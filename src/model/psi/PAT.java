@@ -1,0 +1,59 @@
+package model.psi;
+
+
+import java.util.Map;
+
+public class PAT extends PSI {
+
+    private short tableID;
+    private byte ssi;
+    private int sectionLength;
+    private int tsID;
+    private short versionNum;
+    private byte CNI;
+    private int sectionNum;
+    private int lastSectionNum;
+    private Map PATmap;
+    private long CRC;
+
+    public PAT(short tableID, byte SSI, int sectionLength) {
+        super(tableID, SSI, sectionLength);
+    }
+
+
+    public PAT(short tableID, byte ssi, int sectionLength, int tsID, short versionNum, byte CNI, int sectionNum, int lastSectionNum, Map PATmap, long CRC) {
+        super(tableID, ssi, sectionLength);
+        this.tsID= tsID;
+        this.versionNum = versionNum;
+        this.CNI = CNI;
+        this.sectionNum = sectionNum ;
+        this.lastSectionNum = lastSectionNum;
+        this.PATmap = PATmap;
+        this.CRC = CRC;
+    }
+
+    public PAT(short i, byte ssi, int sectionLength, int programNum, byte versionNum, byte currentNextIndicator, byte sectionNum, byte lastSectionNum, short pcr_pid, short programInfoLength, byte[] descriptors, long crc) {
+    }
+
+    public int getTsID() {
+        return tsID;
+    }
+    public short getVersionNum() {
+        return versionNum;
+    }
+    public byte getCNI() {
+        return CNI;
+    }
+    public int getSectionNum() {
+        return sectionNum;
+    }
+    public int getLastSectionNum() {
+        return lastSectionNum;
+    }
+    public Map getPATmap() {
+        return PATmap;
+    }
+    public long getCRC() {
+        return CRC;
+    }
+}
