@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_ts_visualizer" default="compile.module.ts_visualizer">
+  <dirname property="module.ts_visualizer.basedir" file="${ant.file.module_ts_visualizer}"/>
+  
+  <property name="module.jdk.home.ts_visualizer" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.ts_visualizer" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.ts_visualizer" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.ts_visualizer" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="ts_visualizer.output.dir" value="${module.ts_visualizer.basedir}/out/production/TS Visualizer"/>
+  <property name="ts_visualizer.testoutput.dir" value="${module.ts_visualizer.basedir}/out/test/TS Visualizer"/>
+  
+  <path id="ts_visualizer.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="ts_visualizer.module.production.classpath">
+    <path refid="${module.jdk.classpath.ts_visualizer}"/>
+  </path>
+  
+  <path id="ts_visualizer.runtime.production.module.classpath">
+    <pathelement location="${ts_visualizer.output.dir}"/>
+  </path>
+  
+  <path id="ts_visualizer.module.classpath">
+    <path refid="${module.jdk.classpath.ts_visualizer}"/>
+    <pathelement location="${ts_visualizer.output.dir}"/>
+  </path>
+  
+  <path id="ts_visualizer.runtime.module.classpath">
+    <pathelement location="${ts_visualizer.testoutput.dir}"/>
+    <pathelement location="${ts_visualizer.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.ts_visualizer">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.ts_visualizer">
+    <patternset refid="excluded.from.module.ts_visualizer"/>
+  </patternset>
+  
+  <path id="ts_visualizer.module.sourcepath">
+    <dirset dir="${module.ts_visualizer.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.ts_visualizer" depends="compile.module.ts_visualizer.production,compile.module.ts_visualizer.tests" description="Compile module TS Visualizer"/>
+  
+  <target name="compile.module.ts_visualizer.production" depends="register.custom.compilers" description="Compile module TS Visualizer; production classes">
+    <mkdir dir="${ts_visualizer.output.dir}"/>
+    <javac2 destdir="${ts_visualizer.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.ts_visualizer}/javac">
+      <compilerarg line="${compiler.args.ts_visualizer}"/>
+      <bootclasspath refid="ts_visualizer.module.bootclasspath"/>
+      <classpath refid="ts_visualizer.module.production.classpath"/>
+      <src refid="ts_visualizer.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.ts_visualizer"/>
+    </javac2>
+    
+    <copy todir="${ts_visualizer.output.dir}">
+      <fileset dir="${module.ts_visualizer.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.ts_visualizer.tests" depends="register.custom.compilers,compile.module.ts_visualizer.production" description="compile module TS Visualizer; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.ts_visualizer" description="cleanup module">
+    <delete dir="${ts_visualizer.output.dir}"/>
+    <delete dir="${ts_visualizer.testoutput.dir}"/>
+  </target>
+</project>

@@ -64,6 +64,11 @@ public class Controller {
                 openFile(file);
         });
 
+        this.view.userGuide.setOnAction(actionEvent ->
+        {
+            this.view.showUserGuide();
+        });
+
         this.view.about.setOnAction(actionEvent ->
                 this.view.showAbout());
     }

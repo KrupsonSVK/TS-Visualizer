@@ -145,4 +145,19 @@ public class Config {
         Object obj = map.get(pid);
         return obj == null ? "" : obj.toString();
     }
+
+    public boolean isPSI(int pid) {
+        if(getPacketName(pid) == "PES")
+            return false;
+        return true;
+    }
+
+    public static final String userGuideText = "First choose a file to analyse by clicking \"Select file..\" button or drag'n'drop a file to the window." +
+            "An error can occure if the file you choose is invalid, unaccessible or does not contain valid TS packets. " +
+            "Choose from three tab to display: for detailed specifications of the stream click \"Details\" tab, for graphical " +
+            "visualization of the packet distribution in the stream click \"Visualization\" tab and for bitrate chart of " +
+            "programmes choose \"Graph\" tab.\n\nVisualization tab:\n To move the packet panes drag them with mouse. To display packet details click " +
+            "on it with left mouse. To zoom the packet pane use zoom bar. To apply program filter of packets choose available " +
+            "option in combobox. To move packet panes by packet bar drag the looking glass with mouse. To apply PSI filter of " +
+            "packet bar click on it and select available option.";
 }

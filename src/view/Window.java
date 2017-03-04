@@ -2,6 +2,7 @@ package view;
 
 import app.Main;
 import javafx.application.Platform;
+import javafx.scene.text.Font;
 import model.Stream;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -13,8 +14,11 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import view.visualizationTab.VisualizationTab;
+
 import java.io.IOException;
 
+import static app.Config.userGuideText;
 import static app.Main.releaseDate;
 import static java.lang.Thread.sleep;
 
@@ -47,10 +51,12 @@ public class Window {
     MenuItem jumpToPacket;
     MenuItem searchPacket;
     public MenuItem about;
-    MenuItem manual;
+    public MenuItem userGuide;
     public TreeItem<String> nodes;
 
     private Task task;
+    private Stage userGuideStage;
+
 
     public Window(Stage primaryStage) {
 
@@ -126,18 +132,17 @@ public class Window {
         searchPacket = new MenuItem("Search packet...");
 
         about = new MenuItem("About");
-        manual = new MenuItem("Manual");
+        userGuide = new MenuItem("Guide");
 
         importXML.setDisable(true);
         exportXML.setDisable(true);
         settings.setDisable(true);
         jumpToPacket.setDisable(true);
         searchPacket.setDisable(true);
-        manual.setDisable(true);
 
         file.getItems().addAll(openFile, importXML, exportXML, new SeparatorMenuItem(), settings, new SeparatorMenuItem(), exitApp);
         edit.getItems().addAll(jumpToPacket, searchPacket);
-        help.getItems().addAll(manual, new SeparatorMenuItem(), about);
+        help.getItems().addAll(userGuide, new SeparatorMenuItem(), about);
 
         mainMenu.getMenus().addAll(file, edit, help);
     }
@@ -181,7 +186,8 @@ public class Window {
 
 
     public void showAbout() {
-        aboutStage.initModality(Modality.WINDOW_MODAL);
+        if(aboutStage.getModality() != Modality.WINDOW_MODAL)
+            aboutStage.initModality(Modality.WINDOW_MODAL);
         aboutStage.setTitle("About");
 
         VBox vBox = new VBox();
@@ -189,12 +195,28 @@ public class Window {
         vBox.setPadding(new Insets(5));
         vBox.getChildren().addAll(new Label("TS Visualizer BETA" + "\n\n" + "Last release " + releaseDate), new Text("\nCreated by Tomas Krupa"));
 
-        Scene scene = new Scene(vBox, 400, 300);
-        aboutStage.setScene(scene);
+        aboutStage.setScene(new Scene(vBox, 400, 300));
         aboutStage.show();
     }
 
     public Task getTask() {
         return task;
+    }
+
+    public void showUserGuide() {
+        if(userGuideStage.getModality() != Modality.WINDOW_MODAL)
+            userGuideStage.initModality(Modality.WINDOW_MODAL);
+
+        userGuideStage.setTitle("User userGuide");
+        Text text = new Text(userGuideText);
+        Label label = new Label("User userGuide to using application TS Visualizer\n");
+        label.setFont(new Font(12));
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER);
+       // vBox.setPadding(new Insets(5));
+        vBox.getChildren().addAll(label,text);
+
+        userGuideStage.setScene(new Scene(vBox, 400, 300));
+        userGuideStage.show();
     }
 }
