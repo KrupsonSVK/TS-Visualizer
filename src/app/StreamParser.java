@@ -39,13 +39,18 @@ public class StreamParser extends Config {
 
                 ArrayList<TSpacket> packets = new ArrayList<TSpacket>();
 
+                boolean isPATanalyzed = false;
+                int firstPosition = nil;
+
                 for (int i = 0; i < buffer.length; i += tsPacketSize) {
 
                     if(i == 0) {
                         i = seekBeginning(buffer, i);
 
-                        if (i == nil)
+                        if (i == nil) {
                             throw new IOException("File does not contain TS stream!");
+                        }
+                        firstPosition = i;
                     }
 
                     if (buffer[i] == syncByte) {
@@ -55,9 +60,9 @@ public class StreamParser extends Config {
                         int header = parseHeader(packet);
 
                         byte[] binaryHeader = new byte[tsHeaderBitLength];
-                        for (int index = 0; index < tsHeaderBitLength; index++)
+                        for (int index = 0; index < tsHeaderBitLength; index++) {
                             binaryHeader[tsHeaderBitLength - index - 1] = getBit(header, index);
-
+                        }
                         TSpacket analyzedHeader = analyzeHeader(binaryHeader);
 
                         if (isAdaptationField(analyzedHeader)) { //
@@ -65,9 +70,9 @@ public class StreamParser extends Config {
                             short adaptationFieldHeader = parseAdaptationFieldHeader(packet);
 
                             byte[] binaryAdaptationFieldHeader = new byte[tsAdaptationFieldHeaderBitLength];
-                            for (int index = 0; index < tsAdaptationFieldHeaderBitLength; index++)
+                            for (int index = 0; index < tsAdaptationFieldHeaderBitLength; index++) {
                                 binaryAdaptationFieldHeader[tsAdaptationFieldHeaderBitLength - index - 1] = getBit(adaptationFieldHeader, index);
-
+                            }
                             analyzedHeader.setAdaptationFieldHeader(analyzeAdaptationFieldHeader(binaryAdaptationFieldHeader));
 
                             short adaptationFieldLength = analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength();
@@ -80,11 +85,25 @@ public class StreamParser extends Config {
 //                                TSpacket.AdaptationFieldOptionalFields analyzedAdaptationFieldOptionalFields = analyzeAdaptationFieldOptionalFields(analyzedAdaptationFieldHeader, binaryAdaptationFieldOptional);
                             }
                         }
-                        if ( isPayloadPSI(analyzedHeader))
-                            analyzedHeader.setPayload(analyzePSI(analyzedHeader,packet));
-                        else
-                            analyzedHeader.setPayload(analyzePES(analyzedHeader,packet));
 
+
+                        if (isPATanalyzed){
+                            if (isPayloadPSI(analyzedHeader)) {
+                                if (analyzedHeader.getPID() == PATpid) {
+                                    analyzePAT(analyzedHeader, packet);
+                                    i = firstPosition;
+                                    isPATanalyzed = true;
+                                }
+                            }
+                            continue;
+                        }
+
+                        if ( isPayloadPSI(analyzedHeader)) {
+                            analyzedHeader.setPayload(analyzePSI(analyzedHeader, packet));
+                        }
+                        else {
+                            analyzedHeader.setPayload(analyzePES(analyzedHeader, packet));
+                        }
                         packets.add(analyzedHeader);
                         updateProgress(i, buffer.length);
                     }
@@ -94,7 +113,6 @@ public class StreamParser extends Config {
 
         };
     }
-
 
     private PSI analyzePSI(TSpacket analyzedHeader, byte[] packet) {
         TSpacket analyzedPacket = analyzedHeader;
@@ -158,9 +176,11 @@ public class StreamParser extends Config {
         byte[] binaryFields = new byte[size];
         int offset = 0;
 
-        for (int index = length-1 ; index >= 0  ; index--)
-            for (int i = 0; i < size/length ; i++ , offset++)
+        for (int index = length-1 ; index >= 0  ; index--) {
+            for (int i = 0; i < size / length; i++, offset++) {
                 binaryFields[size - offset - 1] = getBit(intFields[index], i);
+            }
+        }
 
         return binaryFields;
     }
@@ -169,9 +189,9 @@ public class StreamParser extends Config {
     private int calculatePosition(TSpacket analyzedHeader) {
         int position=tsHeaderSize+AFLlength;
 
-        if(isAdaptationField(analyzedHeader))
+        if(isAdaptationField(analyzedHeader)) {
             position += analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength();
-
+        }
         return position;
     }
 
@@ -180,9 +200,9 @@ public class StreamParser extends Config {
 
         int position = pos;
         int[] bytePATfields = new int[length];
-        for (int index = 0; index < length; index++)
-            bytePATfields[index] = ((packet[position++]) & 0x000000ff );
-
+        for (int index = 0; index < length; index++) {
+            bytePATfields[index] = ((packet[position++]) & 0x000000ff);
+        }
         return bytePATfields;
     }
 
@@ -192,9 +212,9 @@ public class StreamParser extends Config {
         int commonFields = parseCommonFields(packet,position);
 
         byte[] binaryPacket = new byte[PSIcommonFieldsLength];
-        for (int index = 0; index < PSIcommonFieldsLength; index++)
+        for (int index = 0; index < PSIcommonFieldsLength; index++) {
             binaryPacket[PSIcommonFieldsLength - index - 1] = getBit(commonFields, index);
-
+        }
         final int gap = 3;
         short tableID = (short) binToInt(binaryPacket, 0, tableIDlength);
         byte SSI = (byte) binToInt(binaryPacket, tableIDlength, tableIDlength+1);
@@ -289,9 +309,11 @@ public class StreamParser extends Config {
 
     private int seekBeginning(byte[] buffer, int i){
 
-        for (; i < buffer.length - tsPacketSize; i++)
-            if (buffer[i] == syncByte && buffer[i + tsPacketSize] == syncByte)
+        for (; i < buffer.length - tsPacketSize; i++) {
+            if (buffer[i] == syncByte && buffer[i + tsPacketSize] == syncByte) {
                 return i;
+            }
+        }
         return nil;
     }
 
@@ -307,7 +329,7 @@ public class StreamParser extends Config {
 
     private short parseAdaptationFieldHeader(byte[] packet) {
         return (short)( (packet[4] << 8) & 0x0000ff00 |
-                        (packet[5])      & 0x000000ff );
+                (packet[5])      & 0x000000ff );
     }
 
     private int parseCommonFields(byte[] packet, int position) {

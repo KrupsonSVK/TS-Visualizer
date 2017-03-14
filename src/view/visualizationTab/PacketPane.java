@@ -1,164 +1,254 @@
 package view.visualizationTab;
 
 import app.Config;
+import model.Stream;
+import model.TSpacket;
+
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import model.Stream;
-import model.TSpacket;
-
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class PacketPane extends VisualizationTab{
-
+public class PacketPane extends VisualizationTab implements Drawer{
 
     private Tooltip tooltip;
-
     private Config config;
-    private Pane packetPane;
-    public ScrollPane scrollPane;
+    Pane pane;
+    ScrollPane scrollPane;
     private Scene scene;
-    private Canvas packetCanvas;
+    Canvas canvas;
+    private ArrayList<Image> images;
+    private LegendPane legendPane;
 
-    final static double packetImageWidth = 100;
-    private final static double packetImageHeigth = 60;
-    private final static double packetScrollPaneHeigthRatio = 0.54;
-
-    private double oldSceneX, oldTranslateX, oldPacketSceneX, oldPacketTranslateX, xPos;
+    private double oldSceneX, oldTranslateX, xPos;
+    private ArrayList<TSpacket> packets;
+    private List<Integer> sortedPIDs;
+    private List<Rectangle> rectangles;
 
 
     public PacketPane(Scene scene, Config config) {
         tooltip = new Tooltip();
         this.scene = scene;
         this.config = config;
+        rectangles = new ArrayList<>();
     }
 
-    void createPacketScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines) {
 
-        oldSceneX = oldTranslateX = oldPacketTranslateX = oldTranslateX = xPos = 0;
+    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines) {
 
-        packetPane = new Pane();
-        packetPane.setMaxSize(scene.getWidth(),scene.getHeight());
+        oldSceneX = oldTranslateX =  xPos = 0;
 
-        scrollPane = new ScrollPane(packetPane);
-        scrollPane.setMaxSize(scene.getWidth(),scene.getHeight() * packetScrollPaneHeigthRatio);//54%
+        this.packets = packets;
+        this.sortedPIDs = sortedPIDs;
+
+        pane = new Pane();
+        pane.setMaxSize(Double.MAX_VALUE,Double.MAX_VALUE);
+
+        scrollPane = new ScrollPane(pane);
+        scrollPane.setMaxSize(scene.getWidth(),scene.getHeight() * packetScrollPaneHeightRatio);//54%
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setPannable(true);
         scrollPane.setFitToWidth(true);
 
-        double canvasHeigth = lines * packetImageHeigth;
+        double canvasHeigth = lines * packetImageHeight;
         if(canvasHeigth < scrollPane.getMaxHeight())
             canvasHeigth = scrollPane.getMaxHeight();
 
-        packetCanvas = new Canvas(scene.getWidth(), canvasHeigth);
+        canvas = new Canvas(scene.getWidth(), canvasHeigth);
 
-        packetPane.setOnMousePressed(mouseEvent -> {
-            updateX(mouseEvent);
-            if(tooltip.isShowing())
-                tooltip.hide();
-        });
-
-        packetPane.setOnMouseDragged( mouseEvent -> {
-            double translate = oldPacketTranslateX + mouseEvent.getSceneX() - oldPacketSceneX;
-            xPos += translate;// / mouseSensitivity;
-            if(xPos > 0)
-                xPos = 0;
-
-            drawPacketCanvas(stream, packets, sortedPIDs, xPos);
-            drawLegendCanvas(stream, packets, sortedPIDs, xPos/3);
-            updateX(mouseEvent);
-        });
-
-
-        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-            double newWidth = scene.getWidth();
-            packetCanvas.setWidth(newWidth);
-            packetPane.setMaxWidth(newWidth);
-            scrollPane.setMaxWidth(newWidth);
-
-            drawPacketCanvas(stream, packets,sortedPIDs, xPos);
-            //drawLegendCanvas(stream, packets,sortedPIDs, xPos);
-        });
-
-        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-           // scrollPane.setMaxHeight(scene.getHeight() - legendScrollPane.getHeight() - barScrollPane.getHeight());
-            drawPacketCanvas(stream, packets,sortedPIDs, xPos);
-            //drawLegendCanvas(stream, packets,sortedPIDs, xPos);
-
-        });
+        addListenersAndHandlers(stream, packets,sortedPIDs);
     }
 
 
-    void drawPacketCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+    protected void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
 
-        drawPackets(stream, packets, sortedPIDs,xPos);
+        GraphicsContext graphicsContextPacketCanvas = canvas.getGraphicsContext2D();
 
-        packetPane.getChildren().clear();
-        packetPane.getChildren().add(packetCanvas);
-    }
-
-
-    private void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sorted, double xPos) {
-
-        GraphicsContext graphicsContextPacketCanvas = packetCanvas.getGraphicsContext2D();
-
-        graphicsContextPacketCanvas.clearRect(0, 0, packetCanvas.getWidth(), packetCanvas.getHeight());
+        graphicsContextPacketCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         graphicsContextPacketCanvas.setFill(Color.WHITE);
-        graphicsContextPacketCanvas.fillRect(0,0, packetCanvas.getWidth(), packetCanvas.getHeight());
+        graphicsContextPacketCanvas.fillRect(0,0, canvas.getWidth(), canvas.getHeight());
 
         int index = 0;
         for (TSpacket packet : packets) {
-            if(isInViewport(index * packetImageWidth,(-1) * xPos)) {
+            if(isInViewport(scene, index * packetImageWidth, -xPos)) {
                 int pid = packet.getPID();
-                drawPacketImg(graphicsContextPacketCanvas, pid, pid, config.getProgramName(stream,pid), sorted.indexOf(pid), xPos + index * packetImageWidth);
+                double newPos = xPos + index * packetImageWidth;
+                drawPacketImg(graphicsContextPacketCanvas, pid, pid, config.getProgramName(stream,pid), sortedPIDs.indexOf(pid), newPos);
             }
             index++;
         }
-        //return packetCanvas;
     }
 
 
     private void drawPacketImg(GraphicsContext graphicsContext, int type, int pid, String name, int yPos, double xPos) {
-        xPos -= 25;
-        yPos *= packetImageHeigth;
+        double offset = 50;
+
+        xPos -= packetImageHeight / 2;
+        yPos *= packetImageHeight;
 
         javafx.scene.image.Image original = new javafx.scene.image.Image(getClass().getResourceAsStream("/app/resources/" + config.getPacketImageName(type))); //TODO toto musia byt array of finals
-        graphicsContext.drawImage(original, xPos, yPos, packetImageWidth, packetImageHeigth);
-        graphicsContext.setFont(new Font(8));
+        graphicsContext.drawImage(original, xPos, yPos, packetImageWidth, packetImageHeight);
+        graphicsContext.setFont(new Font(fontSize));
         graphicsContext.strokeText("PID: " + pid + "\n" + config.getPacketName(pid) + "\n" + name, xPos + 5, yPos + 30);
 
-        Rectangle rectangle = new Rectangle(xPos, yPos, packetImageWidth-10, packetImageHeigth);
+        Rectangle rectangle = new Rectangle(xPos, yPos, packetImageWidth-10, packetImageHeight);
         rectangle.setFill(Paint.valueOf("transparent"));
 
         rectangle.setOnMouseClicked(mouseEvent -> {
-            Rectangle rect = (Rectangle) mouseEvent.getSource();
-            tooltip.setText(getPacketInfo(rect));
-            tooltip.show(rect, mouseEvent.getScreenX() + 50, mouseEvent.getScreenY());
+            hideTooltip();
+            tooltip.setText(getPacketInfo(pid));
+            tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + offset, mouseEvent.getScreenY());}
+        );
+        pane.getChildren().add(rectangle);
+        rectangle.toFront();
+    }
+
+    private void hideTooltip() {
+        if(tooltip.isShowing()) {
+            tooltip.hide();
+        }
+    }
+
+
+    public void addListenersAndHandlers(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs) {
+
+        pane.setOnMousePressed(mouseEvent -> {
+            updateX(mouseEvent);
         });
 
-        packetPane.getChildren().add(rectangle);
+        pane.setOnMouseReleased(mouseEvent -> {
+            hideTooltip();
+        });
+
+        pane.setOnMouseDragged( mouseEvent -> {
+            hideTooltip();
+            double translate = translate(mouseEvent.getSceneX());
+            xPos += translate;
+            if(xPos > 0)
+                xPos = 0;
+
+            drawCanvas(stream, packets, sortedPIDs, xPos);
+            legendPane.setXpos(xPos/legendPaneMoveCoeff);
+            legendPane.drawCanvas(stream, packets, sortedPIDs, xPos/legendPaneMoveCoeff);
+
+            updateX(mouseEvent);
+        });
+
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            double newWidth = scene.getWidth();
+
+            canvas.setWidth(newWidth);
+            scrollPane.setMaxWidth(newWidth);
+
+            drawCanvas(stream, packets,sortedPIDs, xPos);
+        });
+
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double newHeigth = scene.getHeight() - legendScrollPaneHeight - barScrollPaneHeight;
+
+            scrollPane.setMaxHeight(newHeigth);
+
+            drawCanvas(stream, packets,sortedPIDs, xPos);
+        });
+
+
     }
 
 
-    void updateX(MouseEvent mouseEvent) {
-        oldPacketSceneX = mouseEvent.getSceneX();
-        oldPacketTranslateX = ((Pane) mouseEvent.getSource()).getTranslateX();
+    void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+        pane.getChildren().clear();
+
+        drawPackets(stream, packets, sortedPIDs,xPos);
+        pane.getChildren().add(canvas);
+        canvas.toBack();
     }
 
-    boolean isInViewport(double packetPosition, double start) {
-        double end = start + scene.getWidth();
-        return packetPosition >= start && packetPosition <= end;
+
+    String getPacketInfo(int PID) {
+
+        for(TSpacket packet : packets) {
+            if (packet.getPID() == PID) {
+                return createPacketInfo(packet);
+            }
+        }
+        return "Unable to collect packet data!";
     }
 
+
+    private String createPacketInfo(TSpacket packet) {
+        String adaptationField = null;
+//        if (packet.getAdaptationFieldControl() > 0)
+//            adaptationField = "Adaptation Field Length: " + packet.getAdaptationFieldHeader().getAdaptationFieldLength();
+
+        return ("Packet PID: " + packet.getPID() + "\n" +
+                "Transport Error Indicator: " + packet.getTransportErrorIndicator() + "\n" +
+                "Payload Start Indicator: " + packet.getPayloadStartIndicator() + "\n" +
+                "Transport Scrambling Control:" + packet.getTransportScramblingControl() + "\n" +
+                "Continuity Counter: " + packet.getContinuityCounter() + "\n" +
+                "Adaptation Field Control: " + packet.getAdaptationFieldControl() + "\n" +
+                adaptationField + "\n" +
+                "Payload: " + packet.getPayload() + "\n"
+        );
+    }
+
+
+    private boolean isInRange(int packetX, double packetY, double xPos, double yPos) {
+
+        if (packetX > xPos - 5 && packetX < xPos + 5) {
+            if (packetY > yPos - 3 && packetY < yPos + 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    @Override
+    public void updateX(MouseEvent mouseEvent) {
+        oldSceneX = mouseEvent.getSceneX();
+        oldTranslateX = ((Node) mouseEvent.getSource()).getTranslateX();
+    }
+
+    @Override
+    public double translate(double sceneX) {
+        return oldTranslateX + sceneX - oldSceneX;
+    }
+
+    @Override
+    public void setXpos(double xPos) {
+        this.xPos = xPos;
+    }
+
+    @Override
+    public void setOldTranslateX(double oldTranslateX) {
+        this.oldTranslateX= oldTranslateX;
+    }
+
+    @Override
+    public void setOldSceneX(double oldSceneX) {
+        this.oldSceneX = oldSceneX;
+    }
+
+
+    public void setLegendPane(LegendPane legendPane) {
+        this.legendPane = legendPane;
+    }
+
+
+    public void setBarPane(BarPane barPane) {
+        this.barPane = barPane;
+    }
 }

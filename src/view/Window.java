@@ -25,6 +25,9 @@ import static java.lang.Thread.sleep;
 
 public class Window {
 
+    private final double windowWidth = 960;
+    protected static final double windowHeigth = 720;
+
     public DetailTab detailTab;
     public GraphTab graphTab;
     public VisualizationTab visualizationTab;
@@ -44,8 +47,8 @@ public class Window {
     TabPane tabPane;
     Menu file, edit, help;
     public MenuItem openFile;
-    MenuItem importXML;
-    MenuItem exportXML;
+    public MenuItem importXML;
+    public MenuItem exportXML;
     MenuItem settings;
     public MenuItem exitApp;
     MenuItem jumpToPacket;
@@ -61,6 +64,8 @@ public class Window {
     public Window(Stage primaryStage) {
 
         this.task = null;
+
+        userGuideStage = new Stage();
 
         this.primaryStage = primaryStage;
         aboutStage = new Stage();
@@ -102,7 +107,7 @@ public class Window {
         alertBox = new Alert(Alert.AlertType.ERROR);
         progressWindow = new ProgressForm();
 
-        scene = new Scene(rootPane, 960, 720);
+        scene = new Scene(rootPane, windowWidth, windowHeigth);
         primaryStage.setTitle("TS Visualizer");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -110,6 +115,9 @@ public class Window {
         detailTab = new DetailTab(nodes);
         visualizationTab = new VisualizationTab(scene);
         graphTab = new GraphTab(scene);
+    }
+
+    public Window() {
     }
 
 
@@ -134,7 +142,6 @@ public class Window {
         about = new MenuItem("About");
         userGuide = new MenuItem("Guide");
 
-        importXML.setDisable(true);
         exportXML.setDisable(true);
         settings.setDisable(true);
         jumpToPacket.setDisable(true);
@@ -209,13 +216,14 @@ public class Window {
 
         userGuideStage.setTitle("User userGuide");
         Text text = new Text(userGuideText);
+        text.setWrappingWidth(200);
+        //text.maxWidth(100);
         Label label = new Label("User userGuide to using application TS Visualizer\n");
         label.setFont(new Font(12));
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
        // vBox.setPadding(new Insets(5));
         vBox.getChildren().addAll(label,text);
-
         userGuideStage.setScene(new Scene(vBox, 400, 300));
         userGuideStage.show();
     }

@@ -13,12 +13,15 @@ import view.Window;
 public class Controller {
 
     private static final String errorTitle = "Error occured!";
+    private XML XML;
 
-    private Thread parserThread, fileHandlerThread, visualizerThread, testThread;
+    private Thread parserThread, fileHandlerThread, visualizerThread;
     private Stage primaryStage;
     private FileHandler fileHandler;
     private Window view;
     private StreamParser streamParser;
+
+    private Stream stream;
 
 
     Controller(Stage primaryStage, FileHandler fileHandler, StreamParser streamParser, Window view) {
@@ -27,29 +30,31 @@ public class Controller {
         this.view = view;
         this.fileHandler = fileHandler;
         this.streamParser = streamParser;
+        this.stream = null;
+        this.XML = null;
 
-        this.view.scene.setOnDragOver(dragEvent ->
-        {
+        this.view.scene.setOnDragOver(dragEvent -> {
             Dragboard db = dragEvent.getDragboard();
-            if (db.hasFiles())
+            if (db.hasFiles()) {
                 dragEvent.acceptTransferModes(TransferMode.COPY);
-            else
+            }
+            else {
                 dragEvent.consume();
+            }
         });
 
-        this.view.selectFileButton.setOnAction( actionEvent ->
-        {
+        this.view.selectFileButton.setOnAction( actionEvent -> {
             File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
-            if (file != null)
+            if (file != null) {
                 openFile(file);
+            }
         });
 
-        this.view.scene.setOnDragDropped(dragEvent ->
-        {
+        this.view.scene.setOnDragDropped(dragEvent -> {
             Dragboard dragboard = dragEvent.getDragboard();
-            if (dragboard.hasFiles())
+            if (dragboard.hasFiles()) {
                 openFile(dragboard.getFiles().get(0));
-
+            }
             dragEvent.setDropCompleted(dragboard.hasFiles());
             dragEvent.consume();
         });
@@ -57,39 +62,60 @@ public class Controller {
         this.view.exitApp.setOnAction(actionEvent ->
                 System.exit(0));
 
-        this.view.openFile.setOnAction(actionEvent ->
-        {
+        this.view.openFile.setOnAction(actionEvent -> {
             File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
-            if (file != null)
+            if (file != null) {
                 openFile(file);
+            }
         });
 
         this.view.userGuide.setOnAction(actionEvent ->
-        {
-            this.view.showUserGuide();
-        });
+                this.view.showUserGuide());
 
         this.view.about.setOnAction(actionEvent ->
                 this.view.showAbout());
+
+        this.view.importXML.setOnAction(actionEvent -> {
+                    File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
+                    if (file != null) {
+                        try {
+                            this.view.createTask(XML.read(file));
+                        } catch (Exception error) {
+                            this.view.showAlertBox(errorTitle, String.valueOf(error.getStackTrace()));
+                        }
+                    }
+                }
+        );
+
+        this.view.exportXML.setOnAction(actionEvent -> {
+                    File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
+                    if (file != null) {
+                        try {
+                            this.XML.save(this.stream, file);
+                        } catch (Exception error) {
+                            this.view.showAlertBox(errorTitle, String.valueOf(error.getStackTrace()));
+                        }
+                    }
+                }
+        );
     }
 
 
     void createTask(File file) {
 
-        fileHandler.getTask().setOnSucceeded(event ->
-        {
+        fileHandler.getTask().setOnSucceeded(event -> {
+
             streamParser.parseStream(fileHandler.getTask().getValue());
 
             view.progressWindow.activateProgressBar(streamParser.getTask());
 
-            streamParser.getTask().setOnSucceeded(workerStateEvent ->
-                    {
+            streamParser.getTask().setOnSucceeded(workerStateEvent -> {
                         Stream streamDescriptor;
                         try {
                             streamDescriptor = streamParser.analyzeStream(file, streamParser.getTask().getValue());
                             view.createTask(streamDescriptor);
                         } catch (IOException e) {
-                            view.showAlertBox(errorTitle, e.getMessage());
+                            view.showAlertBox(errorTitle, String.valueOf(e.getStackTrace()));
                         }
                         visualizerThread = new Thread(view.getTask());
                         visualizerThread.start();
@@ -98,10 +124,9 @@ public class Controller {
                     }
             );
 
-            streamParser.getTask().setOnFailed(workerStateEvent ->
-                    {
+            streamParser.getTask().setOnFailed(workerStateEvent -> {
                         view.progressWindow.getDialogStage().close();
-                        view.showAlertBox(errorTitle, streamParser.getTask().getException().getMessage() + streamParser.getTask().getException().getStackTrace());
+                        view.showAlertBox(errorTitle, String.valueOf(streamParser.getTask().getException().getStackTrace()) + streamParser.getTask().getException().getStackTrace());
                     }
             );
 
