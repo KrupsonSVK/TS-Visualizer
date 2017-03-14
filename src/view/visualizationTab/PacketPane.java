@@ -64,9 +64,9 @@ public class PacketPane extends VisualizationTab implements Drawer{
         scrollPane.setFitToWidth(true);
 
         double canvasHeigth = lines * packetImageHeight;
-        if(canvasHeigth < scrollPane.getMaxHeight())
+        if(canvasHeigth < scrollPane.getMaxHeight()) {
             canvasHeigth = scrollPane.getMaxHeight();
-
+        }
         canvas = new Canvas(scene.getWidth(), canvasHeigth);
 
         addListenersAndHandlers(stream, packets,sortedPIDs);
@@ -108,7 +108,7 @@ public class PacketPane extends VisualizationTab implements Drawer{
         rectangle.setFill(Paint.valueOf("transparent"));
 
         rectangle.setOnMouseClicked(mouseEvent -> {
-            hideTooltip();
+            //hideTooltip();
             tooltip.setText(getPacketInfo(pid));
             tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + offset, mouseEvent.getScreenY());}
         );
@@ -137,9 +137,9 @@ public class PacketPane extends VisualizationTab implements Drawer{
             hideTooltip();
             double translate = translate(mouseEvent.getSceneX());
             xPos += translate;
-            if(xPos > 0)
+            if(xPos > 0) {
                 xPos = 0;
-
+            }
             drawCanvas(stream, packets, sortedPIDs, xPos);
             legendPane.setXpos(xPos/legendPaneMoveCoeff);
             legendPane.drawCanvas(stream, packets, sortedPIDs, xPos/legendPaneMoveCoeff);
@@ -158,12 +158,16 @@ public class PacketPane extends VisualizationTab implements Drawer{
 
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeigth = scene.getHeight() - legendScrollPaneHeight - barScrollPaneHeight;
-
             scrollPane.setMaxHeight(newHeigth);
 
             drawCanvas(stream, packets,sortedPIDs, xPos);
         });
 
+        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+                    legendPane.labelScrollPane.setVvalue(scrollPane.getVvalue());
+                    legendPane.scrollPane.setVvalue(scrollPane.getVvalue());
+                }
+        );
 
     }
 

@@ -1,18 +1,13 @@
 package view.visualizationTab;
 
 import app.Config;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import model.Stream;
@@ -33,15 +28,13 @@ public class LegendPane extends VisualizationTab implements Drawer{
     private Canvas labelCanvas;
     private  PacketPane packetPane;
 
-    private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler, lookingGlassOnMouseDraggedEventHandler;
-    private EventHandler<MouseEvent> paneMousePressedEventHandler, paneMouseDraggedEventHandler, tooltipEventHadler;
-    private EventHandler<ActionEvent> groupByCheckBoxEvent, programComboBoxEvent;
-
-
-    private ScrollPane labelScrollPane;
+    ScrollPane labelScrollPane;
     private double xpos;
 
     private double oldSceneX, oldTranslateX, xPos;
+    private Pane labelPane;
+    private static final double labelWidth = 135;
+    private static final double fontSize = 8.5;
 
 
     public LegendPane(Scene scene, Config config) {
@@ -57,22 +50,34 @@ public class LegendPane extends VisualizationTab implements Drawer{
         pane = new Pane();
         pane.setMaxSize(scene.getWidth(),scene.getHeight());
 
-        double legendScrollPaneHeight = scene.getHeight()* legendScrollPaneHeightRatio;
+        labelPane = new Pane();
+        labelPane.setMaxSize(scene.getWidth(),scene.getHeight());
+
+        double scrollPaneHeight = scene.getHeight()* legendScrollPaneHeightRatio;
 
         scrollPane = new ScrollPane(pane);
-        scrollPane.setMaxSize(scene.getWidth(),legendScrollPaneHeight);
-        scrollPane.setMinHeight(legendScrollPaneHeight);
+        scrollPane.setMaxSize(scene.getWidth(),scrollPaneHeight);
+        scrollPane.setMinHeight(scrollPaneHeight);
         scrollPane.setPannable(true);
         scrollPane.setFitToWidth(true);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-        double canvasHeigth = lines * miniPacketImageSize;
-        if(canvasHeigth < legendScrollPaneHeight)
-            canvasHeigth = legendScrollPaneHeight;
+        labelScrollPane = new ScrollPane(labelPane);
+        labelScrollPane.setMaxSize(labelWidth, scrollPaneHeight);
+        labelScrollPane.setMinHeight(scrollPaneHeight);
+        labelScrollPane.setPannable(true);
+        labelScrollPane.setFitToWidth(true);
+        labelScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        labelScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
+        double canvasHeigth = lines * miniPacketImageSize;
+        if(canvasHeigth < scrollPaneHeight) {
+            canvasHeigth = scrollPaneHeight;
+        }
         canvas = new Canvas(scene.getWidth(), canvasHeigth);
-        labelCanvas = new Canvas(30,canvasHeigth);
+        labelCanvas = new Canvas(labelWidth,canvasHeigth);
+
         addListenersAndHandlers(stream, packets, sortedPIDs);
     }
 
@@ -104,11 +109,10 @@ public class LegendPane extends VisualizationTab implements Drawer{
     }
 
 
-    protected VBox createLabels(Map<Integer, Integer> PIDs) {
+    protected void createLabels(Map<Integer, Integer> PIDs) {
 
-       // VBox vBox = new VBox();
-        double fontSize = 11.5;
-        int y=2,x = 2, labelLength = 7;
+        int y = 9,x = 2, labelLength = 7;
+        double gap = 2;
 
         GraphicsContext graphicsContextLabelCanvas = labelCanvas.getGraphicsContext2D();
 
@@ -119,24 +123,24 @@ public class LegendPane extends VisualizationTab implements Drawer{
         for (Map.Entry<Integer, Integer> pid : PIDs.entrySet()) {
 
             graphicsContextLabelCanvas.setFont(new Font(fontSize));
-            graphicsContextLabelCanvas.strokeText("PID: " + pid.getKey().toString(),x,y+fontSize);
+            graphicsContextLabelCanvas.strokeText("PID: " + pid.getKey().toString(),x,y);
+            y+=fontSize+gap;
         }
-//        labelScrollPane = new ScrollPane();
-//        labelScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-//        labelScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-//        labelScrollPane.setContent(vBox);
-//        labelScrollPane.setMinWidth(fontSize * labelLength);
-//        labelScrollPane.setMaxHeight(scene.getHeight()* legendScrollPaneHeightRatio);
-//        labelScrollPane.setMinHeight(scene.getHeight()* legendScrollPaneHeightRatio);
-
-        return new VBox();
+        labelPane.getChildren().add(labelCanvas);
     }
 
 
     public void addListenersAndHandlers(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs) {
 
-        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) ->
-                labelScrollPane.setVvalue(scrollPane.getVvalue())
+        scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+                    labelScrollPane.setVvalue(scrollPane.getVvalue());
+                    packetPane.scrollPane.setVvalue(scrollPane.getVvalue());
+                }
+        );
+
+        labelScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+                    scrollPane.setVvalue(labelScrollPane.getVvalue());
+                }
         );
 
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
@@ -159,9 +163,9 @@ public class LegendPane extends VisualizationTab implements Drawer{
         pane.setOnMouseDragged(mouseEvent -> {
             double translate = translate(mouseEvent.getSceneX());
             xPos += translate;
-            if(xPos > 0)
+            if(xPos > 0) {
                 xPos = 0;
-
+            }
             drawCanvas(stream, packets,sortedPIDs, xPos);
             packetPane.setXpos(xPos*legendPaneMoveCoeff);
             packetPane.drawCanvas(stream, packets,sortedPIDs, xPos * legendPaneMoveCoeff);
@@ -175,7 +179,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
         drawPackets(stream, packets, sortedPIDs,xPos);
 
         pane.getChildren().clear();
-        pane.getChildren().addAll(labelCanvas,canvas);
+        pane.getChildren().addAll(canvas);
     }
 
     @Override

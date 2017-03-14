@@ -97,8 +97,8 @@ public class VisualizationTab extends Window{
         packetPane.drawCanvas(stream, packets,sortedPIDs,0);
         legendPane.drawCanvas(stream, packets,sortedPIDs, 0);
 
-        VBox labelVBox = legendPane.createLabels(sortedMapPIDs);
-        HBox labelsLegendScrollPaneBox = new HBox(labelVBox, legendPane.scrollPane);
+        legendPane.createLabels(sortedMapPIDs);
+        HBox labelsLegendScrollPaneBox = new HBox(legendPane.labelScrollPane, legendPane.scrollPane);
 
         HBox comboCheckboxBar = createComboCheckBoxBar(stream);
 

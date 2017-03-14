@@ -1,8 +1,7 @@
 package view.visualizationTab;
 
 import app.Config;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import model.Stream;
 import model.TSpacket;
 
@@ -12,7 +11,6 @@ import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -36,7 +34,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler, lookingGlassOnMouseDraggedEventHandler;
 
     private double offset = 0;
-    private Menu menu;
+    private ContextMenu contextMenu;
 
     private double oldSceneX, oldTranslateX, xPos;
     private List<Integer> sortedPIDs;
@@ -51,15 +49,14 @@ public class BarPane extends VisualizationTab implements Drawer{
 
     public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines){
 
-
-    oldSceneX = oldTranslateX = xPos = 0;
+        oldSceneX = oldTranslateX = xPos = 0;
 
         this.packets = packets;
         this.stream = stream;
         this.sortedPIDs = sortedPIDs;
         this.lines = lines;
 
-        menu = new Menu();
+        contextMenu = createContextMenu(sortedPIDs);
 
         scrollPane = new ScrollPane();
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -70,6 +67,25 @@ public class BarPane extends VisualizationTab implements Drawer{
 
         drawBar();
         addListenersAndHandlers();
+    }
+
+
+    private ContextMenu createContextMenu(List<Integer> sortedPIDs) {
+        ContextMenu contextMenu = new ContextMenu();
+        {
+            CheckMenuItem item = new CheckMenuItem("All");
+            item.setSelected(true);
+            contextMenu.getItems().add(item);
+        }
+        for(Integer pid : sortedPIDs){
+            if(config.isPSI(pid)){
+                CheckMenuItem item = new CheckMenuItem(config.getPacketName(pid));
+                item.setDisable(true);
+                item.setSelected(false);
+                contextMenu.getItems().add(item);
+            }
+        }
+        return contextMenu;
     }
 
 
@@ -154,46 +170,44 @@ public class BarPane extends VisualizationTab implements Drawer{
         };
 
         scrollPane.setOnMouseClicked((MouseEvent mouseEvent) -> {
-                    if (mouseEvent.isSecondaryButtonDown()) {
-                        MenuItem item = new MenuItem("all");
-                        item.setDisable(false);
-                        menu.getItems().add(item);
-                        menu.show();
-                        if (menu.isShowing())
-                            menu.hide();
+                    if (contextMenu.isShowing()) {
+                        contextMenu.hide();
+                    }
+                    if (mouseEvent.getButton().name() == "SECONDARY") {
+                        contextMenu.show(scrollPane,mouseEvent.getScreenX(),mouseEvent.getScreenY());
                     }
                 }
         );
 
-            rectangle.setOnMousePressed(lookingGlassOnMousePressedEventHandler);
-            rectangle.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
-        }
+        rectangle.setOnMousePressed(lookingGlassOnMousePressedEventHandler);
+        rectangle.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
+    }
 
-        @Override
-        public void updateX(MouseEvent mouseEvent) {
-            oldSceneX = mouseEvent.getSceneX();
-            oldTranslateX = ((Node) mouseEvent.getSource()).getTranslateX();
-        }
+    @Override
+    public void updateX(MouseEvent mouseEvent) {
+        oldSceneX = mouseEvent.getSceneX();
+        oldTranslateX = ((Node) mouseEvent.getSource()).getTranslateX();
+    }
 
-        @Override
-        public double translate(double sceneX) {
-            return oldTranslateX + sceneX - oldSceneX;
-        }
+    @Override
+    public double translate(double sceneX) {
+        return oldTranslateX + sceneX - oldSceneX;
+    }
 
-        @Override
-        public void setXpos(double xpos) {
-            this.xPos = xpos;
-        }
+    @Override
+    public void setXpos(double xpos) {
+        this.xPos = xpos;
+    }
 
-        @Override
-        public void setOldTranslateX(double oldTranslateX) {
-            this.oldTranslateX= oldTranslateX;
-        }
+    @Override
+    public void setOldTranslateX(double oldTranslateX) {
+        this.oldTranslateX= oldTranslateX;
+    }
 
-        @Override
-        public void setOldSceneX(double oldSceneX) {
-            this.oldSceneX = oldSceneX;
-        }
+    @Override
+    public void setOldSceneX(double oldSceneX) {
+        this.oldSceneX = oldSceneX;
+    }
 
     public void setPacketPane(PacketPane packetPane) {
         this.packetPane = packetPane;
@@ -202,4 +216,4 @@ public class BarPane extends VisualizationTab implements Drawer{
     public void setLegendPane(LegendPane legendPane) {
         this.legendPane = legendPane;
     }
-    }
+}
