@@ -37,13 +37,12 @@ public class Controller {
             Dragboard db = dragEvent.getDragboard();
             if (db.hasFiles()) {
                 dragEvent.acceptTransferModes(TransferMode.COPY);
-            }
-            else {
+            } else {
                 dragEvent.consume();
             }
         });
 
-        this.view.selectFileButton.setOnAction( actionEvent -> {
+        this.view.selectFileButton.setOnAction(actionEvent -> {
             File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
             if (file != null) {
                 openFile(file);
@@ -59,8 +58,10 @@ public class Controller {
             dragEvent.consume();
         });
 
-        this.view.exitApp.setOnAction(actionEvent ->
-                System.exit(0));
+        this.view.exitApp.setOnAction(actionEvent -> {
+            System.exit(0);
+        });
+
 
         this.view.openFile.setOnAction(actionEvent -> {
             File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
@@ -69,11 +70,13 @@ public class Controller {
             }
         });
 
-        this.view.userGuide.setOnAction(actionEvent ->
-                this.view.showUserGuide());
+        this.view.userGuide.setOnAction(actionEvent ->  {
+            this.view.showUserGuide();
+        });
 
-        this.view.about.setOnAction(actionEvent ->
-                this.view.showAbout());
+        this.view.about.setOnAction(actionEvent ->  {
+            this.view.showAbout();
+        });
 
         this.view.importXML.setOnAction(actionEvent -> {
                     File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
@@ -160,8 +163,9 @@ public class Controller {
         fileHandlerThread = new Thread(this.fileHandler.getTask());
         fileHandlerThread.start();
 
-        view.progressWindow.getDialogStage().setOnCloseRequest(windowEvent ->
-                this.restart());
+        view.progressWindow.getDialogStage().setOnCloseRequest(windowEvent ->   {
+            this.restart();
+        });
     }
 
 
@@ -171,8 +175,9 @@ public class Controller {
             //interrupt = true;
             fileHandlerThread.interrupt();
 
-            if (parserThread != null)
+            if (parserThread != null) {
                 parserThread.interrupt();
+            }
         }
         view = new Window(primaryStage);
         //interrupt = false;

@@ -26,28 +26,28 @@ public class FileHandler {
             public byte[] call() throws InterruptedException, IOException {
 
                 Path filepath = Paths.get(file.getAbsolutePath());
-                if (filepath == null)
+                if (filepath == null) {
                     throw new IOException("File not found!");
-
+                }
                 BasicFileAttributes attr = Files.readAttributes(filepath, BasicFileAttributes.class);
 
-                if (!attr.isRegularFile())
+                if (!attr.isRegularFile()) {
                     throw new IOException("File not regular!");
-
-                if (file.length() > Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) //TODO dorobit
+                }
+                if (file.length() > Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) {//TODO dorobit
                     throw new IOException("File too large!");
-
+                }
                 else {
                     byte[] buffer;
                     FileInputStream inputStream = new FileInputStream(file);
                     buffer = new byte[Math.toIntExact(file.length())];
 
-                    if (inputStream.read(buffer) == -1)
+                    if (inputStream.read(buffer) == -1) {
                         throw new IOException("EOF reached while trying to read the whole file");
-
-                    if (inputStream != null)
+                    }
+                    if (inputStream != null) {
                         inputStream.close();
-
+                    }
                     return buffer;
                 }
             }

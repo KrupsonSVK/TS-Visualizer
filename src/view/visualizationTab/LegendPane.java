@@ -9,6 +9,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import model.Stream;
 import model.TSpacket;
@@ -27,6 +28,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
     private Canvas canvas;
     private Canvas labelCanvas;
     private  PacketPane packetPane;
+    private BarPane barPane;
 
     ScrollPane labelScrollPane;
     private double xpos;
@@ -167,6 +169,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
                 xPos = 0;
             }
             drawCanvas(stream, packets,sortedPIDs, xPos);
+            barPane.rectangle.setX(xPos / getLookingGlassMoveCoeff() / legendPaneMoveCoeff);
             packetPane.setXpos(xPos*legendPaneMoveCoeff);
             packetPane.drawCanvas(stream, packets,sortedPIDs, xPos * legendPaneMoveCoeff);
             updateX(mouseEvent);
@@ -180,6 +183,11 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
         pane.getChildren().clear();
         pane.getChildren().addAll(canvas);
+    }
+
+    @Override
+    public double getLookingGlassMoveCoeff() {
+        return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
     }
 
     @Override
@@ -210,5 +218,9 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
     public void setPacketPane(PacketPane packetPane) {
         this.packetPane = packetPane;
+    }
+
+    public void setBarPane(BarPane barPane) {
+        this.barPane = barPane;
     }
 }

@@ -26,7 +26,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     private Config config;
     ScrollPane scrollPane;
     private Scene scene;
-    private Rectangle rectangle;
+    Rectangle rectangle;
     private ArrayList<TSpacket> packets;
     private PacketPane packetPane;
     private LegendPane legendPane;
@@ -69,6 +69,11 @@ public class BarPane extends VisualizationTab implements Drawer{
         addListenersAndHandlers();
     }
 
+    @Override
+    public double getLookingGlassMoveCoeff() {
+            return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
+    }
+
 
     private ContextMenu createContextMenu(List<Integer> sortedPIDs) {
         ContextMenu contextMenu = new ContextMenu();
@@ -97,12 +102,15 @@ public class BarPane extends VisualizationTab implements Drawer{
         Image barBackground = drawPacketsInBar(graphicsContextBarCanvas, barCanvas, packets, (int) scene.getWidth(), (int) scene.getHeight());
         graphicsContextBarCanvas.drawImage(barBackground, scene.getWidth(), scene.getHeight());
 
-        double lookingGlassWidth = (miniPacketImageSize / scene.getWidth() * stream.getPackets().size());
-        rectangle = drawLookingGlass(0, lookingGlassWidth, barScrollPaneHeight);
+        rectangle = drawLookingGlass(0, getLookingGlassWidth(), barScrollPaneHeight);
 
         Pane barPane = new Pane(barCanvas,rectangle);
         rectangle.toFront();
         scrollPane.setContent(barPane);
+    }
+
+    private double getLookingGlassWidth() {
+        return miniPacketImageSize / (1- scene.getWidth() * stream.getPackets().size());
     }
 
 
@@ -133,12 +141,13 @@ public class BarPane extends VisualizationTab implements Drawer{
 
     private Rectangle drawLookingGlass(int xPos, double width, double height) {
 
-        Rectangle rectangle = new Rectangle(xPos, 0, width, height);
-        rectangle.setArcHeight(4);
-        rectangle.setArcWidth(4);
-        rectangle.setFill(Paint.valueOf("transparent"));
-        rectangle.setStroke(Paint.valueOf("black"));
-        rectangle.setStrokeWidth(5);
+        double arcSize = 10;
+        Rectangle rectangle = new Rectangle(xPos, 0, width, height - arcSize);
+        rectangle.setArcHeight(arcSize);
+        rectangle.setArcWidth(arcSize);
+        rectangle.setFill(Color.rgb(160,230,250,0.3));
+        rectangle.setStroke(Color.rgb(70,70,70));
+        rectangle.setStrokeWidth(4);
 
         return rectangle;
     }
@@ -160,12 +169,11 @@ public class BarPane extends VisualizationTab implements Drawer{
         lookingGlassOnMouseDraggedEventHandler = mouseEvent -> {
             xPos = mouseEvent.getSceneX();
             double translate = translate(mouseEvent.getSceneX());
-            double  lookingGlassMoveCoeff = miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
             //xPos += translate;
             if (xPos >= 0 && xPos < scene.getWidth()) {
                 ((Rectangle) (mouseEvent.getSource())).setTranslateX(translate);
-                packetPane.drawPackets(stream, packets, sortedPIDs, -xPos * lookingGlassMoveCoeff * legendPaneMoveCoeff);
-                legendPane.drawPackets(stream, packets, sortedPIDs, -xPos * lookingGlassMoveCoeff );
+                packetPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+                legendPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() );
             }
         };
 

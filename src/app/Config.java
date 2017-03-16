@@ -147,9 +147,7 @@ public class Config {
     }
 
     public boolean isPSI(int pid) {
-        if(getPacketName(pid) == "PES")
-            return false;
-        return true;
+        return getPacketName(pid) != "PES";
     }
 
     public static final String userGuideText = "First choose a file to analyse by clicking \"Select file..\" button or drag'n'drop a file to the window." +

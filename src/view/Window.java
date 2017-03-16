@@ -193,8 +193,9 @@ public class Window {
 
 
     public void showAbout() {
-        if(aboutStage.getModality() != Modality.WINDOW_MODAL)
+        if(aboutStage.getModality() != Modality.WINDOW_MODAL) {
             aboutStage.initModality(Modality.WINDOW_MODAL);
+        }
         aboutStage.setTitle("About");
 
         VBox vBox = new VBox();
@@ -211,9 +212,9 @@ public class Window {
     }
 
     public void showUserGuide() {
-        if(userGuideStage.getModality() != Modality.WINDOW_MODAL)
+        if(userGuideStage.getModality() != Modality.WINDOW_MODAL) {
             userGuideStage.initModality(Modality.WINDOW_MODAL);
-
+        }
         userGuideStage.setTitle("User userGuide");
         Text text = new Text(userGuideText);
         text.setWrappingWidth(200);

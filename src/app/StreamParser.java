@@ -300,10 +300,7 @@ public class StreamParser extends Config {
 
 
     private boolean isPayloadPSI(TSpacket analyzedHeader) {
-        if(analyzedHeader.getPID() <= PSImaxPID)
-            return true;
-        return false;
-
+        return analyzedHeader.getPID() <= PSImaxPID;
     }
 
 
@@ -384,15 +381,15 @@ public class StreamParser extends Config {
         byte PRF = 0;
         byte SSF = 0;
 
-        if (adaptationFieldHeader.getPCRF() == 0x1)
+        if (adaptationFieldHeader.getPCRF() == 0x1) {
             PCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 42);
-
-        if (adaptationFieldHeader.getOPCRF() == 0x1)
+        }
+        if (adaptationFieldHeader.getOPCRF() == 0x1) {
             OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 42);
-
-        if (adaptationFieldHeader.getSCF() == 0x1)
+        }
+        if (adaptationFieldHeader.getSCF() == 0x1){
             spliceCountdown = (byte) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);
-
+        }
         int offset = i;
         if (adaptationFieldHeader.getTPDF() == 0x1) {
 
@@ -400,8 +397,9 @@ public class StreamParser extends Config {
             offset = i;
 
             TPD = new byte[TPDlength];
-            for (int index = 0; offset < i + TPDlength;)
+            for (int index = 0; offset < i + TPDlength;) {
                 TPD[index++] = binaryAdaptationFieldOptionalFields[offset++];
+            }
         }
 
         if (adaptationFieldHeader.getAFEF() == 0x1) {
@@ -427,11 +425,12 @@ public class StreamParser extends Config {
             if (PIDmap.get(packet.getPID()) == null) {
                 PIDmap.put(packet.getPID(), 1);
                 ErrorMap.put(packet.getPID(), 0);
-            } else
+            } else {
                 PIDmap.put(packet.getPID(), PIDmap.get(packet.getPID()) + 1);
-
-            if (packet.getTransportErrorIndicator() == '1')
+            }
+            if (packet.getTransportErrorIndicator() == '1') {
                 ErrorMap.put(packet.getPID(), ErrorMap.get(packet.getPID()) + 1);
+            }
         }
 
         return new Table(PIDmap, ErrorMap, packets);
@@ -450,9 +449,9 @@ public class StreamParser extends Config {
     private int binToInt(byte[] binaryHeader, int start, int end) {
 
         int result = 0;
-        for (int i = start; i < end; i++)
+        for (int i = start; i < end; i++) {
             result = (result << 1) | (binaryHeader[i] == 1 ? 1 : 0);
-
+        }
         return result;
     }
 
@@ -464,20 +463,20 @@ public class StreamParser extends Config {
 
         String size;
 
-        if (attr.size() > 1000000)
+        if (attr.size() > 1000000) {
             size = String.format("%.2f MB", (double) attr.size() / (double) 1000000);
-        else if (attr.size() > 1000)
+        }else if (attr.size() > 1000) {
             size = String.format("%.2f kB", (double) attr.size() / (double) 1000);
-        else
+        }else{
             size = String.format("%.2f Bytes", (double) attr.size());
+        }
 
-
-        for (Integer value : table.getPIDmap().values())
+        for (Integer value : table.getPIDmap().values()) {
             packets += value;
-
-        for (Integer value : table.getErrorMap().values())
+        }
+        for (Integer value : table.getErrorMap().values()) {
             errors += value;
-
+        }
         Map programs = new HashMap<Integer, String>();
         programs.put(2112,"Markiza");
         programs.put(2564,"JOJ");

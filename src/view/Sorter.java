@@ -9,8 +9,9 @@ public class Sorter {
     public <K, V> HashMap<V, K> reverse(Map<K, V> map) {
         HashMap<V, K> rev = new HashMap<V, K>();
 
-        for (Map.Entry<K, V> entry : map.entrySet())
+        for (Map.Entry<K, V> entry : map.entrySet()) {
             rev.put(entry.getValue(), entry.getKey());
+        }
         return rev;
     }
 
@@ -21,8 +22,9 @@ public class Sorter {
 
         Map<K, V> result = new LinkedHashMap<>();
 
-        for (Integer key : keys)
+        for (Integer key : keys) {
             result.put((K) key, map.get(key));
+        }
         return result;
     }
 
@@ -30,9 +32,9 @@ public class Sorter {
     public List<Integer> sortPIDs(Map<Integer, Integer> copyPIDs) {
         List<Integer> unsorted = new ArrayList<Integer>();
 
-        for (Map.Entry<Integer, Integer> entry : copyPIDs.entrySet())
+        for (Map.Entry<Integer, Integer> entry : copyPIDs.entrySet()) {
             unsorted.add(entry.getKey());
-
+        }
         Collections.sort(unsorted);
 
         return unsorted;

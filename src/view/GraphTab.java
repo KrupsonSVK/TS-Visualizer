@@ -38,9 +38,9 @@ public class GraphTab {
             final XYChart.Series<Number, Number> series = new XYChart.Series<>();
             series.setName("PID: " + ("0x" + Integer.toHexString(pid.getKey()) + " (" + pid.getKey() + ")"));
 
-            for (int i = 1; i <= 12; i += 1)
+            for (int i = 1; i <= 12; i += 1) {
                 series.getData().add(new XYChart.Data(i, (Math.random() * (pid.getKey()) + 1)));
-
+            }
             stackedAreaChart.getData().addAll(series);
         }
 

@@ -18,4 +18,5 @@ public interface Drawer {
     void setOldTranslateX(double oldTranslateX);
     void setOldSceneX(double oldSceneX);
     void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines);
+    double  getLookingGlassMoveCoeff();
 }

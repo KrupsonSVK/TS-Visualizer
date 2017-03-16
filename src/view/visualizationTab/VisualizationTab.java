@@ -23,7 +23,7 @@ import java.util.*;
 public class VisualizationTab extends Window{
 
     public Tab tab;
-    private Stream stream;
+    Stream stream;
     private Sorter sorter;
     private Config config;
 
@@ -35,7 +35,7 @@ public class VisualizationTab extends Window{
     //private static final int mouseSensitivity = 80;
 
     private PacketPane packetPane;
-    BarPane barPane;
+    private BarPane barPane;
     private LegendPane legendPane;
 
     private EventHandler<ActionEvent> groupByCheckBoxEvent, programComboBoxEvent, zoomerEvent;
@@ -53,8 +53,6 @@ public class VisualizationTab extends Window{
     final static double barScrollPaneHeight = windowHeigth * barScrollPaneHeigthRatio;
     final static double legendScrollPaneHeight = windowHeigth * legendScrollPaneHeightRatio;;
     final static double barHeight = windowHeigth * barScrollPaneHeigthRatio;
-
-    //public double oldSceneX, oldTranslateX, oldPacketSceneX, oldPacketTranslateX, xPos;
 
 
     public VisualizationTab() {
@@ -75,13 +73,12 @@ public class VisualizationTab extends Window{
 
     public void visualizePackets(Stream stream) {
 
-        // oldSceneX = oldTranslateX =  oldPacketSceneX = oldPacketTranslateX =  xPos = 0;
-
         this.stream = stream;
 
         packetPane.setLegendPane(legendPane);
         packetPane.setBarPane(barPane);
         legendPane.setPacketPane(packetPane);
+        legendPane.setBarPane(barPane);
         barPane.setPacketPane(packetPane);
         barPane.setLegendPane(legendPane);
 
@@ -112,6 +109,7 @@ public class VisualizationTab extends Window{
 
         tab.setContent(mainVBox);
     }
+
 
 
     private HBox createComboCheckBoxBar(Stream stream) {
@@ -145,8 +143,9 @@ public class VisualizationTab extends Window{
         comboBox.getItems().add("All");
         comboBox.getSelectionModel().selectFirst();
 
-        for (Object entry : stream.getPrograms().values())
+        for (Object entry : stream.getPrograms().values()) {
             comboBox.getItems().add(entry.toString());
+        }
         return comboBox;
     }
 
@@ -155,8 +154,6 @@ public class VisualizationTab extends Window{
         double end = start + scene.getWidth();
         return packetPosition >= start && packetPosition <= end;
     }
-
-
 
 
     private void addListenersAndHandlers() {
@@ -182,6 +179,5 @@ public class VisualizationTab extends Window{
                 packetPane.scrollPane.setScaleX( 1 + ((new_val.doubleValue()-50) / 50));
                 packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));            }
         });
-}
-
+    }
 }

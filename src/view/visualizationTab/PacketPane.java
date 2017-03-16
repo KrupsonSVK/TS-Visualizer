@@ -31,6 +31,7 @@ public class PacketPane extends VisualizationTab implements Drawer{
     Canvas canvas;
     private ArrayList<Image> images;
     private LegendPane legendPane;
+    private BarPane barPane;
 
     private double oldSceneX, oldTranslateX, xPos;
     private ArrayList<TSpacket> packets;
@@ -141,7 +142,8 @@ public class PacketPane extends VisualizationTab implements Drawer{
                 xPos = 0;
             }
             drawCanvas(stream, packets, sortedPIDs, xPos);
-            legendPane.setXpos(xPos/legendPaneMoveCoeff);
+            barPane.rectangle.setX(xPos / getLookingGlassMoveCoeff());
+            legendPane.setXpos(xPos / legendPaneMoveCoeff);
             legendPane.drawCanvas(stream, packets, sortedPIDs, xPos/legendPaneMoveCoeff);
 
             updateX(mouseEvent);
@@ -219,6 +221,10 @@ public class PacketPane extends VisualizationTab implements Drawer{
         return false;
     }
 
+    @Override
+    public double getLookingGlassMoveCoeff() {
+        return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
+    }
 
     @Override
     public void updateX(MouseEvent mouseEvent) {
