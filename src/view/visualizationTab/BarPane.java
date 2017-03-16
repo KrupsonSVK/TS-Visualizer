@@ -24,22 +24,23 @@ import java.util.List;
 public class BarPane extends VisualizationTab implements Drawer{
 
     private Config config;
-    ScrollPane scrollPane;
     private Scene scene;
+
+    ScrollPane scrollPane;
     Rectangle rectangle;
-    private ArrayList<TSpacket> packets;
+    private ContextMenu contextMenu;
+
     private PacketPane packetPane;
     private LegendPane legendPane;
 
     private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler, lookingGlassOnMouseDraggedEventHandler;
 
-    private double offset = 0;
-    private ContextMenu contextMenu;
+    private Stream stream;
+    private ArrayList<TSpacket> packets;
+    private List sortedPIDs;
 
     private double oldSceneX, oldTranslateX, xPos;
-    private List<Integer> sortedPIDs;
-    private Stream stream;
-    private int lines;
+
 
     public BarPane(Scene scene, Config config){
         this.scene = scene;
@@ -54,7 +55,6 @@ public class BarPane extends VisualizationTab implements Drawer{
         this.packets = packets;
         this.stream = stream;
         this.sortedPIDs = sortedPIDs;
-        this.lines = lines;
 
         contextMenu = createContextMenu(sortedPIDs);
 
@@ -71,7 +71,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
     @Override
     public double getLookingGlassMoveCoeff() {
-            return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
+        return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
     }
 
 
@@ -109,15 +109,16 @@ public class BarPane extends VisualizationTab implements Drawer{
         scrollPane.setContent(barPane);
     }
 
+
     private double getLookingGlassWidth() {
-        return miniPacketImageSize / (1- scene.getWidth() * stream.getPackets().size());
+        return (scene.getWidth() * scene.getWidth()) / (stream.getPackets().size() * miniPacketImageSize);
     }
 
 
     private Image drawPacketsInBar(GraphicsContext gcb, Canvas barCanvas, ArrayList<TSpacket> packets, double width, double height) {
 
         double increment = width / packets.size();
-        int widthOfBar = (int) increment == 0 ? 1 : (int) increment; //ak je jeden paket na liste uzsi ako 1px
+        int widthOfBar = (int) increment == 0 ? 1 : (int) increment; //if one packet is narrower than 1px
 
         double xPos = 0;
         for(TSpacket packet : packets){
@@ -146,8 +147,8 @@ public class BarPane extends VisualizationTab implements Drawer{
         rectangle.setArcHeight(arcSize);
         rectangle.setArcWidth(arcSize);
         rectangle.setFill(Color.rgb(160,230,250,0.3));
-        rectangle.setStroke(Color.rgb(70,70,70));
-        rectangle.setStrokeWidth(4);
+        rectangle.setStroke(Color.rgb(90,90,90));
+        rectangle.setStrokeWidth(2.5);
 
         return rectangle;
     }
@@ -167,14 +168,16 @@ public class BarPane extends VisualizationTab implements Drawer{
         };
 
         lookingGlassOnMouseDraggedEventHandler = mouseEvent -> {
-            xPos = mouseEvent.getSceneX();
-            double translate = translate(mouseEvent.getSceneX());
-            //xPos += translate;
-            if (xPos >= 0 && xPos < scene.getWidth()) {
-                ((Rectangle) (mouseEvent.getSource())).setTranslateX(translate);
-                packetPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
-                legendPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() );
-            }
+
+            xPos = stayInRange(mouseEvent.getSceneX());
+
+            ((Rectangle) (mouseEvent.getSource())).setX(xPos);
+
+            packetPane.setXpos(-xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+            packetPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+
+            legendPane.setXpos(-xPos * getLookingGlassMoveCoeff());
+            legendPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() );
         };
 
         scrollPane.setOnMouseClicked((MouseEvent mouseEvent) -> {
@@ -191,10 +194,21 @@ public class BarPane extends VisualizationTab implements Drawer{
         rectangle.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
     }
 
+
+    public double stayInRange(double xPos) {
+        if (xPos < 0) {
+            return 0;
+        }
+        if (xPos > scene.getWidth()) {
+            return scene.getWidth();
+        }
+        return xPos;
+    }
+
     @Override
     public void updateX(MouseEvent mouseEvent) {
         oldSceneX = mouseEvent.getSceneX();
-        oldTranslateX = ((Node) mouseEvent.getSource()).getTranslateX();
+        oldTranslateX = ((Rectangle) mouseEvent.getSource()).getX();
     }
 
     @Override
@@ -205,16 +219,6 @@ public class BarPane extends VisualizationTab implements Drawer{
     @Override
     public void setXpos(double xpos) {
         this.xPos = xpos;
-    }
-
-    @Override
-    public void setOldTranslateX(double oldTranslateX) {
-        this.oldTranslateX= oldTranslateX;
-    }
-
-    @Override
-    public void setOldSceneX(double oldSceneX) {
-        this.oldSceneX = oldSceneX;
     }
 
     public void setPacketPane(PacketPane packetPane) {

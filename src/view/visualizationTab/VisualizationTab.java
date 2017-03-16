@@ -111,7 +111,6 @@ public class VisualizationTab extends Window{
     }
 
 
-
     private HBox createComboCheckBoxBar(Stream stream) {
 
         ComboBox<String> filterComboBox = createFilterComboBox(stream);

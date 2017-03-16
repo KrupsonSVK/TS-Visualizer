@@ -1,8 +1,11 @@
 package app;
 
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import model.Stream;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class Config {
@@ -52,6 +55,7 @@ public class Config {
     public static final int netSyncPid = 0x15;
     public static final int DITpid = 0x1E;
     public static final int SITpid = 0x1F;
+    public static final int PMTpid = 0xFF;
 
     public static final int PAStableID = 0x00;
     public static final int CAStableID = 0x01;
@@ -73,6 +77,41 @@ public class Config {
     public static final int intBitLength = 32;
     public static final int byteBitLength = 8;
 
+    public final Map images;
+    public static final String resourcesPath = "/app/resources/";
+
+
+    public Config(){
+        images = new ImageHashMap<Integer,Image>(new Image(getClass().getResourceAsStream(resourcesPath + "grey.png"))){
+            {
+                put(PATpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(PATpid))));
+                put(CATpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(CATpid))));
+                put(TDSTpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(TDSTpid))));
+                put(NIT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(NIT_STpid))));
+                put(SDT_BAT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(SDT_BAT_STpid))));
+                put(EIT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(EIT_STpid))));
+                put(RST_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(RST_STpid))));
+                put(TDT_TOT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(TDT_TOT_STpid))));
+                put(netSyncPid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(netSyncPid))));
+                put(DITpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(DITpid))));
+                put(SITpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(SITpid))));
+                put(PMTpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(PMTpid))));
+            }
+        };
+    }
+
+
+    public class ImageHashMap<K,V> extends HashMap<K,V> {
+        protected V defaultValue;
+        public ImageHashMap(V defaultValue) {
+            this.defaultValue = defaultValue;
+        }
+        @Override
+        public V get(Object k) {
+            return containsKey(k) ? super.get(k) : defaultValue;
+        }
+    }
+
 
     public Color getPacketColor(int type){
         switch(type){
@@ -87,9 +126,11 @@ public class Config {
             case netSyncPid : return Color.VIOLET;
             case DITpid : return Color.PINK;
             case SITpid : return Color.DARKBLUE;
-            default: return Color.GRAY;
+            case PMTpid : return Color.DARKBLUE;
+            default: return Color.GREY;
         }
     }
+
 
     public String getPacketImageName(int type){
         switch(type){
@@ -104,9 +145,11 @@ public class Config {
             case netSyncPid : return "violet.png";
             case DITpid : return "pink.png";
             case SITpid : return "darkblue.png";
-            default: return "gray.png";
+            case PMTpid : return "black.png";
+            default: return "grey.png";
         }
     }
+
 
     public String getPacketImageName(Color color) {
         if (color == Color.RED) return "red.png";
@@ -120,8 +163,9 @@ public class Config {
         if (color == Color.VIOLET) return "violet.png";
         if (color == Color.PINK) return "pink.png";
         if (color == Color.DARKBLUE) return "darkblue.png";
-        return "gray.png";
+        return "grey.png";
     }
+
 
     public String getPacketName(int pid) {
         switch(pid){
@@ -136,9 +180,11 @@ public class Config {
             case netSyncPid : return "NetSync";
             case DITpid : return "DIT";
             case SITpid : return "SIT";
+            case PMTpid : return "PMT";
             default: return "PES";
         }
     }
+
 
     public String getProgramName(Stream stream, int pid) {
         Map map = stream.getPrograms();
@@ -146,9 +192,11 @@ public class Config {
         return obj == null ? "" : obj.toString();
     }
 
+
     public boolean isPSI(int pid) {
         return getPacketName(pid) != "PES";
     }
+
 
     public static final String userGuideText = "First choose a file to analyse by clicking \"Select file..\" button or drag'n'drop a file to the window." +
             "An error can occure if the file you choose is invalid, unaccessible or does not contain valid TS packets. " +

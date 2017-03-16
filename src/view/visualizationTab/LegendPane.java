@@ -9,7 +9,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import model.Stream;
 import model.TSpacket;
@@ -22,19 +21,21 @@ import java.util.Map;
 public class LegendPane extends VisualizationTab implements Drawer{
 
     private Config config;
+    private Scene scene;
+
     private Pane pane;
     ScrollPane scrollPane;
-    private Scene scene;
     private Canvas canvas;
+
     private Canvas labelCanvas;
-    private  PacketPane packetPane;
+    private Pane labelPane;
+    ScrollPane labelScrollPane;
+
+    private PacketPane packetPane;
     private BarPane barPane;
 
-    ScrollPane labelScrollPane;
-    private double xpos;
-
     private double oldSceneX, oldTranslateX, xPos;
-    private Pane labelPane;
+
     private static final double labelWidth = 135;
     private static final double fontSize = 8.5;
 
@@ -48,6 +49,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
     public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines) {
 
         oldSceneX = oldTranslateX =  xPos = 0;
+        this.stream = stream;
 
         pane = new Pane();
         pane.setMaxSize(scene.getWidth(),scene.getHeight());
@@ -89,8 +91,10 @@ public class LegendPane extends VisualizationTab implements Drawer{
         GraphicsContext graphicsContextLegendCanvas = canvas.getGraphicsContext2D();
 
         graphicsContextLegendCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        graphicsContextLegendCanvas.setFill(Color.WHITE);
+        graphicsContextLegendCanvas.setFill(Color.rgb(240,240,240));
         graphicsContextLegendCanvas.fillRect(0,0, canvas.getWidth(), canvas.getHeight());
+        graphicsContextLegendCanvas.setFill(Color.WHITE);
+        graphicsContextLegendCanvas.fillRect(0,0, getLegendScopeLength(), canvas.getHeight());
 
         int index = 0;
         for (TSpacket packet : packets) {
@@ -100,7 +104,11 @@ public class LegendPane extends VisualizationTab implements Drawer{
             }
             index++;
         }
-        // return legendCanvas;
+    }
+
+
+    private double getLegendScopeLength() {
+        return ( scene.getWidth() / packetImageWidth * miniPacketImageSize );
     }
 
 
@@ -163,15 +171,18 @@ public class LegendPane extends VisualizationTab implements Drawer{
         });
 
         pane.setOnMouseDragged(mouseEvent -> {
-            double translate = translate(mouseEvent.getSceneX());
-            xPos += translate;
-            if(xPos > 0) {
-                xPos = 0;
-            }
+
+            xPos += translate(mouseEvent.getSceneX());
+            xPos = stayInRange(xPos);
+
             drawCanvas(stream, packets,sortedPIDs, xPos);
-            barPane.rectangle.setX(xPos / getLookingGlassMoveCoeff() / legendPaneMoveCoeff);
+
             packetPane.setXpos(xPos*legendPaneMoveCoeff);
             packetPane.drawCanvas(stream, packets,sortedPIDs, xPos * legendPaneMoveCoeff);
+
+            barPane.setXpos(-xPos / getLookingGlassMoveCoeff());
+            barPane.rectangle.setX(-xPos / getLookingGlassMoveCoeff());
+
             updateX(mouseEvent);
         });
     }
@@ -191,6 +202,14 @@ public class LegendPane extends VisualizationTab implements Drawer{
     }
 
     @Override
+    public double stayInRange(double xPos) {
+        if (xPos > 0) {
+            return 0;
+        }
+        return xPos;
+    }
+
+    @Override
     public void updateX(MouseEvent mouseEvent) {
         oldSceneX = mouseEvent.getSceneX();
         oldTranslateX = ((Node) mouseEvent.getSource()).getTranslateX();
@@ -202,18 +221,8 @@ public class LegendPane extends VisualizationTab implements Drawer{
     }
 
     @Override
-    public void setXpos(double xpos) {
-        this.xpos = xpos;
-    }
-
-    @Override
-    public void setOldTranslateX(double oldTranslateX) {
-        this.oldTranslateX= oldTranslateX;
-    }
-
-    @Override
-    public void setOldSceneX(double oldSceneX) {
-        this.oldSceneX = oldSceneX;
+    public void setXpos(double xPos) {
+        this.xPos = xPos;
     }
 
     public void setPacketPane(PacketPane packetPane) {

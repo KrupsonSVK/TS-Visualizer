@@ -17,6 +17,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,18 +27,21 @@ public class PacketPane extends VisualizationTab implements Drawer{
 
     private Tooltip tooltip;
     private Config config;
+
+    private Scene scene;
     Pane pane;
     ScrollPane scrollPane;
-    private Scene scene;
     Canvas canvas;
-    private ArrayList<Image> images;
+
     private LegendPane legendPane;
     private BarPane barPane;
 
-    private double oldSceneX, oldTranslateX, xPos;
+    private ArrayList<Image> images;
     private ArrayList<TSpacket> packets;
     private List<Integer> sortedPIDs;
     private List<Rectangle> rectangles;
+
+    private double oldSceneX, oldTranslateX, xPos;
 
 
     public PacketPane(Scene scene, Config config) {
@@ -51,6 +56,7 @@ public class PacketPane extends VisualizationTab implements Drawer{
 
         oldSceneX = oldTranslateX =  xPos = 0;
 
+        this.stream = stream;
         this.packets = packets;
         this.sortedPIDs = sortedPIDs;
 
@@ -100,7 +106,8 @@ public class PacketPane extends VisualizationTab implements Drawer{
         xPos -= packetImageHeight / 2;
         yPos *= packetImageHeight;
 
-        javafx.scene.image.Image original = new javafx.scene.image.Image(getClass().getResourceAsStream("/app/resources/" + config.getPacketImageName(type))); //TODO toto musia byt array of finals
+        javafx.scene.image.Image original = (Image) config.images.get(pid); //TODO toto musia byt array of finals
+
         graphicsContext.drawImage(original, xPos, yPos, packetImageWidth, packetImageHeight);
         graphicsContext.setFont(new Font(fontSize));
         graphicsContext.strokeText("PID: " + pid + "\n" + config.getPacketName(pid) + "\n" + name, xPos + 5, yPos + 30);
@@ -109,13 +116,13 @@ public class PacketPane extends VisualizationTab implements Drawer{
         rectangle.setFill(Paint.valueOf("transparent"));
 
         rectangle.setOnMouseClicked(mouseEvent -> {
-            //hideTooltip();
             tooltip.setText(getPacketInfo(pid));
             tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + offset, mouseEvent.getScreenY());}
         );
         pane.getChildren().add(rectangle);
         rectangle.toFront();
     }
+
 
     private void hideTooltip() {
         if(tooltip.isShowing()) {
@@ -136,15 +143,17 @@ public class PacketPane extends VisualizationTab implements Drawer{
 
         pane.setOnMouseDragged( mouseEvent -> {
             hideTooltip();
-            double translate = translate(mouseEvent.getSceneX());
-            xPos += translate;
-            if(xPos > 0) {
-                xPos = 0;
-            }
+
+            xPos += translate(mouseEvent.getSceneX());
+            xPos = stayInRange(xPos);
+
             drawCanvas(stream, packets, sortedPIDs, xPos);
-            barPane.rectangle.setX(xPos / getLookingGlassMoveCoeff());
+
             legendPane.setXpos(xPos / legendPaneMoveCoeff);
             legendPane.drawCanvas(stream, packets, sortedPIDs, xPos/legendPaneMoveCoeff);
+
+            barPane.setXpos(-xPos / legendPaneMoveCoeff / getLookingGlassMoveCoeff());
+            barPane.rectangle.setX(-xPos / legendPaneMoveCoeff / getLookingGlassMoveCoeff());
 
             updateX(mouseEvent);
         });
@@ -233,6 +242,14 @@ public class PacketPane extends VisualizationTab implements Drawer{
     }
 
     @Override
+    public double stayInRange(double xPos) {
+        if (xPos > 0) {
+            return 0;
+        }
+        return xPos;
+    }
+
+    @Override
     public double translate(double sceneX) {
         return oldTranslateX + sceneX - oldSceneX;
     }
@@ -240,16 +257,6 @@ public class PacketPane extends VisualizationTab implements Drawer{
     @Override
     public void setXpos(double xPos) {
         this.xPos = xPos;
-    }
-
-    @Override
-    public void setOldTranslateX(double oldTranslateX) {
-        this.oldTranslateX= oldTranslateX;
-    }
-
-    @Override
-    public void setOldSceneX(double oldSceneX) {
-        this.oldSceneX = oldSceneX;
     }
 
 

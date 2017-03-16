@@ -207,25 +207,32 @@ public class Window {
         aboutStage.show();
     }
 
+
     public Task getTask() {
         return task;
     }
+
 
     public void showUserGuide() {
         if(userGuideStage.getModality() != Modality.WINDOW_MODAL) {
             userGuideStage.initModality(Modality.WINDOW_MODAL);
         }
         userGuideStage.setTitle("User userGuide");
-        Text text = new Text(userGuideText);
-        text.setWrappingWidth(200);
-        //text.maxWidth(100);
+        TextArea textArea = new TextArea(userGuideText);
+        textArea.setWrapText(true);
+        textArea.setMinHeight(370);
+        textArea.setEditable(false);
+
         Label label = new Label("User userGuide to using application TS Visualizer\n");
         label.setFont(new Font(12));
-        VBox vBox = new VBox();
+        //label.setPadding(new Insets(20,10,10,10));
+
+
+        VBox vBox = new VBox(label,textArea);
+        vBox.setMargin(label,new Insets(20,10,10,10));
+        vBox.setMargin(textArea,new Insets(10,10,10,10));
         vBox.setAlignment(Pos.CENTER);
-       // vBox.setPadding(new Insets(5));
-        vBox.getChildren().addAll(label,text);
-        userGuideStage.setScene(new Scene(vBox, 400, 300));
+        userGuideStage.setScene(new Scene(vBox, 600, 450));
         userGuideStage.show();
     }
 }
