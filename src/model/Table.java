@@ -4,21 +4,31 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static app.Config.nil;
+
 public class Table {
 
     private HashMap<Integer, Integer> PIDmap;
     private HashMap<Integer, Integer> errorMap;
     private ArrayList<TSpacket> packets;
-    private Map PATmap;
-    private int PATmapVersion = -1;
+    private Map PATmap, PMTmap;
+    private int PATmapVersion = nil;
+    private int PMTmapVersion = nil;
+    private Map streams;
 
-    public Table() {}
+    public Table() {
+        this.streams = new HashMap();
+    }
 
-    public Table(HashMap<Integer, Integer> PIDmap, HashMap<Integer, Integer> errorMap, ArrayList<TSpacket> packets) {
+    public Table(HashMap<Integer, Integer> PIDmap, HashMap<Integer, Integer> errorMap, ArrayList<TSpacket> packets, Map streams, Map PATmap) {
         this.PIDmap = PIDmap;
         this.errorMap = errorMap;
         this.packets = packets;
+        this.streams = streams;
+        this.PATmap = PATmap;
     }
+
+
 
 
     public HashMap<Integer, Integer> getPIDmap() {
@@ -55,6 +65,23 @@ public class Table {
             this.PATmap = PATmap;
             PATmapVersion = versionNum;
         }
+    }
+
+    public void updateStreamPMT(HashMap PMTmap, byte versionNum) {
+        if(versionNum > PMTmapVersion) {
+            this.PMTmap = PMTmap;
+            PMTmapVersion = versionNum;
+        }
+    }
+
+    public void updateStreamCodes(Integer PID, Integer streamID) {
+        if(this.streams.get(PID) == null) {
+            this.streams.put(PID,streamID);
+        }
+    }
+
+    public Map getStreams() {
+        return streams;
     }
 }
 

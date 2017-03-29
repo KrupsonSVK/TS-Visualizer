@@ -46,7 +46,7 @@ public class AdaptationFieldHeader {
     public byte getOPCRF() {
         return OF;
     }
-    public byte getSCF() {
+    public byte getSPF() {
         return SPF;
     }
     public byte getTPDF() {

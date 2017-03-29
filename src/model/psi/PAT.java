@@ -17,12 +17,12 @@ public class PAT extends PSI {
     private long CRC;
 
     public PAT(short tableID, byte SSI, int sectionLength) {
-        super(tableID, SSI, sectionLength);
+        super(tableID, SSI, sectionLength,null);
     }
 
 
     public PAT(short tableID, byte ssi, int sectionLength, int tsID, short versionNum, byte CNI, int sectionNum, int lastSectionNum, Map PATmap, long CRC) {
-        super(tableID, ssi, sectionLength);
+        super(tableID, ssi, sectionLength,null);
         this.tsID= tsID;
         this.versionNum = versionNum;
         this.CNI = CNI;

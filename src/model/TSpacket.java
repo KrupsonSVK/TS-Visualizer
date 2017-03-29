@@ -11,25 +11,27 @@ public class TSpacket {
     private final byte continuityCounter;
     private AdaptationFieldHeader adaptationFieldHeader;
     private Payload payload;
+    private byte[] data;
 
-    public TSpacket(byte transportErrorIndicator, byte payloadStartIndicator, byte transportPriority, short PID, byte transportScramblingControl, byte adaptationFieldControl, byte continuityCounter, short adaptationFieldLength) {
-        this.transportErrorIndicator = (byte) transportErrorIndicator;
-        this.payloadStartIndicator = (byte) payloadStartIndicator;
-        this.transportPriority = (byte) transportPriority;
-        this.PID = (short) PID;
-        this.transportScramblingControl = (byte) transportScramblingControl;
-        this.adaptationFieldControl = (byte) adaptationFieldControl;
-        this.continuityCounter = (byte) continuityCounter;
+    public TSpacket(byte transportErrorIndicator, byte payloadStartIndicator, byte transportPriority, short PID, byte transportScramblingControl, byte adaptationFieldControl, byte continuityCounter, short adaptationFieldLength, byte[] data) {
+        this.transportErrorIndicator =  transportErrorIndicator;
+        this.payloadStartIndicator =  payloadStartIndicator;
+        this.transportPriority = transportPriority;
+        this.PID = PID;
+        this.transportScramblingControl =  transportScramblingControl;
+        this.adaptationFieldControl =  adaptationFieldControl;
+        this.continuityCounter = continuityCounter;
+        this.data = data;
     }
 
     public char getTransportErrorIndicator() {
         return (char) transportErrorIndicator;
     }
-    public char getPayloadStartIndicator() {
-        return (char) payloadStartIndicator;
+    public int getPayloadStartIndicator() {
+        return  payloadStartIndicator;
     }
-    public char getTransportPriority() {
-        return (char) transportPriority;
+    public int getTransportPriority() {
+        return transportPriority;
     }
     public int getPID() {
         return PID;
@@ -37,8 +39,8 @@ public class TSpacket {
     public int getTransportScramblingControl() {
         return transportScramblingControl;
     }
-    public int getAdaptationFieldControl() {
-        return adaptationFieldControl;
+    public Integer getAdaptationFieldControl() {
+        return Integer.valueOf(adaptationFieldControl);
     }
     public int getContinuityCounter() {
         return continuityCounter;
@@ -49,6 +51,9 @@ public class TSpacket {
     public Payload getPayload() {
         return payload;
     }
+    public byte[] getData() {
+        return data;
+    }
 
     public void setAdaptationFieldHeader(AdaptationFieldHeader adaptationFieldHeader) {
         this.adaptationFieldHeader = adaptationFieldHeader;
@@ -56,6 +61,7 @@ public class TSpacket {
     public void setPayload(Payload payload) {
         this.payload = payload;
     }
+
 }
 
 

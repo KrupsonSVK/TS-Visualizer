@@ -16,7 +16,7 @@ public class PMT_ extends PSI{
     private long CRC;
 
     public PMT_(short tableID, byte SSI, int sectionLength) {
-        super(tableID, SSI, sectionLength);
+        super(tableID, SSI, sectionLength, null);
     }
 
     public PMT_() {
@@ -24,7 +24,7 @@ public class PMT_ extends PSI{
     }
 
     public PMT_(short tableID, byte ssi, int sectionLength, int programNum, byte versionNum, byte currentNextIndicator, byte sectionNum, byte lastSectionNum, short pcr_pid, short programInfoLength, byte[] descriptors, long crc) {
-        super(tableID, ssi, sectionLength);
+        super(tableID, ssi, sectionLength, null);
         this.programNum = programNum;
         this.versionNum = versionNum;
         this.currentNextIndicator = currentNextIndicator;

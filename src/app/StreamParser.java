@@ -4,6 +4,7 @@ import model.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -44,7 +45,12 @@ public class StreamParser extends Config {
 
                 for (int i = 0; i < buffer.length; i += tsPacketSize) {
 
-                    if(i == 0) {
+                    if(!isPATanalyzed && i>=buffer.length - 2*tsPacketSize) { // if we are almost at the and there is no PAT, pretend like there is
+                        isPATanalyzed = true;
+                        i = firstPosition;
+                    }
+
+                    if (i == 0) {
                         i = seekBeginning(buffer, i);
 
                         if (i == nil) {
@@ -63,7 +69,7 @@ public class StreamParser extends Config {
                         for (int index = 0; index < tsHeaderBitLength; index++) {
                             binaryHeader[tsHeaderBitLength - index - 1] = getBit(header, index);
                         }
-                        TSpacket analyzedHeader = analyzeHeader(binaryHeader);
+                        TSpacket analyzedHeader = analyzeHeader(binaryHeader,packet);
 
                         if (isAdaptationField(analyzedHeader)) { //
 
@@ -85,24 +91,23 @@ public class StreamParser extends Config {
 //                                TSpacket.AdaptationFieldOptionalFields analyzedAdaptationFieldOptionalFields = analyzeAdaptationFieldOptionalFields(analyzedAdaptationFieldHeader, binaryAdaptationFieldOptional);
                             }
                         }
-
-
-                        if (isPATanalyzed){
-                            if (isPayloadPSI(analyzedHeader)) {
-                                if (analyzedHeader.getPID() == PATpid) {
-                                    analyzePAT(analyzedHeader, packet);
-                                    i = firstPosition;
-                                    isPATanalyzed = true;
+                        if(isPayload(analyzedHeader.getAdaptationFieldControl())) {
+                            if (!isPATanalyzed) {
+                                if (isPayloadPSI(analyzedHeader)) {
+                                    if (analyzedHeader.getPID() == PATpid) {
+                                        analyzePAT(analyzedHeader, packet);
+                                        i = firstPosition;
+                                        isPATanalyzed = true;
+                                    }
                                 }
+                                continue;
                             }
-                            continue;
-                        }
 
-                        if ( isPayloadPSI(analyzedHeader)) {
-                            analyzedHeader.setPayload(analyzePSI(analyzedHeader, packet));
-                        }
-                        else {
-                            analyzedHeader.setPayload(analyzePES(analyzedHeader, packet));
+                            if (isPayloadPSI(analyzedHeader)) {
+                                analyzedHeader.setPayload(analyzePSI(analyzedHeader, packet));
+                            } else {
+                                analyzedHeader.setPayload(analyzePES(analyzedHeader, packet));
+                            }
                         }
                         packets.add(analyzedHeader);
                         updateProgress(i, buffer.length);
@@ -114,15 +119,36 @@ public class StreamParser extends Config {
         };
     }
 
+
+    private boolean isPayload(Integer adaptationFieldControl) {
+        return adaptationFieldControl != 2;
+    }
+
+
     private PSI analyzePSI(TSpacket analyzedHeader, byte[] packet) {
         TSpacket analyzedPacket = analyzedHeader;
 
-        switch(analyzedHeader.getPID()){
-            case PATpid: return analyzePAT(analyzedHeader,packet);
-            case CATpid: return analyzeCAT(analyzedHeader,packet);
-            case TDSTpid: return analyzePMT(analyzedHeader,packet); //TODO toto je somarina
-            default: return null;
+        if (isPMT(analyzedHeader.getPID())) {
+            return analyzePMT(analyzedHeader, packet);
         }
+        switch (analyzedHeader.getPID()) {
+            case PATpid:
+                return analyzePAT(analyzedHeader, packet);
+            case CATpid:
+                return analyzeCAT(analyzedHeader, packet);
+            default:
+                return null;
+        }
+    }
+
+
+    private boolean isPMT(int pid) {
+        if(pid != PATpid) {
+            if (table.getPATmap().get(pid) != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -137,7 +163,7 @@ public class StreamParser extends Config {
         final int reserved = 2;
         int sectionLength = psiCommonFields.getSectionLength();
 
-        int[] PATFields = parsePATfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
+        int[] PATFields = parsePMTfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
         byte[] binaryPATFields = intToBinary(sectionLength*byteBitLength,sectionLength,PATFields);
 
         int tsID = binToInt(binaryPATFields, position=0, tsIDlength);
@@ -196,7 +222,7 @@ public class StreamParser extends Config {
     }
 
 
-    private int[] parsePATfields(byte[] packet, int pos, int length) {
+    private int[] parsePMTfields(byte[] packet, int pos, int length) {
 
         int position = pos;
         int[] bytePATfields = new int[length];
@@ -220,7 +246,7 @@ public class StreamParser extends Config {
         byte SSI = (byte) binToInt(binaryPacket, tableIDlength, tableIDlength+1);
         int sectionLength = binToInt(binaryPacket, tableIDlength+1+gap, tableIDlength+1+gap+sectionLengthLength);
 
-        return new PSI(tableID,SSI,sectionLength);
+        return new PSI(tableID,SSI,sectionLength,null);
     }
 
 
@@ -239,15 +265,13 @@ public class StreamParser extends Config {
     private PMT_ analyzePMT(TSpacket analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
-
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
-
         position += PSIcommonFieldsLength/byteBitLength;
 
         final int reserved = 2;
         int sectionLength = psiCommonFields.getSectionLength();
 
-        int[] PMTFields = parsePATfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
+        int[] PMTFields = parsePMTfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
         byte[] binaryPMTFields = intToBinary(sectionLength*byteBitLength,sectionLength,PMTFields);
 
         int programNum =  binToInt(binaryPMTFields, position=0, programNumberLength);
@@ -264,19 +288,20 @@ public class StreamParser extends Config {
         //TODO load N descriptors
 
 
-        Map PMTmap = new HashMap<Integer,Integer>();
-        int N = sectionLength*byteBitLength - mandatoryPATfields;
+        HashMap PMTmap = new HashMap<Integer,Integer>();
+        int N = sectionLength * byteBitLength - mandatoryPATfields;
 
-        for(int i = 0; i < N; i+=32) {
+        for(int i = 0; i < N; i+=40) {
             int streamType = binToInt(binaryPMTFields, position, position += streamTypeLength);
-            int elementaryPID = binToInt(binaryPMTFields, position, position += elementaryPIDlength);
-            int ESinfoLength = binToInt(binaryPMTFields, position, position += ESinfoLengthLength);
-            byte[] NloopDescriptors = new byte[ESinfoLength*byteBitLength];
-
+            int elementaryPID = binToInt(binaryPMTFields, position+=3, position += elementaryPIDlength);
+            int ESinfoLength = binToInt(binaryPMTFields, position+=6, position += ESinfoLengthLength-2);
+            byte[] NsloopDescriptors = new byte[ESinfoLength];
+            position += ESinfoLength;
             PMTmap.put(streamType, elementaryPID);
-        } long CRC = binToInt(binaryPMTFields, position, position+=CRClength);
+        }
+        long CRC = binToInt(binaryPMTFields, position, position+=CRClength);
 
-        this.table.updateStream(PMTmap,versionNum);
+        this.table.updateStreamPMT(PMTmap,versionNum);
 
         return new PMT_(
                 psiCommonFields.tableID(),
@@ -295,7 +320,67 @@ public class StreamParser extends Config {
 
 
     private PES analyzePES(TSpacket analyzedHeader, byte[] packet) {
-        return new PES();
+
+        int position = calculatePosition(analyzedHeader);
+
+        int PESlength = tsPacketSize - position;
+        int[] PESFields = parsePMTfields(packet, position, PESlength);
+        byte[] binaryPESFields = intToBinary(PESlength * byteBitLength, PESlength, PESFields);
+
+        int[] whole_packet = parsePMTfields(packet, 0, tsPacketSize);
+        byte[] binary_whole_packet = intToBinary(tsPacketSize * byteBitLength, tsPacketSize, whole_packet);
+
+        if (position < tsPacketSize - packetStartCodePrefixLength ) {
+            int pscp = binToInt(binaryPESFields, position, position += packetStartCodePrefixLength);
+
+            if (pscp == packetStartCodePrefix) {
+
+                byte streamID = (byte) binToInt(binaryPESFields, position, position += streamIDlength);
+                byte PESpacketLength = (byte) binToInt(binaryPESFields, position, position += streamIDlength);
+                byte PESscramblingControl = (byte) binToInt(binaryPESFields, position, position+1);
+                byte PESpriority = (byte) binToInt(binaryPESFields, position, position+1);
+                byte DataAlignmentIndicator = (byte) binToInt(binaryPESFields, position, position+1);
+                byte copyright = (byte) binToInt(binaryPESFields, position, position+1);
+                byte OriginalOrCopy = (byte) binToInt(binaryPESFields, position, position+1);
+                byte PTSdtsFlags = (byte) binToInt(binaryPESFields, position, position+1);
+                byte ESCRflag = (byte) binToInt(binaryPESFields, position, position+1);
+                byte ESrateFlag = (byte) binToInt(binaryPESFields, position, position+1);
+                byte DSMtrickModeFlag = (byte) binToInt(binaryPESFields, position, position+1);
+                byte AdditionalCopyInfoFlag = (byte) binToInt(binaryPESFields, position, position+1);
+                byte PEScrcFlag = (byte) binToInt(binaryPESFields, position, position+1);
+                byte PESextensionFlag = (byte) binToInt(binaryPESFields, position, position+1);
+                int PESheaderDataLength = (byte) binToInt(binaryPESFields, position, position+1);
+                PES.PESoptionalHeader optionalPESheader = analyzePESheader(binaryPESFields, position);
+                byte[] PESpacketData = null;
+                table.updateStreamCodes(analyzedHeader.getPID(), Integer.valueOf(streamID));
+
+                return new PES(
+                        streamID,
+                        PESpacketLength,
+                        PESscramblingControl,
+                        PESpriority,
+                        DataAlignmentIndicator,
+                        copyright,
+                        OriginalOrCopy,
+                        PTSdtsFlags,
+                        ESCRflag,
+                        ESrateFlag,
+                        DSMtrickModeFlag,
+                        AdditionalCopyInfoFlag,
+                        PEScrcFlag,
+                        PESextensionFlag,
+                        PESheaderDataLength,
+                        optionalPESheader,
+                        PESpacketData
+                        );
+            }
+        }
+        return new PES(binaryPESFields);
+    }
+
+
+    private PES.PESoptionalHeader analyzePESheader(byte[] binaryPMTFields, int position) {
+        return null;
     }
 
 
@@ -336,7 +421,7 @@ public class StreamParser extends Config {
     }
 
 
-    private TSpacket analyzeHeader(byte[] header) {
+    private TSpacket analyzeHeader(byte[] header, byte[] packet) {
 
         byte transportErrorIndicator = header[8];
         byte payloadStartIndicator = header[9];
@@ -347,7 +432,7 @@ public class StreamParser extends Config {
         byte continuityCounter = (byte) binToInt(header, 28, 32);
         short adaptationFieldLength =  0;
 
-        return new TSpacket(transportErrorIndicator, payloadStartIndicator, transportPriority, PID, tranportScramblingControl, adaptationFieldControl, continuityCounter, adaptationFieldLength);
+        return new TSpacket(transportErrorIndicator, payloadStartIndicator, transportPriority, PID, tranportScramblingControl, adaptationFieldControl, continuityCounter, adaptationFieldLength, packet);
     }
 
     private AdaptationFieldHeader analyzeAdaptationFieldHeader(byte[] adaptationFieldHeader) {
@@ -387,7 +472,7 @@ public class StreamParser extends Config {
         if (adaptationFieldHeader.getOPCRF() == 0x1) {
             OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 42);
         }
-        if (adaptationFieldHeader.getSCF() == 0x1){
+        if (adaptationFieldHeader.getSPF() == 0x1){
             spliceCountdown = (byte) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);
         }
         int offset = i;
@@ -428,12 +513,12 @@ public class StreamParser extends Config {
             } else {
                 PIDmap.put(packet.getPID(), PIDmap.get(packet.getPID()) + 1);
             }
-            if (packet.getTransportErrorIndicator() == '1') {
+            if (packet.getTransportErrorIndicator() == 1) {
                 ErrorMap.put(packet.getPID(), ErrorMap.get(packet.getPID()) + 1);
             }
         }
 
-        return new Table(PIDmap, ErrorMap, packets);
+        return new Table(PIDmap, ErrorMap, packets, table.getStreams(), table.getPATmap());
     }
 
 
@@ -498,8 +583,8 @@ public class StreamParser extends Config {
                 errors,
                 table.getPIDmap(),
                 table.getPackets(),
-                programs
-        );
+                programs,
+                table.getStreams());
     }
 
     public Task<Table> getTask() {

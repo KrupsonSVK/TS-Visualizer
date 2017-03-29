@@ -84,7 +84,8 @@ public class Controller {
                         try {
                             this.view.createTask(XML.read(file));
                         } catch (Exception error) {
-                            this.view.showAlertBox(errorTitle, String.valueOf(error.getStackTrace()));
+                            error.printStackTrace();
+                            this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
                         }
                     }
                 }
@@ -96,7 +97,8 @@ public class Controller {
                         try {
                             this.XML.save(this.stream, file);
                         } catch (Exception error) {
-                            this.view.showAlertBox(errorTitle, String.valueOf(error.getStackTrace()));
+                            error.printStackTrace();
+                            this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
                         }
                     }
                 }
@@ -118,7 +120,8 @@ public class Controller {
                             streamDescriptor = streamParser.analyzeStream(file, streamParser.getTask().getValue());
                             view.createTask(streamDescriptor);
                         } catch (IOException e) {
-                            view.showAlertBox(errorTitle, String.valueOf(e.getStackTrace()));
+                            e.printStackTrace();
+                            view.showAlertBox(errorTitle, String.valueOf(e.getMessage()));
                         }
                         visualizerThread = new Thread(view.getTask());
                         visualizerThread.start();
@@ -129,7 +132,8 @@ public class Controller {
 
             streamParser.getTask().setOnFailed(workerStateEvent -> {
                         view.progressWindow.getDialogStage().close();
-                        view.showAlertBox(errorTitle, String.valueOf(streamParser.getTask().getException().getStackTrace()) + streamParser.getTask().getException().getStackTrace());
+                        streamParser.getTask().getException().printStackTrace();
+                        view.showAlertBox(errorTitle, String.valueOf(streamParser.getTask().getException().getStackTrace()) + streamParser.getTask().getException().getMessage());
                     }
             );
 
@@ -140,8 +144,10 @@ public class Controller {
         fileHandler.getTask().setOnFailed(workerStateEvent ->
                 {
                     view.progressWindow.getDialogStage().close();
-                    fileHandler.getTask().setOnFailed(event ->
-                            view.showAlertBox(errorTitle, fileHandler.getTask().getException().getMessage()));
+                    fileHandler.getTask().setOnFailed(event -> {
+                                fileHandler.getTask().getException().printStackTrace();
+                        view.showAlertBox(errorTitle, fileHandler.getTask().getException().getMessage());
+                    });
                 }
         );
     }
@@ -153,6 +159,7 @@ public class Controller {
         try {
             fileHandler.createTask(file);
         } catch (IOException e) {
+            e.printStackTrace();
             view.showAlertBox(errorTitle, e.getMessage());
         }
 

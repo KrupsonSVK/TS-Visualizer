@@ -44,6 +44,7 @@ public class VisualizationTab extends Window{
     final static double packetImageWidth = 100;
     final static double packetImageHeight = 60;
     final static double miniPacketImageSize = 10;
+    final static double typeIconSize = 20;
     final static double legendPaneMoveCoeff = packetImageWidth / miniPacketImageSize;
     final static double packetScrollPaneHeightRatio = 0.54;
     final static double barScrollPaneHeigthRatio = 0.06;
@@ -63,7 +64,6 @@ public class VisualizationTab extends Window{
         tab = new Tab("Visualization");
         sorter = new Sorter();
         config = new Config();
-
 
         packetPane = new PacketPane(this.scene,config);
         barPane = new BarPane(this.scene,config);

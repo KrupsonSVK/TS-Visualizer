@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static app.Config.videoType;
+
 
 public class Stream {
 
@@ -23,9 +25,10 @@ public class Stream {
     private final HashMap PIDs;
     private final ArrayList packets;
     private final Map programs;
+    private final Map streams;
 
 
-    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, HashMap PIDs, ArrayList packets, Map programs) {
+    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, HashMap PIDs, ArrayList packets, Map programs, Map streams) {
         this.name = name;
         this.path = path;
         this.size = size;
@@ -41,6 +44,7 @@ public class Stream {
         this.PIDs = PIDs;
         this.packets = packets;
         this.programs = programs;
+        this.streams = streams;
     }
 
     public String getName() {
@@ -87,5 +91,12 @@ public class Stream {
     }
     public Map getPrograms() {
         return programs;
+    }
+
+    public int getPEScode(int pid) {
+        if (this.streams.get(pid) == null) {
+            return videoType;
+        }
+        return (int) this.streams.get(pid);
     }
 }

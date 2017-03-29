@@ -4,7 +4,6 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import model.Stream;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +43,10 @@ public class Config {
     public final static int elementaryPIDlength = 13;
     public final static int ESinfoLengthLength = 12;
 
+    public final static int packetStartCodePrefix = 0x000001;
+    public final static int packetStartCodePrefixLength = 24;
+    public final static int streamIDlength = 8;
+
     public static final int PATpid = 0x00;
     public static final int CATpid = 0x01;
     public static final int TDSTpid = 0x02;
@@ -77,12 +80,20 @@ public class Config {
     public static final int intBitLength = 32;
     public static final int byteBitLength = 8;
 
-    public final Map images;
-    public static final String resourcesPath = "/app/resources/";
+    public static final int PSItype = 0xFA;
+    public static final int videoType = 0xFB;
+    public static final int audioType = 0xFC;
+    public static final int CAStype = 0xFD;
+    public static final int PSMtype = 0xFE;
+
+    public final Map packetImages;
+    public final Map typeIcons;
+
+    public static final String resourcesPath = "/resources/";
 
 
     public Config(){
-        images = new ImageHashMap<Integer,Image>(new Image(getClass().getResourceAsStream(resourcesPath + "grey.png"))){
+        packetImages = new ImageHashMap<Integer,Image>(new Image(getClass().getResourceAsStream(resourcesPath + "grey.png"))){
             {
                 put(PATpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(PATpid))));
                 put(CATpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(CATpid))));
@@ -98,14 +109,51 @@ public class Config {
                 put(PMTpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(PMTpid))));
             }
         };
+
+        typeIcons = new ImageHashMap<Integer,Image>(new Image(getClass().getResourceAsStream(resourcesPath + "dvb.png"))){
+            {
+                put(PSItype, new Image(getClass().getResourceAsStream(resourcesPath + "psi.png")));
+                put(videoType, new Image(getClass().getResourceAsStream(resourcesPath + "video.png")));
+                put(audioType, new Image(getClass().getResourceAsStream(resourcesPath + "audio.png")));
+                put(CAStype, new Image(getClass().getResourceAsStream(resourcesPath + "cas.png")));
+                put(PSMtype, new Image(getClass().getResourceAsStream(resourcesPath + "map.png")));
+            }
+        };
+    }
+
+
+    public int getPEStype(int streamID){
+
+        if (streamID >= 11000000 && streamID <=11011111) {
+            return audioType;
+        }
+        if (streamID >= 11100000 && streamID <=11101111) {
+            return videoType;
+        }
+        if (streamID == 111110000 || streamID == 111110001){
+            return CAStype;
+        }
+        if (streamID == 101111100 || streamID == 111111111){
+            return PSMtype;
+        }
+        return 0;
+
+    }
+
+    public String getStreamDescription(int streamID) {
+        //TODO dorobit
+        return "ISO/IEC 13818-3 or ISO/IEC 11172-3 or ISO/IEC 13818-7\n" +
+                "or ISO/IEC 14496-3 audio stream number: " + (streamID << 4) ;
     }
 
 
     public class ImageHashMap<K,V> extends HashMap<K,V> {
         protected V defaultValue;
+
         public ImageHashMap(V defaultValue) {
             this.defaultValue = defaultValue;
         }
+
         @Override
         public V get(Object k) {
             return containsKey(k) ? super.get(k) : defaultValue;

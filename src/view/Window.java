@@ -92,7 +92,7 @@ public class Window {
 
         rootPane.setStyle(
                 "-fx-background-image: url('" +
-                        Main.class.getResource("/app/resources/dragndrop.png").toExternalForm() +
+                        Main.class.getResource("/resources/dragndrop.png").toExternalForm() +
                         "'); " +
                         "-fx-background-position: center center; " +
                         "-fx-background-repeat: stretch;"
