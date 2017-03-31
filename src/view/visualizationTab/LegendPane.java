@@ -1,6 +1,6 @@
 package view.visualizationTab;
 
-import app.Config;
+import model.Config;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -100,7 +100,9 @@ public class LegendPane extends VisualizationTab implements Drawer{
         for (TSpacket packet : packets) {
             if(isInViewport(scene, index * miniPacketImageSize,(-1) * xPos)) {
                 int pid = packet.getPID();
-                drawMiniPacket(graphicsContextLegendCanvas, pid,  xPos + index * miniPacketImageSize, sorted.indexOf(pid));
+                boolean isPayloadStart = packet.getPayload() != null ? packet.getPayload().hasPESheader() : false;
+                boolean isAdaptationField = packet.getAdaptationFieldHeader() != null;
+                drawMiniPacket(graphicsContextLegendCanvas, pid,  xPos + index * miniPacketImageSize, sorted.indexOf(pid),isAdaptationField,isPayloadStart);
             }
             index++;
         }
@@ -112,10 +114,34 @@ public class LegendPane extends VisualizationTab implements Drawer{
     }
 
 
-    private void drawMiniPacket(GraphicsContext graphicsContext, int type, double x, double y) {
+    private void drawMiniPacket(GraphicsContext graphicsContext, int type, double x, double y, boolean isAdaptationField, boolean isPayloadStart) {
         final int offset = 2;
-        graphicsContext.setFill(config.getPacketColor(type));
-        graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset); //x,y,height, width, archeigth, arcwidh
+
+        if (isAdaptationField && isPayloadStart){
+            graphicsContext.setFill(config.adaptationFieldColor);
+            graphicsContext.fillRect(x + offset + offset*0.75, y * miniPacketImageSize + offset + offset*0.75 , miniPacketImageSize-offset*1.5, miniPacketImageSize-offset*1.5);//x,y,height, width, archeigth, arcwidh
+            graphicsContext.setFill(config.payloadStartColor);
+            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
+            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.fillRect(x + 2*offset, y * miniPacketImageSize + 2*offset, miniPacketImageSize - 2*offset, miniPacketImageSize - 2*offset);
+        }
+        else if (isAdaptationField){
+            graphicsContext.setFill(config.adaptationFieldColor);
+            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
+            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.fillRect(x + offset*1.5, y * miniPacketImageSize + offset*1.5, miniPacketImageSize - 2*offset, miniPacketImageSize - 2*offset);
+
+        }
+        else if (isPayloadStart){
+            graphicsContext.setFill(config.payloadStartColor);
+            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
+            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.fillRect(x + offset*1.5, y * miniPacketImageSize + offset*1.5, miniPacketImageSize - 2*offset, miniPacketImageSize - 2*offset);
+        }
+        else {
+            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset, miniPacketImageSize - offset, miniPacketImageSize - offset);
+        }
     }
 
 

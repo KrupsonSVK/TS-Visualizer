@@ -10,14 +10,14 @@ public class PSI extends Payload {
     private int sectionLength;
 
     public PSI(short tableID, byte SSI, int sectionLength, byte[] data) {
-        super(null, true, false);
+        super(true, false);
         this.tableID = tableID;
         this.SSI = SSI;
         this.sectionLength = sectionLength;
     }
 
     public PSI() {
-        super(null, true,false);
+        super(true,false);
     }
 
     public short tableID() {

@@ -1,14 +1,11 @@
 package view.visualizationTab;
 
-import app.Config;
-import model.*;
-
+import model.Config;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -16,18 +13,17 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
-import model.pes.PES;
+import model.*;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static app.Config.PSItype;
+import static model.Config.PSItype;
 
 
 public class PacketPane extends VisualizationTab implements Drawer {
 
-    private Tooltip tooltip;
+    private Tooltip_ tooltip;
     private Config config;
 
     private Scene scene;
@@ -47,7 +43,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
 
     public PacketPane(Scene scene, Config config) {
-        tooltip = new Tooltip();
+        tooltip = new Tooltip_();
         this.scene = scene;
         this.config = config;
         rectangles = new ArrayList<>();
@@ -61,6 +57,9 @@ public class PacketPane extends VisualizationTab implements Drawer {
         this.stream = stream;
         this.packets = packets;
         this.sortedPIDs = sortedPIDs;
+
+        tooltip.setPackets(packets);
+        tooltip.setConfig(config);
 
         pane = new Pane();
         pane.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -95,7 +94,9 @@ public class PacketPane extends VisualizationTab implements Drawer {
             if (isInViewport(scene, index * packetImageWidth, -xPos)) {
                 int pid = packet.getPID();
                 double newPos = xPos + index * packetImageWidth;
-                drawPacketImg(graphicsContextPacketCanvas, getType(packet), pid, config.getProgramName(stream, pid), sortedPIDs.indexOf(pid), newPos);
+                boolean isPayloadStart = packet.getPayload()!=null ? packet.getPayload().hasPESheader() : false;
+                boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
+                drawPacketImg(graphicsContextPacketCanvas, sortedPIDs.indexOf(pid), newPos, getType(packet), pid, config.getProgramName(stream, pid), isAdaptationField , isPayloadStart, packet.hashCode());
             }
             index++;
         }
@@ -105,13 +106,15 @@ public class PacketPane extends VisualizationTab implements Drawer {
     private int getType(TSpacket packet) {
         if (config.isPSI(packet.getPID()))
             return PSItype;
-        return stream.getPEScode(packet.getPID());
+        return config.getPEStype(stream.getPEScode(packet.getPID()));
     }
 
 
-    private void drawPacketImg(GraphicsContext graphicsContext, int type, int pid, String name, int yPos, double xPos) {
+    private void drawPacketImg(GraphicsContext graphicsContext,  int yPos, double xPos, int type, int pid, String name, boolean isAdaptationField, boolean isPayloadStart, int packetHash) {
         double offset = 50;
-        double padding = 5;
+        double xPadding = 8;
+        double margin = 4;
+        double shadowSize = 10;
 
         xPos -= packetImageHeight / 2;
         yPos *= packetImageHeight;
@@ -120,29 +123,31 @@ public class PacketPane extends VisualizationTab implements Drawer {
         graphicsContext.drawImage(packetImage, xPos, yPos, packetImageWidth, packetImageHeight);
 
         Image typeIcon = (Image) config.typeIcons.get(type);
-        graphicsContext.drawImage(typeIcon, xPos + 2 * typeIconSize + padding, yPos + typeIconSize + padding, typeIconSize, typeIconSize);
+        graphicsContext.drawImage(typeIcon, xPos + 2*typeIconSize + xPadding , yPos + typeIconSize , typeIconSize, typeIconSize);
+
+        if (isAdaptationField){
+            Image icon = (Image) config.typeIcons.get(config.adaptationFieldIcon);
+            graphicsContext.drawImage(icon, xPos + margin,  yPos + typeIconSize + margin +  typeIconSize,specialIconSize, specialIconSize);
+        }
+        if (isPayloadStart){
+            Image icon = (Image) config.typeIcons.get(config.PESheaderIcon);
+            graphicsContext.drawImage(icon, xPos + 2*typeIconSize + xPadding , yPos + 2*typeIconSize + margin/2 , specialIconSize, specialIconSize);
+        }
 
         graphicsContext.setFont(new Font(fontSize));
-        graphicsContext.strokeText("PID: " + pid + "\n" + config.getPacketName(pid) + "\n" + name, xPos + 5, yPos + 30);
+        graphicsContext.strokeText("PID: " + pid + "\n" + config.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
 
-        Rectangle rectangle = new Rectangle(xPos, yPos, packetImageWidth - 10, packetImageHeight);
+        Rectangle rectangle = new Rectangle(xPos, yPos, packetImageWidth - shadowSize, packetImageHeight);
         rectangle.setFill(Paint.valueOf("transparent"));
 
         rectangle.setOnMouseClicked(mouseEvent -> {
-                    tooltip.setText(getPacketInfo(pid));
+                    tooltip.setText(tooltip.getPacketInfo(packetHash));  //TODO je uplne zle!!!
                     tooltip.setStyle("-fx-font-family: monospace");
                     tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + offset, mouseEvent.getScreenY());
                 }
         );
         pane.getChildren().add(rectangle);
         rectangle.toFront();
-    }
-
-
-    private void hideTooltip() {
-        if (tooltip.isShowing()) {
-            tooltip.hide();
-        }
     }
 
 
@@ -153,11 +158,11 @@ public class PacketPane extends VisualizationTab implements Drawer {
         });
 
         pane.setOnMouseReleased(mouseEvent -> {
-            hideTooltip();
+            tooltip.hideTooltip();
         });
 
         pane.setOnMouseDragged(mouseEvent -> {
-            hideTooltip();
+            tooltip.hideTooltip();
 
             xPos += translate(mouseEvent.getSceneX());
             xPos = stayInRange(xPos);
@@ -204,123 +209,6 @@ public class PacketPane extends VisualizationTab implements Drawer {
         drawPackets(stream, packets, sortedPIDs, xPos);
         pane.getChildren().add(canvas);
         canvas.toBack();
-    }
-
-
-    String getPacketInfo(int PID) {
-
-        for (TSpacket packet : packets) {
-            if (packet.getPID() == PID) {
-                return createPacketInfo(packet);
-            }
-        }
-        return "Unable to collect packet data!";
-    }
-
-
-    private String createPacketInfo(TSpacket packet) {
-        String adaptationField = null;
-//        if (packet.getAdaptationFieldControl() > 0)
-//            adaptationField = "Adaptation Field Length: " + packet.getAdaptationFieldHeader().getAdaptationFieldLength();
-
-        return "Header: \n\n" +
-                "Packet PID: " + String.format("0x%04X", packet.getPID() & 0xFFFFF) + " (" + packet.getPID() + ")\n" +
-                "Transport Error Indicator: " + packet.getTransportErrorIndicator() + (packet.getTransportErrorIndicator() == 0 ? " (No error)" : " (Error packet)") + "\n" +
-                "Payload Start Indicator: " + packet.getPayloadStartIndicator() + (packet.getPayloadStartIndicator() == 0 ? " (Normal payload)" : " (Payload start)") + "\n" +
-                "Transport priority: " + packet.getTransportPriority() + (packet.getTransportPriority() == 0 ? " (Normal priority)" : " (High priority)") + "\n" +
-                "Transport Scrambling Control: " + packet.getTransportScramblingControl() + (packet.getTransportScramblingControl() == 0 ? " (Not scrambled)" : " (Scrambled)") + "\n" +
-                "Continuity Counter: " + String.format("0x%01X", packet.getContinuityCounter() & 0xFFFFF) + " (" + packet.getContinuityCounter() + ")" + "\n" +
-                "Adaptation Field Control: " + packet.getAdaptationFieldControl() + (packet.getAdaptationFieldControl() == 1 ?
-                " (Payload only)" : (packet.getAdaptationFieldControl() == 2 ?
-                " (Adaptation field only)" : " (Adaptation field followed by payload)")) + "\n\n\n" +
-                createAdaptationFieldHeaderOutput(packet.getAdaptationFieldHeader()) +
-                createPESheaderOutput(packet.getPayload()) +
-                createDataOutput(packet.getData()) + "\n";
-    }
-
-
-    private String  createPESheaderOutput(Payload payload) {
-        if(payload != null) {
-            if (payload.hasPESheader()) {
-                PES pesPacket = (PES) payload;
-                return (
-                        "PES header: \n\n" +
-                                "Stream ID: " + pesPacket.getStreamID() + " (" + config.getStreamDescription(pesPacket.getStreamID()) + ")\n" +
-                                "PES packet length: " + pesPacket.getPESpacketLength() + "\n" +
-                                "PES scrambling control: " + pesPacket.getPEScrcFlag() + "\n" +
-                                "PES priority: " + pesPacket.getPESpriority() + "\n" +
-                                "Copyright: " + pesPacket.getCopyright() + "\n" +
-                                "Original or copy: " + pesPacket.getOriginalOrCopy() + "\n" +
-                                "PTS DTS flags: " + pesPacket.getPTSdtsFlags() + "\n" +
-                                "ES rate flag: " + pesPacket.getESrateFlag() + "\n" +
-                                "DSM trick mode flag: " + pesPacket.getDSMtrickModeFlag() + "\n" +
-                                "Additional copy info flag: " + pesPacket.getAdditionalCopyInfoFlag() + "\n" +
-                                "PES CRC flag: " + pesPacket.getPEScrcFlag() + "\n" +
-                                "PES extension flag: " + pesPacket.getPESextensionFlag() + "\n" +
-                                "PES header data length: " + pesPacket.getPESheaderDataLength() + "\n" +
-                                createPESoptionalFieldsOutput(pesPacket.getOptionalPESheader()) + "\n\n\n"
-                );
-            }
-        }
-        return "";
-    }
-
-
-    private String createPESoptionalFieldsOutput(PES.PESoptionalHeader optionalPESheader) {
-        return ""; //TODO dorobit analyzu
-    }
-
-
-    private String createAdaptationFieldHeaderOutput(AdaptationFieldHeader adaptationFieldHeader) {
-        if (adaptationFieldHeader != null) {
-            return(
-                    "Adaptation field \n\n" +
-                            "Adaptation field length: " + adaptationFieldHeader.getAdaptationFieldLength() + "\n" +
-                            "Discontinuity indicator: " + adaptationFieldHeader.getDI() + "\n" +
-                            "Random access indicator: " + adaptationFieldHeader.getRAI() + "\n" +
-                            "Elementary stream priority indicator: " + adaptationFieldHeader.getSPF()+ "\n" +
-                            "PCR flag: " + adaptationFieldHeader.getPCRF()+ "\n" +
-                            "OPCR flag: " + adaptationFieldHeader.getOPCRF() + "\n" +
-                            "Splicing point flag: " + adaptationFieldHeader.getSPF() + "\n" +
-                            "Transport private data flag: " + adaptationFieldHeader.getTPDF() + "\n" +
-                            "Adaptation field extension flag: " + adaptationFieldHeader.getAFEF() + "\n" +
-                            createAdaptationOtionalFieldsOutput(adaptationFieldHeader.getOptionalField()) + "\n\n\n"
-            );
-        }
-        return "";
-    }
-
-
-    private String createAdaptationOtionalFieldsOutput(AdaptationFieldOptionalFields optionalField) {
-        return ""; //TODO dorobit optional fields
-    }
-
-
-
-    private static String createDataOutput(byte[] bits) {
-
-        BigInteger bigInt = new BigInteger(bits);
-        String hexSequence = bigInt.toString(16);
-
-        StringBuilder hexBuilder = new StringBuilder();
-        hexBuilder.append( String.format("0x%06X   ", 0 & 0xFFFFF));
-
-        int index = 0;
-        for(char c : hexSequence.toCharArray()){
-            hexBuilder.append(Character.toUpperCase(c));
-            if(++index % 4 == 0){
-                hexBuilder.append(" ");
-            }
-            if(index % 32 == 0){
-                hexBuilder.append("\n");
-                hexBuilder.append( String.format("0x%06X   ", (index/2) & 0xFFFFF));
-            }
-        }
-        return (
-                "Data: \n\n" +
-                        "           0001 0203 0405 0607 0809 0A0B 0C0D 0E0F\n\n" +
-                        hexBuilder.toString()
-        );
     }
 
 

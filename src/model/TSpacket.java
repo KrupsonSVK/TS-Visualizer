@@ -24,33 +24,43 @@ public class TSpacket {
         this.data = data;
     }
 
+
     public char getTransportErrorIndicator() {
         return (char) transportErrorIndicator;
     }
+
     public int getPayloadStartIndicator() {
         return  payloadStartIndicator;
     }
+
     public int getTransportPriority() {
         return transportPriority;
     }
+
     public int getPID() {
         return PID;
     }
+
     public int getTransportScramblingControl() {
         return transportScramblingControl;
     }
+
     public Integer getAdaptationFieldControl() {
         return Integer.valueOf(adaptationFieldControl);
     }
+
     public int getContinuityCounter() {
         return continuityCounter;
     }
+
     public AdaptationFieldHeader getAdaptationFieldHeader() {
         return adaptationFieldHeader;
     }
+
     public Payload getPayload() {
         return payload;
     }
+
     public byte[] getData() {
         return data;
     }
@@ -58,14 +68,9 @@ public class TSpacket {
     public void setAdaptationFieldHeader(AdaptationFieldHeader adaptationFieldHeader) {
         this.adaptationFieldHeader = adaptationFieldHeader;
     }
+
     public void setPayload(Payload payload) {
         this.payload = payload;
     }
 
 }
-
-
-
-
-
-

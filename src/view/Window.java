@@ -18,7 +18,7 @@ import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
 
-import static app.Config.userGuideText;
+import static model.Config.userGuideText;
 import static app.Main.releaseDate;
 import static java.lang.Thread.sleep;
 

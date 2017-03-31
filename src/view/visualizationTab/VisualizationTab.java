@@ -1,9 +1,8 @@
 package view.visualizationTab;
 
-import app.Config;
+import model.Config;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.scene.input.ZoomEvent;
 import model.Stream;
 import model.TSpacket;
 import view.Sorter;
@@ -15,7 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 import view.Window;
 
 import java.util.*;
@@ -44,7 +42,8 @@ public class VisualizationTab extends Window{
     final static double packetImageWidth = 100;
     final static double packetImageHeight = 60;
     final static double miniPacketImageSize = 10;
-    final static double typeIconSize = 20;
+    final static double typeIconSize = 19;
+    final static double specialIconSize = 16;
     final static double legendPaneMoveCoeff = packetImageWidth / miniPacketImageSize;
     final static double packetScrollPaneHeightRatio = 0.54;
     final static double barScrollPaneHeigthRatio = 0.06;

@@ -9,9 +9,10 @@ public class PES extends Payload {
     private int PESpacketLength;
     private byte PESscramblingControl;
     private byte PESpriority;
-    private byte DataAlignmentIndicator;
+    private byte dataAlignmentIndicator;
     private byte copyright;
-    private byte OriginalOrCopy;
+    private byte originalOrCopy;
+
     private byte PTSdtsFlags;
     private byte ESCRflag;
     private byte ESrateFlag;
@@ -19,19 +20,29 @@ public class PES extends Payload {
     private byte AdditionalCopyInfoFlag;
     private byte PEScrcFlag;
     private byte PESextensionFlag;
+
     private int PESheaderDataLength;
-    private PESoptionalHeader optionalPESheader;
+
+    private long PTSdts;
+    private long ESCR;
+    private long ESrate;
+    private int DSMtrickMode;
+    private int AdditionalCopyInfo;
+    private long PEScrc;
 
 
-    public PES(int streamID, int PESpacketLength, byte PESscramblingControl, byte PESpriority, byte dataAlignmentIndicator, byte copyright, byte originalOrCopy, byte PTSdtsFlags, byte ESCRflag, byte ESrateFlag, byte DSMtrickModeFlag, byte additionalCopyInfoFlag, byte PEScrcFlag, byte PESextensionFlag, int PESheaderDataLength, PESoptionalHeader optionalPESheader, byte[] PESpacketData) {
-        super(PESpacketData, false, true);
-        this.streamID = streamID;
-        this.PESpacketLength = PESpacketLength;
-        this.PESscramblingControl = PESscramblingControl;
-        this.PESpriority = PESpriority;
-        this.DataAlignmentIndicator = dataAlignmentIndicator;
-        this.copyright = copyright;
-        this.OriginalOrCopy = originalOrCopy;
+    public PES(PES header, byte PTSdtsFlags, byte ESCRflag, byte ESrateFlag, byte DSMtrickModeFlag, byte additionalCopyInfoFlag, byte PEScrcFlag, byte PESextensionFlag, int PESheaderDataLength, long PTSdts, long ESCR, long ESrate, int DSMtrickMode, int AdditionalCopyInfo, long PEScrc) {
+
+        super( false, true);
+
+        this.streamID = header.streamID;
+        this.PESpacketLength = header.PESpacketLength;
+        this.PESscramblingControl = header.PESscramblingControl;
+        this.PESpriority = header.PESpriority;
+        this.dataAlignmentIndicator = header.dataAlignmentIndicator;
+        this.copyright = header.copyright;
+        this.originalOrCopy = header.originalOrCopy;
+
         this.PTSdtsFlags = PTSdtsFlags;
         this.ESCRflag = ESCRflag;
         this.ESrateFlag = ESrateFlag;
@@ -39,66 +50,122 @@ public class PES extends Payload {
         this.AdditionalCopyInfoFlag = additionalCopyInfoFlag;
         this.PEScrcFlag = PEScrcFlag;
         this.PESextensionFlag = PESextensionFlag;
+
         this.PESheaderDataLength = PESheaderDataLength;
-        this.optionalPESheader = optionalPESheader;
+
+        this.PTSdts = PTSdts;
+        this.ESCR = ESCR;
+        this.ESrate = ESrate;
+        this.DSMtrickMode = DSMtrickMode;
+        this.AdditionalCopyInfo = AdditionalCopyInfo;
+        this.PEScrc = PEScrc;
     }
 
 
-    public PES(byte[] PESpacketData) {
-        super(PESpacketData,false, false);
+    public PES(int streamID, int PESpacketLength, byte PESscramblingControl, byte PESpriority, byte dataAlignmentIndicator, byte copyright, byte originalOrCopy) {
+
+        super( false, true);
+
+        this.streamID = streamID;
+        this.PESpacketLength = PESpacketLength;
+        this.PESscramblingControl = PESscramblingControl;
+        this.PESpriority = PESpriority;
+        this.dataAlignmentIndicator = dataAlignmentIndicator;
+        this.copyright = copyright;
+        this.originalOrCopy = originalOrCopy;
+    }
+
+
+    public PES() {
+        super(false, false);
     }
 
 
     public int getStreamID() {
         return streamID;
     }
+
     public int getPESpacketLength() {
         return PESpacketLength;
     }
+
     public byte getPESscramblingControl() {
         return PESscramblingControl;
     }
+
     public byte getPESpriority() {
         return PESpriority;
     }
+
     public byte getDataAlignmentIndicator() {
-        return DataAlignmentIndicator;
+        return dataAlignmentIndicator;
     }
+
     public byte getCopyright() {
         return copyright;
     }
+
     public byte getOriginalOrCopy() {
-        return OriginalOrCopy;
+        return originalOrCopy;
     }
+
     public byte getPTSdtsFlags() {
         return PTSdtsFlags;
     }
+
     public byte getESrateFlag() {
         return ESrateFlag;
     }
+
     public byte getDSMtrickModeFlag() {
         return DSMtrickModeFlag;
     }
+
     public byte getAdditionalCopyInfoFlag() {
         return AdditionalCopyInfoFlag;
     }
+
     public byte getPEScrcFlag() {
         return PEScrcFlag;
     }
+
     public byte getPESextensionFlag() {
         return PESextensionFlag;
     }
-    public int getPESheaderDataLength() {
-        return PESheaderDataLength;
-    }
-    public PESoptionalHeader getOptionalPESheader() {
-        return optionalPESheader;
-    }
+
     public byte getESCRflag() {
         return ESCRflag;
     }
 
+    public int getPESheaderDataLength() {
+        return PESheaderDataLength;
+    }
 
-    public class PESoptionalHeader {
+    public long getPTS() {
+        return PTSdts;
+    }
+
+    public long getDTS() {
+        return PTSdts;
+    }
+
+    public long getESCR() {
+        return ESCR;
+    }
+
+    public long getESrate() {
+        return ESrate;
+    }
+
+    public int getDSMtrickMode() {
+        return DSMtrickMode;
+    }
+
+    public int getAdditionalCopyInfo() {
+        return AdditionalCopyInfo;
+    }
+
+    public long getPEScrc() {
+        return PEScrc;
     }
 }

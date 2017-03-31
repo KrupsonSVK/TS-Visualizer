@@ -1,12 +1,11 @@
 package view.visualizationTab;
 
-import app.Config;
+import model.Config;
 import javafx.scene.control.*;
 import model.Stream;
 import model.TSpacket;
 
 import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -15,7 +14,6 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 import java.util.List;

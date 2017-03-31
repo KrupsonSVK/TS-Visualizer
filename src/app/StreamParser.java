@@ -4,7 +4,6 @@ import model.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -71,7 +70,7 @@ public class StreamParser extends Config {
                         }
                         TSpacket analyzedHeader = analyzeHeader(binaryHeader,packet);
 
-                        if (isAdaptationField(analyzedHeader)) { //
+                        if (isAdaptationField(analyzedHeader)) {
 
                             short adaptationFieldHeader = parseAdaptationFieldHeader(packet);
 
@@ -155,6 +154,7 @@ public class StreamParser extends Config {
     private model.psi.PAT analyzePAT(TSpacket analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
+        position += 1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
 
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
 
@@ -213,7 +213,7 @@ public class StreamParser extends Config {
 
 
     private int calculatePosition(TSpacket analyzedHeader) {
-        int position=tsHeaderSize+AFLlength;
+        int position=tsHeaderSize;
 
         if(isAdaptationField(analyzedHeader)) {
             position += analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength();
@@ -265,6 +265,8 @@ public class StreamParser extends Config {
     private PMT_ analyzePMT(TSpacket analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
+        position+=1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
+
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
         position += PSIcommonFieldsLength/byteBitLength;
 
@@ -327,60 +329,97 @@ public class StreamParser extends Config {
         int[] PESFields = parsePMTfields(packet, position, PESlength);
         byte[] binaryPESFields = intToBinary(PESlength * byteBitLength, PESlength, PESFields);
 
-        int[] whole_packet = parsePMTfields(packet, 0, tsPacketSize);
-        byte[] binary_whole_packet = intToBinary(tsPacketSize * byteBitLength, tsPacketSize, whole_packet);
-
         if (position < tsPacketSize - packetStartCodePrefixLength ) {
-            int pscp = binToInt(binaryPESFields, position, position += packetStartCodePrefixLength);
+            int pscp = binToInt(binaryPESFields, position=0, position += packetStartCodePrefixLength);
 
             if (pscp == packetStartCodePrefix) {
 
-                byte streamID = (byte) binToInt(binaryPESFields, position, position += streamIDlength);
-                byte PESpacketLength = (byte) binToInt(binaryPESFields, position, position += streamIDlength);
-                byte PESscramblingControl = (byte) binToInt(binaryPESFields, position, position+1);
-                byte PESpriority = (byte) binToInt(binaryPESFields, position, position+1);
-                byte DataAlignmentIndicator = (byte) binToInt(binaryPESFields, position, position+1);
-                byte copyright = (byte) binToInt(binaryPESFields, position, position+1);
-                byte OriginalOrCopy = (byte) binToInt(binaryPESFields, position, position+1);
-                byte PTSdtsFlags = (byte) binToInt(binaryPESFields, position, position+1);
-                byte ESCRflag = (byte) binToInt(binaryPESFields, position, position+1);
-                byte ESrateFlag = (byte) binToInt(binaryPESFields, position, position+1);
-                byte DSMtrickModeFlag = (byte) binToInt(binaryPESFields, position, position+1);
-                byte AdditionalCopyInfoFlag = (byte) binToInt(binaryPESFields, position, position+1);
-                byte PEScrcFlag = (byte) binToInt(binaryPESFields, position, position+1);
-                byte PESextensionFlag = (byte) binToInt(binaryPESFields, position, position+1);
-                int PESheaderDataLength = (byte) binToInt(binaryPESFields, position, position+1);
-                PES.PESoptionalHeader optionalPESheader = analyzePESheader(binaryPESFields, position);
-                byte[] PESpacketData = null;
+                int streamID = binToInt(binaryPESFields, position, position += streamIDlength);
+                int PESpacketLength = binToInt(binaryPESFields, position, position += PESpacketLengthLength);
+                byte PESscramblingControl = (byte) binToInt(binaryPESFields, position, position += PESscramblingControlLength);
+                byte PESpriority = (byte) binToInt(binaryPESFields, position += 2, position += PESpriorityLength);
+                byte DataAlignmentIndicator = (byte) binToInt(binaryPESFields, position, position += DataAlignmentIndicatorLength);
+                byte copyright = (byte) binToInt(binaryPESFields, position, position += copyrightLength);
+                byte OriginalOrCopy = (byte) binToInt(binaryPESFields, position, position += OriginalOrCopyLength);
+
                 table.updateStreamCodes(analyzedHeader.getPID(), Integer.valueOf(streamID));
 
-                return new PES(
-                        streamID,
-                        PESpacketLength,
-                        PESscramblingControl,
-                        PESpriority,
-                        DataAlignmentIndicator,
-                        copyright,
-                        OriginalOrCopy,
-                        PTSdtsFlags,
-                        ESCRflag,
-                        ESrateFlag,
-                        DSMtrickModeFlag,
-                        AdditionalCopyInfoFlag,
-                        PEScrcFlag,
-                        PESextensionFlag,
-                        PESheaderDataLength,
-                        optionalPESheader,
-                        PESpacketData
-                        );
+                return analyzePESoptionalHeader(new PES(
+                                streamID,
+                                PESpacketLength,
+                                PESscramblingControl,
+                                PESpriority,
+                                DataAlignmentIndicator,
+                                copyright,
+                                OriginalOrCopy)
+                        , binaryPESFields, position);
             }
         }
-        return new PES(binaryPESFields);
+        return new PES();
     }
 
 
-    private PES.PESoptionalHeader analyzePESheader(byte[] binaryPMTFields, int position) {
-        return null;
+    private PES analyzePESoptionalHeader(PES header, byte[] binaryPESFields, int position) {
+
+        byte PTSdtsFlags = (byte) binToInt(binaryPESFields, position, position += PTSdtsFlagsLength);
+        byte ESCRflag = (byte) binToInt(binaryPESFields, position, position += PESCRflagLength);
+        byte ESrateFlag = (byte) binToInt(binaryPESFields, position, position += ESrateFlagLength);
+        byte DSMtrickModeFlag = (byte) binToInt(binaryPESFields, position, position += DSMtrickModeFlagLength);
+        byte AdditionalCopyInfoFlag = (byte) binToInt(binaryPESFields, position, position += AdditionalCopyInfoFlagLength);
+        byte PEScrcFlag = (byte) binToInt(binaryPESFields, position, position += PEScrcFlagLength);
+        byte PESextensionFlag = (byte) binToInt(binaryPESFields, position, position += PESextensionFlagLength);
+
+        int PESheaderDataLength = binToInt(binaryPESFields, position, position += PESheaderDataLengthLength);
+
+        long PTSdts = nil;
+        long ESCR = nil;
+        long ESrate = nil;
+        int DSMtrickMode = nil;
+        int AdditionalCopyInfo = nil;
+        long PEScrc = nil;
+
+        if(PTSdtsFlags == 1) {
+            PTSdts = (byte) binToInt(binaryPESFields, position, position + PTSdtsLength);
+        }
+        else if(PTSdtsFlags == 2) {
+            PTSdts = (byte) binToInt(binaryPESFields, position, position + PTSdtsLength);
+        }
+        if (ESCRflag == 1) {
+            ESCR = (byte) binToInt(binaryPESFields, position, position += ESCRlength);
+        }
+        if (ESrateFlag == 1) {
+            ESrate = (byte) binToInt(binaryPESFields, position, position += ESrateLength);
+        }
+        if (DSMtrickModeFlag == 1) {
+            DSMtrickMode = (byte) binToInt(binaryPESFields, position, position += DSMtrickModeLength);
+        }
+        if (AdditionalCopyInfoFlag == 1) {
+            AdditionalCopyInfo = (byte) binToInt(binaryPESFields, position, position += AdditionalCopyInfoLength);
+        }
+        if (PEScrcFlag == 1) {
+            PEScrc = (byte) binToInt(binaryPESFields, position, position += PEScrcLength);
+        }
+        if (PESextensionFlag == 1) {
+            //TODO PES optional fields extension fields
+        }
+
+        return new PES(
+                header,
+                PTSdtsFlags,
+                ESCRflag,
+                ESrateFlag,
+                DSMtrickModeFlag,
+                AdditionalCopyInfoFlag,
+                PEScrcFlag,
+                PESextensionFlag,
+                PESheaderDataLength,
+                PTSdts,
+                ESCR,
+                ESrate,
+                DSMtrickMode,
+                AdditionalCopyInfo,
+                PEScrc
+        );
     }
 
 

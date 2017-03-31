@@ -6,10 +6,10 @@ public class Payload {
     private boolean isPSI;
     private  boolean hasPESheader;
 
-    protected Payload(byte[] data, boolean isPSI,  boolean hasPESheader){
+    protected Payload(boolean isPSI,  boolean hasPESheader){
         this.hasPESheader = hasPESheader;
         this.isPSI = isPSI;
-        this.data = data;
+        //this.data = data;
     }
 
     public byte[] getData() {

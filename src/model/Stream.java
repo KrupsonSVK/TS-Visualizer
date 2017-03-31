@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static app.Config.videoType;
+import static model.Config.videoType;
 
 
 public class Stream {
@@ -46,6 +46,7 @@ public class Stream {
         this.programs = programs;
         this.streams = streams;
     }
+
 
     public String getName() {
         return name;
