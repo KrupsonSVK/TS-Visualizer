@@ -37,7 +37,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     private ArrayList<TSpacket> packets;
     private List sortedPIDs;
 
-    private double oldSceneX, oldTranslateX, xPos;
+    private double oldSceneX, oldTranslateX, xPos, initDiff, lastValue;
 
 
     public BarPane(Scene scene, Config config){
@@ -48,7 +48,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
     public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines){
 
-        oldSceneX = oldTranslateX = xPos = 0;
+        lastValue = initDiff = oldSceneX = oldTranslateX = xPos = 0;
 
         this.packets = packets;
         this.stream = stream;
@@ -63,7 +63,7 @@ public class BarPane extends VisualizationTab implements Drawer{
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
 
-        drawBar();
+        drawBar(xPos);
         addListenersAndHandlers();
     }
 
@@ -92,7 +92,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
 
-    private void drawBar() {
+    private void drawBar(double xPos) {
 
         Canvas barCanvas = new Canvas(scene.getWidth(), scene.getHeight());
         GraphicsContext graphicsContextBarCanvas = barCanvas.getGraphicsContext2D();
@@ -100,7 +100,7 @@ public class BarPane extends VisualizationTab implements Drawer{
         Image barBackground = drawPacketsInBar(graphicsContextBarCanvas, barCanvas, packets, (int) scene.getWidth(), (int) scene.getHeight());
         graphicsContextBarCanvas.drawImage(barBackground, scene.getWidth(), scene.getHeight());
 
-        lookingGlass = drawLookingGlass(0, getLookingGlassWidth(), barScrollPaneHeight);
+        lookingGlass = drawLookingGlass(xPos, getLookingGlassWidth(), barScrollPaneHeight);
 
         Pane barPane = new Pane(barCanvas, lookingGlass);
         lookingGlass.toFront();
@@ -138,7 +138,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
 
-    private Rectangle drawLookingGlass(int xPos, double width, double height) {
+    private Rectangle drawLookingGlass(double xPos, double width, double height) {
 
         double arcSize = 10;
         Rectangle rectangle = new Rectangle(xPos, 0, width, height - arcSize);
@@ -157,17 +157,24 @@ public class BarPane extends VisualizationTab implements Drawer{
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = scene.getWidth();
             scrollPane.setMaxWidth(newWidth);
-            drawBar();
+            if( lastValue != oldValue.doubleValue()) {
+                xPos *= (newValue.doubleValue() / oldValue.doubleValue());
+                xPos = stayInRange(xPos);
+                lastValue = oldValue.doubleValue();
+            }
+            drawBar(xPos);
             addListenersAndHandlers();
         });
 
         lookingGlassOnMousePressedEventHandler = mouseEvent -> {
             updateX(mouseEvent);
+            initDiff = mouseEvent.getSceneX() - ((Rectangle)(mouseEvent.getSource())).getX();
         };
 
         lookingGlassOnMouseDraggedEventHandler = mouseEvent -> {
 
             xPos = stayInRange(mouseEvent.getSceneX());
+            xPos -= initDiff;
 
             ((Rectangle) (mouseEvent.getSource())).setX(xPos);
 

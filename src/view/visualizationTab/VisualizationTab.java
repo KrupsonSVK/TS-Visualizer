@@ -37,7 +37,6 @@ public class VisualizationTab extends Window{
     LegendPane legendPane;
 
     private EventHandler<ActionEvent> groupByCheckBoxEvent, programComboBoxEvent, zoomerEvent;
-    double offset = 0;
 
     final static double packetImageWidth = 100;
     final static double packetImageHeight = 60;
@@ -53,7 +52,7 @@ public class VisualizationTab extends Window{
     final static double barScrollPaneHeight = windowHeigth * barScrollPaneHeigthRatio;
     final static double legendScrollPaneHeight = windowHeigth * legendScrollPaneHeightRatio;;
     final static double barHeight = windowHeigth * barScrollPaneHeigthRatio;
-
+    final static double inset = 5;
 
     public VisualizationTab() {
         super();
@@ -102,9 +101,9 @@ public class VisualizationTab extends Window{
 
         VBox mainVBox = new VBox(comboCheckboxBar, packetPane.scrollPane, barPane.scrollPane, labelsLegendScrollPaneBox);
 
-        VBox.setMargin(packetPane.scrollPane, new Insets(5, 5, 0, 5));
-        VBox.setMargin(barPane.scrollPane, new Insets(0, 5, 0, 5));
-        VBox.setMargin(labelsLegendScrollPaneBox, new Insets(0, 5, 5, 5));
+        VBox.setMargin(packetPane.scrollPane, new Insets(inset, inset, 0, inset));
+        VBox.setMargin(barPane.scrollPane, new Insets(0, inset, 0, inset));
+        VBox.setMargin(labelsLegendScrollPaneBox, new Insets(0, inset, inset, inset));
 
         addListenersAndHandlers();
 
@@ -121,17 +120,14 @@ public class VisualizationTab extends Window{
         Label filterLabel = new Label("Filter:");
         Label zoomerLabel = new Label("Zoom:");
 
-        zoomer = new Slider();
-        zoomer.setMin(0);
-        zoomer.setMax(100);
-        zoomer.setValue(50);
+        zoomer = new Slider(0,100,50);
 
         HBox comboCheckboxBar = new HBox(filterLabel, filterComboBox, groupByCheckBox, zoomerLabel, zoomer);
-        HBox.setMargin(filterComboBox, new Insets(5, 5, 5, 5));
-        HBox.setMargin(groupByCheckBox, new Insets(10, 35, 5, 35));
-        HBox.setMargin(filterLabel, new Insets(10, 5, 5, 5));
-        HBox.setMargin(zoomerLabel, new Insets(10, 5, 5, 50));
-        HBox.setMargin(zoomer, new Insets(10, 5, 5, 5));
+        HBox.setMargin(filterComboBox, new Insets(inset, inset, inset, inset));
+        HBox.setMargin(groupByCheckBox, new Insets(2*inset, 7*inset, inset, 7*inset));
+        HBox.setMargin(filterLabel, new Insets(2*inset, inset, inset, inset));
+        HBox.setMargin(zoomerLabel, new Insets(2*inset, inset, inset, 10*inset));
+        HBox.setMargin(zoomer, new Insets(2*inset, inset, inset, inset));
 
         return comboCheckboxBar;
     }
@@ -176,8 +172,10 @@ public class VisualizationTab extends Window{
 
         zoomer.valueProperty().addListener(new ChangeListener<Number>() {
             public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
+                //TODO implement zoomer
                 packetPane.scrollPane.setScaleX( 1 + ((new_val.doubleValue()-50) / 50));
-                packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));            }
+                packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));
+            }
         });
     }
 }

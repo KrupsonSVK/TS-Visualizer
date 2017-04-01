@@ -15,13 +15,13 @@ import java.util.ArrayList;
 
 import static model.Config.EIT_STpid;
 
-public class Tooltip_ extends Tooltip {
+public class PacketInfo extends Tooltip {
 
     private ArrayList<TSpacket> packets;
     private Config config;
 
 
-    Tooltip_(){
+    PacketInfo(){
         super();
     }
 
@@ -145,7 +145,7 @@ public class Tooltip_ extends Tooltip {
 
     private String createASCIIoutput(byte[] data, int pid){
         if(pid == EIT_STpid){
-            StringBuilder stringBuilder = new StringBuilder("ASCII data: \n\n");
+            StringBuilder stringBuilder = new StringBuilder("\n\nASCII data: \n\n");
             try {
                 int index = 0;
                 String asciiSequence = new String(data,  "Cp1250" );
@@ -204,7 +204,7 @@ public class Tooltip_ extends Tooltip {
                 hexBuilder.append(String.format("0x%06X   ", (index / 2) & 0xFFFFF));
             }
         }
-        return ( "Data: \n           0001 0203 0405 0607 0809 0A0B 0C0D 0E0F\n\n" + hexBuilder.toString() + "\n\n" );
+        return ( "Data: \n           0001 0203 0405 0607 0809 0A0B 0C0D 0E0F\n\n" + hexBuilder.toString() + "\n" );
     }
 
 

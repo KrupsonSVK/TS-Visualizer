@@ -25,30 +25,21 @@ import static model.Config.nullPacket;
 
 public class PacketPane extends VisualizationTab implements Drawer {
 
-    private Tooltip_ tooltip;
+    private PacketInfo tooltip;
     private Config config;
-
     private Scene scene;
     Pane pane;
     ScrollPane scrollPane;
     Canvas canvas;
-
     private LegendPane legendPane;
     private BarPane barPane;
-
-    private ArrayList<Image> images;
-    private ArrayList<TSpacket> packets;
-    private List<Integer> sortedPIDs;
-    private List<Rectangle> rectangles;
-
     private double oldSceneX, oldTranslateX, xPos, yPos, initYpos, oldTranslateY, initVvalue;
 
 
     public PacketPane(Scene scene, Config config) {
-        tooltip = new Tooltip_();
+        tooltip = new PacketInfo();
         this.scene = scene;
         this.config = config;
-        rectangles = new ArrayList<>();
     }
 
 
@@ -57,7 +48,6 @@ public class PacketPane extends VisualizationTab implements Drawer {
         initVvalue = initYpos = oldTranslateY = yPos = oldSceneX = oldTranslateX = xPos = 0;
 
         this.stream = stream;
-        this.packets = packets;
         this.sortedPIDs = sortedPIDs;
 
         tooltip.setPackets(packets);
@@ -117,12 +107,11 @@ public class PacketPane extends VisualizationTab implements Drawer {
         rectangle.setOnMouseClicked(mouseEvent -> {
                     tooltip.setText(tooltip.getPacketInfo(packetHash));
                     tooltip.setStyle("-fx-font-family: monospace");
-                    tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + offset, mouseEvent.getScreenY());
+                    tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX(), mouseEvent.getScreenY());
                 }
         );
         pane.toBack();
         rectangle.toFront();
-        // rectangle.toBack();
         return rectangle;
     }
 
@@ -164,10 +153,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
         pane.setOnMousePressed(mouseEvent -> {
             updateX(mouseEvent);
-
-            initVvalue = scrollPane.getVvalue();
-            initYpos = mouseEvent.getSceneY();
-            oldTranslateY = ((Pane) mouseEvent.getSource()).getTranslateY();
+            updateY(mouseEvent);
         });
 
         pane.setOnMouseReleased(mouseEvent -> {
@@ -190,13 +176,9 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
             updateX(mouseEvent);
 
-            double hvalue = initVvalue - ((oldTranslateY + mouseEvent.getSceneY() - initYpos) / scrollPane.getHeight()) / (Screen.getPrimary().getVisualBounds().getMaxY()/scrollPane.getHeight())*mouseSensitivityVertical;
-           //hvalue /= 10;
-            //System.out.println("initY: " + initYpos + " initVval: " + initVvalue + "  tran: " + oldTranslateY + "  sceneY: " + mouseEvent.getSceneY() + "  hval: " + hvalue);
+            double hvalue = initVvalue - ( translateY(mouseEvent) / getMoveCoeff() );
             scrollPane.setVvalue(hvalue);
         });
-
-
 
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = scene.getWidth();
@@ -217,10 +199,26 @@ public class PacketPane extends VisualizationTab implements Drawer {
         scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
                     legendPane.labelScrollPane.setVvalue(scrollPane.getVvalue());
                     legendPane.scrollPane.setVvalue(scrollPane.getVvalue());
-                    //legendPane.drawCanvas(stream, packets, sortedPIDs, -xPos / legendPaneMoveCoeff );
                 }
         );
     }
+
+    private void updateY(MouseEvent mouseEvent) {
+        initVvalue = scrollPane.getVvalue();
+        initYpos = mouseEvent.getSceneY();
+        oldTranslateY = ((Pane) mouseEvent.getSource()).getTranslateY();
+    }
+
+
+    private double translateY(MouseEvent mouseEvent) {
+        return ((oldTranslateY + mouseEvent.getSceneY() - initYpos) / scrollPane.getHeight());
+    }
+
+
+    private double getMoveCoeff() {
+        return mouseSensitivityVertical * ( Screen.getPrimary().getVisualBounds().getMaxY() / scrollPane.getHeight() );
+    }
+
 
     @Override
     public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
@@ -229,17 +227,6 @@ public class PacketPane extends VisualizationTab implements Drawer {
         drawPackets(stream, packets, sortedPIDs, xPos);
         pane.getChildren().add(canvas);
         canvas.toBack();
-    }
-
-
-    private boolean isInRange(int packetX, double packetY, double xPos, double yPos) {
-
-        if (packetX > xPos - 5 && packetX < xPos + 5) {
-            if (packetY > yPos - 3 && packetY < yPos + 3) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

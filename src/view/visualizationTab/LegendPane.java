@@ -22,24 +22,24 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
     private Config config;
     private Scene scene;
-
     private Pane pane;
     ScrollPane scrollPane;
     private Canvas canvas;
-
     private Canvas labelCanvas;
     private Pane labelPane;
     ScrollPane labelScrollPane;
-
     private PacketPane packetPane;
     private BarPane barPane;
-
     private double oldSceneX;
     private double oldTranslateX;
-    double xPos;
+    private double xPos;
 
     private static final double labelWidth = 135;
     private static final double fontSize = 8.5;
+    private static final int offset = 2;
+    private static final double secondaryFrameSize = 1.25;
+    private static final double primaryFrameSize = 2.5;
+    private static final Color defaultColor = Color.rgb(240,240,240);
 
 
     public LegendPane(Scene scene, Config config) {
@@ -50,7 +50,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
     public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines) {
 
-        oldSceneX = oldTranslateX =  xPos = 0;
+        oldSceneX = oldTranslateX = xPos = 0;
         this.stream = stream;
 
         pane = new Pane();
@@ -87,7 +87,6 @@ public class LegendPane extends VisualizationTab implements Drawer{
         addListenersAndHandlers(stream, packets, sortedPIDs);
     }
 
-
     @Override
     public void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
 
@@ -95,7 +94,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
         graphicsContextLegendCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        graphicsContextLegendCanvas.setFill(Color.rgb(240,240,240));
+        graphicsContextLegendCanvas.setFill(defaultColor);
         graphicsContextLegendCanvas.fillRect(0,0, canvas.getWidth(), canvas.getHeight());
 
         double yPos = packetPane.scrollPane.getVvalue()*(canvas.getHeight()-getLegendScopeHeigth());
@@ -104,7 +103,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
         int index = 0;
         for (TSpacket packet : packets) {
-            if(isInViewport(scene, index * miniPacketImageSize,(-1) * xPos)) {
+            if(isInViewport(scene, index * miniPacketImageSize,-xPos)) {
                 int pid = packet.getPID();
                 boolean isPayloadStart = packet.getPayload() != null ? packet.getPayload().hasPESheader() : false;
                 boolean isAdaptationField = packet.getAdaptationFieldHeader() != null;
@@ -113,6 +112,7 @@ public class LegendPane extends VisualizationTab implements Drawer{
             index++;
         }
     }
+
 
     private double getLegendScopeHeigth() {
         return ( scene.getHeight() / packetImageHeight * miniPacketImageSize );
@@ -125,28 +125,27 @@ public class LegendPane extends VisualizationTab implements Drawer{
 
 
     private void drawMiniPacket(GraphicsContext graphicsContext, int type, double x, double y, boolean isAdaptationField, boolean isPayloadStart) {
-        final int offset = 2;
 
         if (isAdaptationField && isPayloadStart){
             graphicsContext.setFill(config.payloadStartColor);
             graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
             graphicsContext.setFill(config.adaptationFieldColor);
-            graphicsContext.fillRect(x + offset + offset*0.75, y * miniPacketImageSize + offset + offset*0.75 , miniPacketImageSize-offset*1.5, miniPacketImageSize-offset*1.5);//x,y,height, width, archeigth, arcwidh
+            graphicsContext.fillRect(x + posOffset(secondaryFrameSize), y * miniPacketImageSize + posOffset(secondaryFrameSize) , miniPacketImageSize -  sizeOffset(secondaryFrameSize), miniPacketImageSize - sizeOffset(secondaryFrameSize));//x,y,height, width, archeigth, arcwidh
             graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + 1.5*offset, y * miniPacketImageSize + 1.5*offset, miniPacketImageSize - 3*offset, miniPacketImageSize - 3*offset);
+            graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
         }
         else if (isAdaptationField){
             graphicsContext.setFill(config.adaptationFieldColor);
             graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
             graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + offset*2, y * miniPacketImageSize + offset*2, miniPacketImageSize - 3*offset, miniPacketImageSize - 3*offset);
+            graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
 
         }
         else if (isPayloadStart){
             graphicsContext.setFill(config.payloadStartColor);
             graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
             graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + offset*2, y * miniPacketImageSize + offset*2, miniPacketImageSize - 3*offset, miniPacketImageSize - 3*offset);
+            graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
         }
         else {
             graphicsContext.setFill(config.getPacketColor(type));
@@ -154,10 +153,19 @@ public class LegendPane extends VisualizationTab implements Drawer{
         }
     }
 
+    private double sizeOffset(double i) {
+        return i*offset;
+    }
+
+    private double posOffset(double i) {
+        return (sizeOffset(i) * 0.75);
+    }
+
 
     protected void createLabels(Map<Integer, Integer> PIDs) {
 
-        int y = 9,x = 2, labelLength = 7;
+        int y = 9;
+        int x = 2;
         double gap = 2;
 
         GraphicsContext graphicsContextLabelCanvas = labelCanvas.getGraphicsContext2D();
@@ -181,8 +189,12 @@ public class LegendPane extends VisualizationTab implements Drawer{
         scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
                     labelScrollPane.setVvalue(scrollPane.getVvalue());
                     packetPane.scrollPane.setVvalue(scrollPane.getVvalue());
-                    scrollPane.setVvalue(labelScrollPane.getVvalue());
                     drawCanvas(stream,packets,sortedPIDs,xPos);
+                }
+        );
+
+        labelScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
+                    scrollPane.setVvalue(labelScrollPane.getVvalue());
                 }
         );
 
