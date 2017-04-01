@@ -7,55 +7,69 @@ public class AdaptationFieldHeader {
     private final byte DI;
     private final byte RAI;
     private final byte ESPI;
-    private final byte PF;
-    private final byte OF;
-    private final byte SPF;
-    private final byte TPDF;
-    private final byte AFEF;
-    private final AdaptationFieldOptionalFields adaptationFieldOptionalFields;
-    private Payload payload;
+    private final byte PCRflag;
+    private final byte OPCRflag;
+    private final byte splicingPointFlag;
+    private final byte TPDflag;
+    private final byte AFEflag;
+    private AdaptationFieldOptionalFields adaptationFieldOptionalFields;
 
-    public AdaptationFieldHeader(short adaptationFieldLength, byte DI, byte RAI, byte ESPI, byte OF, byte PF, byte SPF, byte TPDF, byte AFEF, AdaptationFieldOptionalFields adaptationFieldOptionalFields) {
+
+    public AdaptationFieldHeader(short adaptationFieldLength, byte DI, byte RAI, byte ESPI, byte OPCRflag, byte PCRflag, byte splicingPointFlag, byte TPDflag, byte AFEflag, AdaptationFieldOptionalFields adaptationFieldOptionalFields) {
         this.adaptationFieldLength = adaptationFieldLength;
         this.DI = DI;
         this.RAI = RAI;
         this.ESPI = ESPI;
-        this.PF = PF;
-        this.OF = OF;
-        this.SPF = SPF;
-        this.TPDF = TPDF;
-        this.AFEF = AFEF;
+        this.PCRflag = PCRflag;
+        this.OPCRflag = OPCRflag;
+        this.splicingPointFlag = splicingPointFlag;
+        this.TPDflag = TPDflag;
+        this.AFEflag = AFEflag;
         this.adaptationFieldOptionalFields = adaptationFieldOptionalFields;
     }
+
 
     public short getAdaptationFieldLength() {
         return adaptationFieldLength;
     }
+
     public byte getESPI() {
         return ESPI;
     }
+
     public byte getRAI() {
         return RAI;
     }
+
     public byte getDI() {
         return DI;
     }
+
     public byte getPCRF() {
-        return PF;
+        return PCRflag;
     }
+
     public byte getOPCRF() {
-        return OF;
+        return OPCRflag;
     }
-    public byte getSPF() {
-        return SPF;
+
+    public byte getSplicingPointFlag() {
+        return splicingPointFlag;
     }
-    public byte getTPDF() {
-        return TPDF;
+
+    public byte getTPDflag() {
+        return TPDflag;
     }
-    public byte getAFEF() {
-        return AFEF;
+
+    public byte getAFEflag() {
+        return AFEflag;
     }
-    public AdaptationFieldOptionalFields getOptionalField() {
+
+    public AdaptationFieldOptionalFields getOptionalFields() {
         return adaptationFieldOptionalFields;
+    }
+
+    public void setAdaptationFieldOptionalFields(AdaptationFieldOptionalFields adaptationFieldOptionalFields){
+        this.adaptationFieldOptionalFields = adaptationFieldOptionalFields;
     }
 }

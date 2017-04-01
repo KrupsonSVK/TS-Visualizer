@@ -14,21 +14,27 @@ import javafx.stage.StageStyle;
 
 
 public class ProgressForm {
-    private final Stage dialogStage = new Stage();
-    private final ProgressBar pb = new ProgressBar();
-    private final ProgressIndicator pin = new ProgressIndicator();
-    private final VBox vbox = new VBox(5);
-    private Label label = new Label();
+    private final Stage dialogStage;
+    private final ProgressBar pb;
+    private final ProgressIndicator pin;
+    private final VBox vbox;
+    private Label label;
 
 
-    ProgressForm() {
+    ProgressForm(Stage dialogStage) {
 
-        dialogStage.setTitle("Analyzing transport stream...");
-        dialogStage.initStyle(StageStyle.UTILITY);
-        dialogStage.setResizable(false);
-        dialogStage.setWidth(250);
-        dialogStage.setHeight(100);
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        this.dialogStage = dialogStage;
+        pb = new ProgressBar();
+        pin = new ProgressIndicator();
+        vbox = new VBox(5);
+        label = new Label();
+
+        this.dialogStage.setTitle("Analyzing transport stream...");
+        this.dialogStage.initStyle(StageStyle.UTILITY);
+        this.dialogStage.setResizable(false);
+        this.dialogStage.setWidth(250);
+        this.dialogStage.setHeight(100);
+        //this.dialogStage.initModality(Modality.APPLICATION_MODAL);
 
         label.setText(("Preparing stream..."));
         pb.setProgress(-1F);
@@ -38,7 +44,7 @@ public class ProgressForm {
         vbox.getChildren().addAll(pin, label);
 
         Scene scene = new Scene(vbox);
-        dialogStage.setScene(scene);
+        this.dialogStage.setScene(scene);
     }
 
 
@@ -62,18 +68,11 @@ public class ProgressForm {
         dialogStage.show();
 
         pb.progressProperty().unbind();
-        pin.progressProperty().bind(task.progressProperty());
-    }
-
-
-    public void activatePinBar() {
-        vbox.getChildren().clear();
-        vbox.getChildren().addAll(pin);
-
-        dialogStage.show();
-
+        //pin.progressProperty().bind(task.progressProperty());
         pin.indeterminateProperty();
+
     }
+
 
     public Stage getDialogStage() {
         return this.dialogStage;

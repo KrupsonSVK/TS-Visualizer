@@ -2,7 +2,10 @@ package view;
 
 import app.Main;
 import javafx.application.Platform;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Font;
+import model.Config;
 import model.Stream;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -27,12 +30,16 @@ public class Window {
 
     private final double windowWidth = 960;
     protected static final double windowHeigth = 720;
+    private final Config config;
 
-    public DetailTab detailTab;
-    public GraphTab graphTab;
-    public VisualizationTab visualizationTab;
+
     public Stage primaryStage;
     Stage aboutStage;
+    Stage progressStage;
+    private Stage userGuideStage;
+    private DetailTab detailTab;
+    private GraphTab graphTab;
+    private VisualizationTab visualizationTab;
     GridPane gridPane;
     public FileChooser fileChooser;
     public Button selectFileButton;
@@ -55,20 +62,20 @@ public class Window {
     MenuItem searchPacket;
     public MenuItem about;
     public MenuItem userGuide;
-    public TreeItem<String> nodes;
+    private TreeItem<String> nodes;
 
     private Task task;
-    private Stage userGuideStage;
 
 
     public Window(Stage primaryStage) {
 
         this.task = null;
-
-        userGuideStage = new Stage();
+        this.config = new Config();
 
         this.primaryStage = primaryStage;
         aboutStage = new Stage();
+        userGuideStage = new Stage();
+        progressStage = new Stage();
 
         rootPane = new StackPane();
         gridPane = new GridPane();
@@ -105,19 +112,25 @@ public class Window {
         borderPane.setCenter(gridPane);
 
         alertBox = new Alert(Alert.AlertType.ERROR);
-        progressWindow = new ProgressForm();
+        progressWindow = new ProgressForm(progressStage);
+
+        detailTab = new DetailTab(nodes);
+        visualizationTab = new VisualizationTab();
+        graphTab = new GraphTab();
 
         scene = new Scene(rootPane, windowWidth, windowHeigth);
         primaryStage.setTitle("TS Visualizer");
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        detailTab = new DetailTab(nodes);
-        visualizationTab = new VisualizationTab(scene);
-        graphTab = new GraphTab(scene);
+        visualizationTab.init(scene,config);
+        graphTab.setScene(scene);
+        mainMenu.toFront();
     }
 
+
     public Window() {
+        this.config = new Config();
     }
 
 
@@ -162,7 +175,7 @@ public class Window {
             public Object call() throws InterruptedException, IOException {
                 Platform.runLater(() -> {
                     rootPane.setStyle("-fx-background-color: transparent");
-                    detailTab.setNodes(streamDescriptor);
+                    detailTab.createTreeTab(streamDescriptor);
                     visualizationTab.visualizePackets(streamDescriptor);
                     graphTab.drawGraph(streamDescriptor);
                     createTabPane();
@@ -182,7 +195,6 @@ public class Window {
 
 
     public void createTabPane() {
-        detailTab.tab.setContent(detailTab.createTreeTab());
         tabPane.getTabs().addAll(detailTab.tab, visualizationTab.tab, graphTab.tab);
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 

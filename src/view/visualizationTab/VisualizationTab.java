@@ -56,13 +56,15 @@ public class VisualizationTab extends Window{
 
 
     public VisualizationTab() {
-    }
-
-    public VisualizationTab(Scene scene) {
-        this.scene = scene;
+        super();
         tab = new Tab("Visualization");
         sorter = new Sorter();
-        config = new Config();
+    }
+
+
+    public void init(Scene scene, Config config){
+        this.scene = scene;
+        this.config = config;
 
         packetPane = new PacketPane(this.scene,config);
         barPane = new BarPane(this.scene,config);

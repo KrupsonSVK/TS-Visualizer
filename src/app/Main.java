@@ -7,7 +7,7 @@ import view.Window;
 
 public class Main extends Application {
 
-    public static final String releaseDate = "14.02.2017";
+    public static final String releaseDate = "01.04.2017";
 
     public Window view;
     public Controller controller;
@@ -20,6 +20,6 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         view = new Window(primaryStage);
-        controller = new Controller( primaryStage, new FileHandler(), new StreamParser(), view );
+        controller = new Controller( primaryStage, view );
     }
 }

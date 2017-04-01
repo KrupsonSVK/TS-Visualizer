@@ -91,10 +91,12 @@ public class LegendPane extends VisualizationTab implements Drawer{
         GraphicsContext graphicsContextLegendCanvas = canvas.getGraphicsContext2D();
 
         graphicsContextLegendCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
         graphicsContextLegendCanvas.setFill(Color.rgb(240,240,240));
         graphicsContextLegendCanvas.fillRect(0,0, canvas.getWidth(), canvas.getHeight());
+
         graphicsContextLegendCanvas.setFill(Color.WHITE);
-        graphicsContextLegendCanvas.fillRect(0,0, getLegendScopeLength(), canvas.getHeight());
+        graphicsContextLegendCanvas.fillRect(0,0, getLegendScopeLength(), canvas.getHeight()); //TODO dorobit aj x-ovu os
 
         int index = 0;
         for (TSpacket packet : packets) {
@@ -118,25 +120,25 @@ public class LegendPane extends VisualizationTab implements Drawer{
         final int offset = 2;
 
         if (isAdaptationField && isPayloadStart){
-            graphicsContext.setFill(config.adaptationFieldColor);
-            graphicsContext.fillRect(x + offset + offset*0.75, y * miniPacketImageSize + offset + offset*0.75 , miniPacketImageSize-offset*1.5, miniPacketImageSize-offset*1.5);//x,y,height, width, archeigth, arcwidh
             graphicsContext.setFill(config.payloadStartColor);
             graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
+            graphicsContext.setFill(config.adaptationFieldColor);
+            graphicsContext.fillRect(x + offset + offset*0.75, y * miniPacketImageSize + offset + offset*0.75 , miniPacketImageSize-offset*1.5, miniPacketImageSize-offset*1.5);//x,y,height, width, archeigth, arcwidh
             graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + 2*offset, y * miniPacketImageSize + 2*offset, miniPacketImageSize - 2*offset, miniPacketImageSize - 2*offset);
+            graphicsContext.fillRect(x + 1.5*offset, y * miniPacketImageSize + 1.5*offset, miniPacketImageSize - 3*offset, miniPacketImageSize - 3*offset);
         }
         else if (isAdaptationField){
             graphicsContext.setFill(config.adaptationFieldColor);
             graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
             graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + offset*1.5, y * miniPacketImageSize + offset*1.5, miniPacketImageSize - 2*offset, miniPacketImageSize - 2*offset);
+            graphicsContext.fillRect(x + offset*2, y * miniPacketImageSize + offset*2, miniPacketImageSize - 3*offset, miniPacketImageSize - 3*offset);
 
         }
         else if (isPayloadStart){
             graphicsContext.setFill(config.payloadStartColor);
             graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
             graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + offset*1.5, y * miniPacketImageSize + offset*1.5, miniPacketImageSize - 2*offset, miniPacketImageSize - 2*offset);
+            graphicsContext.fillRect(x + offset*2, y * miniPacketImageSize + offset*2, miniPacketImageSize - 3*offset, miniPacketImageSize - 3*offset);
         }
         else {
             graphicsContext.setFill(config.getPacketColor(type));

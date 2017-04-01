@@ -16,7 +16,7 @@ import java.util.Map;
 public class DetailTab {
 
     TreeItem<String> nodes;
-    public Tab tab;
+    Tab tab;
 
     DetailTab(TreeItem<String> nodes){
         this.nodes = nodes;
@@ -25,19 +25,18 @@ public class DetailTab {
 
     //TODO prerobit... preco vobec toto vracia daku scroll pane
     //TODO tuto dotiahnut ten scrolltab ci co to je az po spodok windowu (sceny)
-    public ScrollPane createTreeTab() {
-        VBox vbox = new VBox(new TreeView<String>(nodes));
+    public void createTreeTab(Stream streamDescriptor) {
+        VBox vbox = new VBox(new TreeView<String>(createTree(streamDescriptor)));
         vbox.setFillWidth(true);
         ScrollPane scrollPane = new ScrollPane(vbox);
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
 
-        return scrollPane;
+        this.tab.setContent(scrollPane);
     }
 
 
-
-    public void setNodes(Stream streamDescriptor) {
+    public TreeItem<String> createTree(Stream streamDescriptor) {
 
         TreeItem<String> rootNode = new TreeItem<>(streamDescriptor.getName());
         rootNode.setExpanded(true);
@@ -144,6 +143,6 @@ public class DetailTab {
                 new TreeItem<>("SIT"),
                 new TreeItem<>("Sync"));
 
-        this.nodes = rootNode;
+        return this.nodes = rootNode;
     }
 }

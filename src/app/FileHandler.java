@@ -34,7 +34,7 @@ public class FileHandler {
                 if (!attr.isRegularFile()) {
                     throw new IOException("File not regular!");
                 }
-                if (file.length() > Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) {//TODO dorobit
+                if (file.length() > Runtime.getRuntime().maxMemory() - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) {//TODO unfinished
                     throw new IOException("File too large!");
                 }
                 else {

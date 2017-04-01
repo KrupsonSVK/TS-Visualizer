@@ -13,11 +13,10 @@ import java.util.Map;
 import model.Stream;
 
 public class GraphTab {
-    Scene scene;
-    public Tab  tab;
+    private Scene scene;
+    Tab  tab;
 
-    GraphTab(Scene scene){
-        this.scene = scene;
+    GraphTab(){
         tab = new Tab("Graph");
     }
 
@@ -49,5 +48,9 @@ public class GraphTab {
         scrollPane.setFitToWidth(true);
 
         tab.setContent(new VBox(stackedAreaChart));
+    }
+
+    public void setScene(Scene scene) {
+        this.scene = scene;
     }
 }

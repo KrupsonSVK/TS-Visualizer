@@ -15,7 +15,7 @@ public class Controller {
     private static final String errorTitle = "Error occured!";
     private XML XML;
 
-    private Thread parserThread, fileHandlerThread, visualizerThread;
+    private Thread streamParserThread, fileHandlerThread, visualizerThread;
     private Stage primaryStage;
     private FileHandler fileHandler;
     private Window view;
@@ -24,14 +24,21 @@ public class Controller {
     private Stream stream;
 
 
-    Controller(Stage primaryStage, FileHandler fileHandler, StreamParser streamParser, Window view) {
+    Controller(Stage primaryStage, Window view) {
 
         this.primaryStage = primaryStage;
         this.view = view;
-        this.fileHandler = fileHandler;
-        this.streamParser = streamParser;
+        this.streamParser = new StreamParser();
         this.stream = null;
         this.XML = null;
+
+        try {
+            this.fileHandler = new FileHandler();
+        } catch (IOException error) {
+            error.printStackTrace();
+            this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
+        }
+
 
         this.view.scene.setOnDragOver(dragEvent -> {
             Dragboard db = dragEvent.getDragboard();
@@ -123,6 +130,8 @@ public class Controller {
                             e.printStackTrace();
                             view.showAlertBox(errorTitle, String.valueOf(e.getMessage()));
                         }
+                        view.scene.setOnMouseClicked(mouseEvent -> { System.out.println("scene x: " + view.scene.getX() + "  scene y: " + view.scene.getY() + "mouse x: " + mouseEvent.getX() + "  mouse y: " + mouseEvent.getY());});
+
                         visualizerThread = new Thread(view.getTask());
                         visualizerThread.start();
 
@@ -137,15 +146,15 @@ public class Controller {
                     }
             );
 
-            parserThread = new Thread(streamParser.getTask());
-            parserThread.start();
+            streamParserThread = new Thread(streamParser.getTask());
+            streamParserThread.start();
         });
 
         fileHandler.getTask().setOnFailed(workerStateEvent ->
                 {
                     view.progressWindow.getDialogStage().close();
                     fileHandler.getTask().setOnFailed(event -> {
-                                fileHandler.getTask().getException().printStackTrace();
+                        fileHandler.getTask().getException().printStackTrace();
                         view.showAlertBox(errorTitle, fileHandler.getTask().getException().getMessage());
                     });
                 }
@@ -165,28 +174,40 @@ public class Controller {
 
         view.progressWindow.activatePinBar(this.fileHandler.getTask());
 
-        this.createTask(file);
+        createTask(file);
 
         fileHandlerThread = new Thread(this.fileHandler.getTask());
         fileHandlerThread.start();
 
         view.progressWindow.getDialogStage().setOnCloseRequest(windowEvent ->   {
-            this.restart();
+            try {
+                this.restart();
+            } catch (IOException error) {
+                error.printStackTrace();
+                this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
+            }
         });
     }
 
 
-    private void restart () { //TODO nefunguje
+    private void restart () throws IOException { //TODO not working
 
         if (fileHandlerThread != null) {
-            //interrupt = true;
+            fileHandler.getTask().cancel();
             fileHandlerThread.interrupt();
+            fileHandler = null;
+            fileHandlerThread = null;
 
-            if (parserThread != null) {
-                parserThread.interrupt();
+            if (streamParserThread != null) {
+                streamParser.getTask().cancel();
+                streamParserThread.interrupt();
+                streamParser = null;
+                streamParserThread = null;
+
+                System.gc();
+                streamParser = new StreamParser();
+                fileHandler= new FileHandler();
             }
         }
-        view = new Window(primaryStage);
-        //interrupt = false;
     }
 }

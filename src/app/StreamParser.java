@@ -51,7 +51,6 @@ public class StreamParser extends Config {
 
                     if (i == 0) {
                         i = seekBeginning(buffer, i);
-
                         if (i == nil) {
                             throw new IOException("File does not contain TS stream!");
                         }
@@ -64,9 +63,9 @@ public class StreamParser extends Config {
 
                         int header = parseHeader(packet);
 
-                        byte[] binaryHeader = new byte[tsHeaderBitLength];
-                        for (int index = 0; index < tsHeaderBitLength; index++) {
-                            binaryHeader[tsHeaderBitLength - index - 1] = getBit(header, index);
+                        byte[] binaryHeader = new byte[tsHeaderBinaryLength];
+                        for (int index = 0; index < tsHeaderBinaryLength; index++) {
+                            binaryHeader[tsHeaderBinaryLength - index - 1] = getBit(header, index);
                         }
                         TSpacket analyzedHeader = analyzeHeader(binaryHeader,packet);
 
@@ -74,20 +73,24 @@ public class StreamParser extends Config {
 
                             short adaptationFieldHeader = parseAdaptationFieldHeader(packet);
 
-                            byte[] binaryAdaptationFieldHeader = new byte[tsAdaptationFieldHeaderBitLength];
-                            for (int index = 0; index < tsAdaptationFieldHeaderBitLength; index++) {
-                                binaryAdaptationFieldHeader[tsAdaptationFieldHeaderBitLength - index - 1] = getBit(adaptationFieldHeader, index);
+                            byte[] binaryAdaptationFieldHeader = new byte[tsAdaptationFieldHeaderBinaryLength];
+                            for (int index = 0; index < tsAdaptationFieldHeaderBinaryLength; index++) {
+                                binaryAdaptationFieldHeader[tsAdaptationFieldHeaderBinaryLength - index - 1] = getBit(adaptationFieldHeader, index);
                             }
                             analyzedHeader.setAdaptationFieldHeader(analyzeAdaptationFieldHeader(binaryAdaptationFieldHeader));
 
                             short adaptationFieldLength = analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength();
                             if (adaptationFieldLength > 0) {
-                                //TODO cele pada
-//                                byte[] binaryAdaptationFieldOptional = new byte[adaptationFieldLength];
-//                                for (int index = 0; ++index <= adaptationFieldLength; )
-//                                    binaryAdaptationFieldOptional[adaptationFieldLength - index] = getBit(adaptationFieldHeader, index);
-//
-//                                TSpacket.AdaptationFieldOptionalFields analyzedAdaptationFieldOptionalFields = analyzeAdaptationFieldOptionalFields(analyzedAdaptationFieldHeader, binaryAdaptationFieldOptional);
+
+                                int optionalFieldsBinaryLength = adaptationFieldLength * byteBinaryLength;
+                                byte[] binaryAdaptationFieldOptional = new byte[optionalFieldsBinaryLength];
+
+                                for (int index = 0; ++index <= optionalFieldsBinaryLength; ) {
+                                    binaryAdaptationFieldOptional[optionalFieldsBinaryLength - index] = getBit(optionalFieldsBinaryLength, index);
+                                }
+                                analyzedHeader.getAdaptationFieldHeader().setAdaptationFieldOptionalFields(
+                                        analyzeAdaptationFieldOptionalFields(analyzedHeader.getAdaptationFieldHeader(), binaryAdaptationFieldOptional)
+                                );
                             }
                         }
                         if(isPayload(analyzedHeader.getAdaptationFieldControl())) {
@@ -107,8 +110,8 @@ public class StreamParser extends Config {
                             } else {
                                 analyzedHeader.setPayload(analyzePES(analyzedHeader, packet));
                             }
+                            packets.add(analyzedHeader);
                         }
-                        packets.add(analyzedHeader);
                         updateProgress(i, buffer.length);
                     }
                 }
@@ -158,26 +161,26 @@ public class StreamParser extends Config {
 
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
 
-        position += PSIcommonFieldsLength/byteBitLength;
+        position += PSIcommonFieldsLength/ byteBinaryLength;
 
         final int reserved = 2;
         int sectionLength = psiCommonFields.getSectionLength();
 
         int[] PATFields = parsePMTfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
-        byte[] binaryPATFields = intToBinary(sectionLength*byteBitLength,sectionLength,PATFields);
+        byte[] binaryPATFields = intToBinary(sectionLength* byteBinaryLength,sectionLength,PATFields);
 
-        int tsID = binToInt(binaryPATFields, position=0, tsIDlength);
+        int tsID = (int) binToInt(binaryPATFields, position=0, tsIDlength);
         short versionNum = (short) binToInt(binaryPATFields, position += tsIDlength+reserved, position += versionNumLength);
         byte currentNextIndicator = binaryPATFields[position++];
-        int sectionNum = binToInt(binaryPATFields, position, position += sectionNumLength);
-        int lastSectionNum = binToInt(binaryPATFields, position, position += sectionNumLength);
+        int sectionNum = (int) binToInt(binaryPATFields, position, position += sectionNumLength);
+        int lastSectionNum = (int) binToInt(binaryPATFields, position, position += sectionNumLength);
 
         Map PATmap = new HashMap<Integer,Integer>();
-        int N = sectionLength*byteBitLength - mandatoryPATfields;;
+        int N = sectionLength* byteBinaryLength - mandatoryPATfields;;
 
         for(int i = 0; i < N; i+=32) {
-            int programNum =  binToInt(binaryPATFields, position, position +=16);
-            int programMapPID= binToInt(binaryPATFields, position += 3, position +=13);
+            int programNum = (int) binToInt(binaryPATFields, position, position +=16);
+            int programMapPID= (int) binToInt(binaryPATFields, position += 3, position +=13);
             PATmap.put(programNum, programMapPID);
         }
         //int networkPID = (int) PATmap.get(0x0000);
@@ -244,7 +247,7 @@ public class StreamParser extends Config {
         final int gap = 3;
         short tableID = (short) binToInt(binaryPacket, 0, tableIDlength);
         byte SSI = (byte) binToInt(binaryPacket, tableIDlength, tableIDlength+1);
-        int sectionLength = binToInt(binaryPacket, tableIDlength+1+gap, tableIDlength+1+gap+sectionLengthLength);
+        int sectionLength = (int) binToInt(binaryPacket, tableIDlength+1+gap, tableIDlength+1+gap+sectionLengthLength);
 
         return new PSI(tableID,SSI,sectionLength,null);
     }
@@ -268,15 +271,15 @@ public class StreamParser extends Config {
         position+=1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
 
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
-        position += PSIcommonFieldsLength/byteBitLength;
+        position += PSIcommonFieldsLength/ byteBinaryLength;
 
         final int reserved = 2;
         int sectionLength = psiCommonFields.getSectionLength();
 
         int[] PMTFields = parsePMTfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
-        byte[] binaryPMTFields = intToBinary(sectionLength*byteBitLength,sectionLength,PMTFields);
+        byte[] binaryPMTFields = intToBinary(sectionLength* byteBinaryLength,sectionLength,PMTFields);
 
-        int programNum =  binToInt(binaryPMTFields, position=0, programNumberLength);
+        int programNum = (int) binToInt(binaryPMTFields, position=0, programNumberLength);
         byte versionNum = (byte) binToInt(binaryPMTFields, position += tsIDlength+reserved, position += versionNumLength);
         byte currentNextIndicator = binaryPMTFields[position++];
         byte sectionNum = (byte) binToInt(binaryPMTFields, position += tsIDlength+reserved, position += sectionNumLength);
@@ -286,17 +289,17 @@ public class StreamParser extends Config {
 
         //Map descriptorsMap = new HashMap<Integer,Integer>();
         //List descriptors = new ArrayList<Map>();
-        byte[] descriptors = new byte[programInfoLength * byteBitLength];
+        byte[] descriptors = new byte[programInfoLength * byteBinaryLength];
         //TODO load N descriptors
 
 
         HashMap PMTmap = new HashMap<Integer,Integer>();
-        int N = sectionLength * byteBitLength - mandatoryPATfields;
+        int N = sectionLength * byteBinaryLength - mandatoryPATfields;
 
         for(int i = 0; i < N; i+=40) {
-            int streamType = binToInt(binaryPMTFields, position, position += streamTypeLength);
-            int elementaryPID = binToInt(binaryPMTFields, position+=3, position += elementaryPIDlength);
-            int ESinfoLength = binToInt(binaryPMTFields, position+=6, position += ESinfoLengthLength-2);
+            int streamType = (int) binToInt(binaryPMTFields, position, position += streamTypeLength);
+            int elementaryPID = (int) binToInt(binaryPMTFields, position+=3, position += elementaryPIDlength);
+            int ESinfoLength = (int) binToInt(binaryPMTFields, position+=6, position += ESinfoLengthLength-2);
             byte[] NsloopDescriptors = new byte[ESinfoLength];
             position += ESinfoLength;
             PMTmap.put(streamType, elementaryPID);
@@ -327,15 +330,15 @@ public class StreamParser extends Config {
 
         int PESlength = tsPacketSize - position;
         int[] PESFields = parsePMTfields(packet, position, PESlength);
-        byte[] binaryPESFields = intToBinary(PESlength * byteBitLength, PESlength, PESFields);
+        byte[] binaryPESFields = intToBinary(PESlength * byteBinaryLength, PESlength, PESFields);
 
         if (position < tsPacketSize - packetStartCodePrefixLength ) {
-            int pscp = binToInt(binaryPESFields, position=0, position += packetStartCodePrefixLength);
+            int pscp = (int) binToInt(binaryPESFields, position=0, position += packetStartCodePrefixLength);
 
             if (pscp == packetStartCodePrefix) {
 
-                int streamID = binToInt(binaryPESFields, position, position += streamIDlength);
-                int PESpacketLength = binToInt(binaryPESFields, position, position += PESpacketLengthLength);
+                int streamID = (int) binToInt(binaryPESFields, position, position += streamIDlength);
+                int PESpacketLength = (int) binToInt(binaryPESFields, position, position += PESpacketLengthLength);
                 byte PESscramblingControl = (byte) binToInt(binaryPESFields, position, position += PESscramblingControlLength);
                 byte PESpriority = (byte) binToInt(binaryPESFields, position += 2, position += PESpriorityLength);
                 byte DataAlignmentIndicator = (byte) binToInt(binaryPESFields, position, position += DataAlignmentIndicatorLength);
@@ -369,7 +372,7 @@ public class StreamParser extends Config {
         byte PEScrcFlag = (byte) binToInt(binaryPESFields, position, position += PEScrcFlagLength);
         byte PESextensionFlag = (byte) binToInt(binaryPESFields, position, position += PESextensionFlagLength);
 
-        int PESheaderDataLength = binToInt(binaryPESFields, position, position += PESheaderDataLengthLength);
+        int PESheaderDataLength = (int) binToInt(binaryPESFields, position, position += PESheaderDataLengthLength);
 
         long PTSdts = nil;
         long ESCR = nil;
@@ -379,25 +382,25 @@ public class StreamParser extends Config {
         long PEScrc = nil;
 
         if(PTSdtsFlags == 1) {
-            PTSdts = (byte) binToInt(binaryPESFields, position, position + PTSdtsLength);
+            PTSdts = binToInt(binaryPESFields, position, position += PTSdtsLength);
         }
         else if(PTSdtsFlags == 2) {
-            PTSdts = (byte) binToInt(binaryPESFields, position, position + PTSdtsLength);
+            PTSdts = binToInt(binaryPESFields, position, position += PTSdtsLength);
         }
         if (ESCRflag == 1) {
-            ESCR = (byte) binToInt(binaryPESFields, position, position += ESCRlength);
+            ESCR = binToInt(binaryPESFields, position, position += ESCRlength);
         }
         if (ESrateFlag == 1) {
-            ESrate = (byte) binToInt(binaryPESFields, position, position += ESrateLength);
+            ESrate = binToInt(binaryPESFields, position, position += ESrateLength);
         }
         if (DSMtrickModeFlag == 1) {
-            DSMtrickMode = (byte) binToInt(binaryPESFields, position, position += DSMtrickModeLength);
+            DSMtrickMode = (int) binToInt(binaryPESFields, position, position += DSMtrickModeLength);
         }
         if (AdditionalCopyInfoFlag == 1) {
-            AdditionalCopyInfo = (byte) binToInt(binaryPESFields, position, position += AdditionalCopyInfoLength);
+            AdditionalCopyInfo = (int) binToInt(binaryPESFields, position, position += AdditionalCopyInfoLength);
         }
         if (PEScrcFlag == 1) {
-            PEScrc = (byte) binToInt(binaryPESFields, position, position += PEScrcLength);
+            PEScrc = binToInt(binaryPESFields, position, position += PEScrcLength);
         }
         if (PESextensionFlag == 1) {
             //TODO PES optional fields extension fields
@@ -506,18 +509,18 @@ public class StreamParser extends Config {
         byte SSF = 0;
 
         if (adaptationFieldHeader.getPCRF() == 0x1) {
-            PCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 42);
+            PCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 48);
         }
         if (adaptationFieldHeader.getOPCRF() == 0x1) {
-            OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 42);
+            OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 48);
         }
-        if (adaptationFieldHeader.getSPF() == 0x1){
+        if (adaptationFieldHeader.getSplicingPointFlag() == 0x1){
             spliceCountdown = (byte) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);
         }
         int offset = i;
-        if (adaptationFieldHeader.getTPDF() == 0x1) {
+        if (adaptationFieldHeader.getTPDflag() == 0x1) {
 
-            TPDlength = (byte) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);
+            TPDlength = (short) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);
             offset = i;
 
             TPD = new byte[TPDlength];
@@ -526,7 +529,7 @@ public class StreamParser extends Config {
             }
         }
 
-        if (adaptationFieldHeader.getAFEF() == 0x1) {
+        if (adaptationFieldHeader.getAFEflag() == 0x1) {
 
             AFEFlength = (short) binToInt(binaryAdaptationFieldOptionalFields, offset, offset += 8);
 
@@ -565,14 +568,10 @@ public class StreamParser extends Config {
         return (byte) ((source >> position) & 1);
     }
 
-    public byte getBit(byte source, byte position) {
-        return (byte) ((source >> position) & 1);
-    }
 
+    private long binToInt(byte[] binaryHeader, int start, int end) {
 
-    private int binToInt(byte[] binaryHeader, int start, int end) {
-
-        int result = 0;
+        long result = 0;
         for (int i = start; i < end; i++) {
             result = (result << 1) | (binaryHeader[i] == 1 ? 1 : 0);
         }
