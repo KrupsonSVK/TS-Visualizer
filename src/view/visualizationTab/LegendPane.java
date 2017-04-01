@@ -34,7 +34,9 @@ public class LegendPane extends VisualizationTab implements Drawer{
     private PacketPane packetPane;
     private BarPane barPane;
 
-    private double oldSceneX, oldTranslateX, xPos;
+    private double oldSceneX;
+    private double oldTranslateX;
+    double xPos;
 
     private static final double labelWidth = 135;
     private static final double fontSize = 8.5;
@@ -86,7 +88,8 @@ public class LegendPane extends VisualizationTab implements Drawer{
     }
 
 
-    protected void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sorted, double xPos) {
+    @Override
+    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
 
         GraphicsContext graphicsContextLegendCanvas = canvas.getGraphicsContext2D();
 
@@ -95,8 +98,9 @@ public class LegendPane extends VisualizationTab implements Drawer{
         graphicsContextLegendCanvas.setFill(Color.rgb(240,240,240));
         graphicsContextLegendCanvas.fillRect(0,0, canvas.getWidth(), canvas.getHeight());
 
+        double yPos = packetPane.scrollPane.getVvalue()*(canvas.getHeight()-getLegendScopeHeigth());
         graphicsContextLegendCanvas.setFill(Color.WHITE);
-        graphicsContextLegendCanvas.fillRect(0,0, getLegendScopeLength(), canvas.getHeight()); //TODO dorobit aj x-ovu os
+        graphicsContextLegendCanvas.fillRect(0,yPos, getLegendScopeWidth(), getLegendScopeHeigth());
 
         int index = 0;
         for (TSpacket packet : packets) {
@@ -104,14 +108,18 @@ public class LegendPane extends VisualizationTab implements Drawer{
                 int pid = packet.getPID();
                 boolean isPayloadStart = packet.getPayload() != null ? packet.getPayload().hasPESheader() : false;
                 boolean isAdaptationField = packet.getAdaptationFieldHeader() != null;
-                drawMiniPacket(graphicsContextLegendCanvas, pid,  xPos + index * miniPacketImageSize, sorted.indexOf(pid),isAdaptationField,isPayloadStart);
+                drawMiniPacket(graphicsContextLegendCanvas, pid,  xPos + index * miniPacketImageSize, sortedPIDs.indexOf(pid),isAdaptationField,isPayloadStart);
             }
             index++;
         }
     }
 
+    private double getLegendScopeHeigth() {
+        return ( scene.getHeight() / packetImageHeight * miniPacketImageSize );
+    }
 
-    private double getLegendScopeLength() {
+
+    private double getLegendScopeWidth() {
         return ( scene.getWidth() / packetImageWidth * miniPacketImageSize );
     }
 
@@ -173,11 +181,8 @@ public class LegendPane extends VisualizationTab implements Drawer{
         scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
                     labelScrollPane.setVvalue(scrollPane.getVvalue());
                     packetPane.scrollPane.setVvalue(scrollPane.getVvalue());
-                }
-        );
-
-        labelScrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
                     scrollPane.setVvalue(labelScrollPane.getVvalue());
+                    drawCanvas(stream,packets,sortedPIDs,xPos);
                 }
         );
 
@@ -187,11 +192,11 @@ public class LegendPane extends VisualizationTab implements Drawer{
             canvas.setWidth(newWidth);
             scrollPane.setMaxWidth(newWidth);
 
-            drawCanvas(stream, packets,sortedPIDs, xPos);
+            drawCanvas(stream,packets,sortedPIDs, xPos);
         });
 
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-            drawCanvas(stream, packets,sortedPIDs, xPos);
+            drawCanvas(stream,packets,sortedPIDs, xPos);
         });
 
         pane.setOnMousePressed(mouseEvent -> {
@@ -209,16 +214,16 @@ public class LegendPane extends VisualizationTab implements Drawer{
             packetPane.drawCanvas(stream, packets,sortedPIDs, xPos * legendPaneMoveCoeff);
 
             barPane.setXpos(-xPos / getLookingGlassMoveCoeff());
-            barPane.rectangle.setX(-xPos / getLookingGlassMoveCoeff());
+            barPane.lookingGlass.setX(-xPos / getLookingGlassMoveCoeff());
 
             updateX(mouseEvent);
         });
     }
 
+    @Override
+    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
 
-    void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
-
-        drawPackets(stream, packets, sortedPIDs,xPos);
+        drawPackets(stream,  packets, sortedPIDs,xPos);
 
         pane.getChildren().clear();
         pane.getChildren().addAll(canvas);

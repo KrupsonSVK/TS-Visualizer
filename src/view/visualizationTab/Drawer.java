@@ -18,4 +18,6 @@ public interface Drawer {
     double translate(double sceneX);
     double getLookingGlassMoveCoeff();
     double stayInRange(double xPos);
-}
+    void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos);
+    void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos);
+    }

@@ -9,6 +9,8 @@ import java.util.Map;
 
 public class Config {
 
+    public final static double mouseSensitivityVertical = 1.; // 2.5;
+
     public final static int tsPacketSize = 188;
     public final static int tsHeaderSize = 4;
     public final static int tsHeaderBinaryLength = tsHeaderSize * 8;
@@ -81,6 +83,7 @@ public class Config {
     public static final int DITpid = 0x1E;
     public static final int SITpid = 0x1F;
     public static final int PMTpid = 0xFF;
+    public static final int nullPacket = 0x1FFF;
 
     public static final int PAStableID = 0x00;
     public static final int CAStableID = 0x01;
@@ -153,6 +156,7 @@ public class Config {
                 put(adaptationFieldIcon, new Image(getClass().getResourceAsStream(resourcesPath + "adaptation.png")));
                 put(PESheaderIcon, new Image(getClass().getResourceAsStream(resourcesPath + "pesheader.png")));
                 put(privateType, new Image(getClass().getResourceAsStream(resourcesPath + "private.png")));
+                put(nullPacket, new Image(getClass().getResourceAsStream(resourcesPath + "null.png")));
                 put(defaultType, new Image(getClass().getResourceAsStream(resourcesPath + "default.png")));
             }
         };
@@ -327,6 +331,13 @@ public class Config {
         Map map = stream.getPrograms();
         Object obj = map.get(pid);
         return obj == null ? "" : obj.toString();
+    }
+
+
+    public int getType(TSpacket packet, Stream stream) {
+        if (isPSI(packet.getPID()))
+            return PSItype;
+        return getPEStype(stream.getPEScode(packet.getPID()));
     }
 
 

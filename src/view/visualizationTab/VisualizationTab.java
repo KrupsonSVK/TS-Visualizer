@@ -27,14 +27,14 @@ public class VisualizationTab extends Window{
 
     private Scene scene;
     private CheckBox groupByCheckBox;
-    private List<Integer> sortedPIDs;
+    List<Integer> sortedPIDs;
     public ArrayList<TSpacket> packets;
     private Slider zoomer;
     //private static final int mouseSensitivity = 80;
 
     private PacketPane packetPane;
     private BarPane barPane;
-    private LegendPane legendPane;
+    LegendPane legendPane;
 
     private EventHandler<ActionEvent> groupByCheckBoxEvent, programComboBoxEvent, zoomerEvent;
     double offset = 0;

@@ -25,7 +25,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     private Scene scene;
 
     ScrollPane scrollPane;
-    Rectangle rectangle;
+    Rectangle lookingGlass;
     private ContextMenu contextMenu;
 
     private PacketPane packetPane;
@@ -100,10 +100,10 @@ public class BarPane extends VisualizationTab implements Drawer{
         Image barBackground = drawPacketsInBar(graphicsContextBarCanvas, barCanvas, packets, (int) scene.getWidth(), (int) scene.getHeight());
         graphicsContextBarCanvas.drawImage(barBackground, scene.getWidth(), scene.getHeight());
 
-        rectangle = drawLookingGlass(0, getLookingGlassWidth(), barScrollPaneHeight);
+        lookingGlass = drawLookingGlass(0, getLookingGlassWidth(), barScrollPaneHeight);
 
-        Pane barPane = new Pane(barCanvas,rectangle);
-        rectangle.toFront();
+        Pane barPane = new Pane(barCanvas, lookingGlass);
+        lookingGlass.toFront();
         scrollPane.setContent(barPane);
     }
 
@@ -172,10 +172,10 @@ public class BarPane extends VisualizationTab implements Drawer{
             ((Rectangle) (mouseEvent.getSource())).setX(xPos);
 
             packetPane.setXpos(-xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
-            packetPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+            packetPane.drawCanvas(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
 
             legendPane.setXpos(-xPos * getLookingGlassMoveCoeff());
-            legendPane.drawPackets(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() );
+            legendPane.drawCanvas(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() );
         };
 
         scrollPane.setOnMouseClicked((MouseEvent mouseEvent) -> {
@@ -188,8 +188,8 @@ public class BarPane extends VisualizationTab implements Drawer{
                 }
         );
 
-        rectangle.setOnMousePressed(lookingGlassOnMousePressedEventHandler);
-        rectangle.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
+        lookingGlass.setOnMousePressed(lookingGlassOnMousePressedEventHandler);
+        lookingGlass.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
     }
 
 
@@ -201,6 +201,16 @@ public class BarPane extends VisualizationTab implements Drawer{
             return scene.getWidth();
         }
         return xPos;
+    }
+
+    @Override
+    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+
+    }
+
+    @Override
+    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+
     }
 
     @Override
