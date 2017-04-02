@@ -2,36 +2,33 @@ package view;
 
 import app.Main;
 import javafx.application.Platform;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.text.Font;
-import model.Config;
-import model.Stream;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import model.Stream;
+import model.config.dvb;
 import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
 
-import static model.Config.userGuideText;
 import static app.Main.releaseDate;
-import static java.lang.Thread.sleep;
+import static model.config.config.*;
 
 
 public class Window {
 
-    private final double windowWidth = 960;
-    protected static final double windowHeigth = 720;
-    private final Config config;
-
+    private final dvb dvb;
 
     public Stage primaryStage;
     Stage aboutStage;
@@ -70,7 +67,7 @@ public class Window {
     public Window(Stage primaryStage) {
 
         this.task = null;
-        this.config = new Config();
+        this.dvb = new dvb();
 
         this.primaryStage = primaryStage;
         aboutStage = new Stage();
@@ -123,14 +120,14 @@ public class Window {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        visualizationTab.init(scene,config);
+        visualizationTab.init(scene);
         graphTab.setScene(scene);
         mainMenu.toFront();
     }
 
 
     public Window() {
-        this.config = new Config();
+        this.dvb = new dvb();
     }
 
 

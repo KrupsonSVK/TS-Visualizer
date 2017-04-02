@@ -1,6 +1,7 @@
 package view.visualizationTab;
 
-import model.Config;
+import model.config.config;
+import model.config.dvb;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -17,10 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static model.config.dvb.*;
+import static model.config.config.*;
+
 
 public class LegendPane extends VisualizationTab implements Drawer{
 
-    private Config config;
     private Scene scene;
     private Pane pane;
     ScrollPane scrollPane;
@@ -34,17 +37,9 @@ public class LegendPane extends VisualizationTab implements Drawer{
     private double oldTranslateX;
     private double xPos;
 
-    private static final double labelWidth = 135;
-    private static final double fontSize = 8.5;
-    private static final int offset = 2;
-    private static final double secondaryFrameSize = 1.25;
-    private static final double primaryFrameSize = 2.5;
-    private static final Color defaultColor = Color.rgb(240,240,240);
 
-
-    public LegendPane(Scene scene, Config config) {
+    public LegendPane(Scene scene) {
         this.scene = scene;
-        this.config = config;
     }
 
 
@@ -127,34 +122,34 @@ public class LegendPane extends VisualizationTab implements Drawer{
     private void drawMiniPacket(GraphicsContext graphicsContext, int type, double x, double y, boolean isAdaptationField, boolean isPayloadStart) {
 
         if (isAdaptationField && isPayloadStart){
-            graphicsContext.setFill(config.payloadStartColor);
-            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
-            graphicsContext.setFill(config.adaptationFieldColor);
+            graphicsContext.setFill(payloadStartColor);
+            graphicsContext.fillRect(x + offsetLP, y * miniPacketImageSize + offsetLP, miniPacketImageSize- offsetLP, miniPacketImageSize- offsetLP);
+            graphicsContext.setFill(adaptationFieldColor);
             graphicsContext.fillRect(x + posOffset(secondaryFrameSize), y * miniPacketImageSize + posOffset(secondaryFrameSize) , miniPacketImageSize -  sizeOffset(secondaryFrameSize), miniPacketImageSize - sizeOffset(secondaryFrameSize));//x,y,height, width, archeigth, arcwidh
-            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.setFill(getPacketColor(type));
             graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
         }
         else if (isAdaptationField){
-            graphicsContext.setFill(config.adaptationFieldColor);
-            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
-            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.setFill(adaptationFieldColor);
+            graphicsContext.fillRect(x + offsetLP, y * miniPacketImageSize + offsetLP, miniPacketImageSize- offsetLP, miniPacketImageSize- offsetLP);
+            graphicsContext.setFill(getPacketColor(type));
             graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
 
         }
         else if (isPayloadStart){
-            graphicsContext.setFill(config.payloadStartColor);
-            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset , miniPacketImageSize-offset, miniPacketImageSize-offset);
-            graphicsContext.setFill(config.getPacketColor(type));
+            graphicsContext.setFill(payloadStartColor);
+            graphicsContext.fillRect(x + offsetLP, y * miniPacketImageSize + offsetLP, miniPacketImageSize- offsetLP, miniPacketImageSize- offsetLP);
+            graphicsContext.setFill(getPacketColor(type));
             graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
         }
         else {
-            graphicsContext.setFill(config.getPacketColor(type));
-            graphicsContext.fillRect(x + offset, y * miniPacketImageSize + offset, miniPacketImageSize - offset, miniPacketImageSize - offset);
+            graphicsContext.setFill(getPacketColor(type));
+            graphicsContext.fillRect(x + offsetLP, y * miniPacketImageSize + offsetLP, miniPacketImageSize - offsetLP, miniPacketImageSize - offsetLP);
         }
     }
 
     private double sizeOffset(double i) {
-        return i*offset;
+        return i* offsetLP;
     }
 
     private double posOffset(double i) {

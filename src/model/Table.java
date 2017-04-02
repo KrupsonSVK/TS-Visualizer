@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static model.Config.nil;
+import static model.config.dvb.nil;
 
 public class Table {
 

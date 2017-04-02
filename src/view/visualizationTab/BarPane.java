@@ -1,48 +1,46 @@
 package view.visualizationTab;
 
-import model.Config;
-import javafx.scene.control.*;
-import model.Stream;
-import model.TSpacket;
-
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import model.config.dvb;
+import model.Stream;
+import model.TSpacket;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static model.config.dvb.*;
+import static model.config.config.*;
 
 
 public class BarPane extends VisualizationTab implements Drawer{
 
-    private Config config;
     private Scene scene;
-
     ScrollPane scrollPane;
     Rectangle lookingGlass;
     private ContextMenu contextMenu;
-
     private PacketPane packetPane;
     private LegendPane legendPane;
-
-    private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler, lookingGlassOnMouseDraggedEventHandler;
-
+    private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler,lookingGlassOnMouseDraggedEventHandler;
     private Stream stream;
     private ArrayList<TSpacket> packets;
     private List sortedPIDs;
-
     private double oldSceneX, oldTranslateX, xPos, initDiff, lastValue;
 
 
-    public BarPane(Scene scene, Config config){
+    public BarPane(Scene scene){
         this.scene = scene;
-        this.config = config;
     }
 
 
@@ -81,8 +79,8 @@ public class BarPane extends VisualizationTab implements Drawer{
             contextMenu.getItems().add(item);
         }
         for(Integer pid : sortedPIDs){
-            if(config.isPSI(pid)){
-                CheckMenuItem item = new CheckMenuItem(config.getPacketName(pid));
+            if(dvb.isPSI(pid)){
+                CheckMenuItem item = new CheckMenuItem(dvb.getPacketName(pid));
                 item.setDisable(true);
                 item.setSelected(false);
                 contextMenu.getItems().add(item);
@@ -120,7 +118,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
         double xPos = 0;
         for(TSpacket packet : packets){
-            if(config.isPSI(packet.getPID())){
+            if(dvb.isPSI(packet.getPID())){
                 drawOneBar(gcb, packet.getPID(), (int) xPos, widthOfBar, height);
             }
             xPos += increment;
@@ -133,7 +131,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
 
     private void drawOneBar(GraphicsContext gc, int type, int x, int width, double height) {
-        gc.setFill(config.getPacketColor(type));
+        gc.setFill(getPacketColor(type));
         gc.fillRect(x, 0, width, height);
     }
 

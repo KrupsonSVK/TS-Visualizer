@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import javafx.concurrent.Task;
+import model.config.dvb;
 import model.pes.PES;
 import model.psi.CАТs;
 import model.psi.PAT;
@@ -16,7 +17,7 @@ import model.psi.PMT_;
 import model.psi.PSI;
 
 
-public class StreamParser extends Config {
+public class StreamParser extends dvb {
 
 
     private Task<Table> task;

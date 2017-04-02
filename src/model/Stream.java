@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static model.Config.videoType;
+import static model.config.dvb.videoType;
 
 
 public class Stream {

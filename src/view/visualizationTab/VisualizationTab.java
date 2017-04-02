@@ -1,6 +1,6 @@
 package view.visualizationTab;
 
-import model.Config;
+import model.config.dvb;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import model.Stream;
@@ -18,41 +18,24 @@ import view.Window;
 
 import java.util.*;
 
+import static model.config.dvb.*;
+import static model.config.config.*;
+
+
 public class VisualizationTab extends Window{
 
     public Tab tab;
     Stream stream;
     private Sorter sorter;
-    private Config config;
-
     private Scene scene;
     private CheckBox groupByCheckBox;
     List<Integer> sortedPIDs;
     public ArrayList<TSpacket> packets;
     private Slider zoomer;
-    //private static final int mouseSensitivity = 80;
-
     private PacketPane packetPane;
     private BarPane barPane;
     LegendPane legendPane;
-
     private EventHandler<ActionEvent> groupByCheckBoxEvent, programComboBoxEvent, zoomerEvent;
-
-    final static double packetImageWidth = 100;
-    final static double packetImageHeight = 60;
-    final static double miniPacketImageSize = 10;
-    final static double typeIconSize = 19;
-    final static double specialIconSize = 16;
-    final static double legendPaneMoveCoeff = packetImageWidth / miniPacketImageSize;
-    final static double packetScrollPaneHeightRatio = 0.54;
-    final static double barScrollPaneHeigthRatio = 0.06;
-    final static double legendScrollPaneHeightRatio = 0.30;
-    final static double packetScrollPaneHeight = windowHeigth * packetScrollPaneHeightRatio;
-    final static double fontSize = 8;
-    final static double barScrollPaneHeight = windowHeigth * barScrollPaneHeigthRatio;
-    final static double legendScrollPaneHeight = windowHeigth * legendScrollPaneHeightRatio;;
-    final static double barHeight = windowHeigth * barScrollPaneHeigthRatio;
-    final static double inset = 5;
 
     public VisualizationTab() {
         super();
@@ -61,13 +44,12 @@ public class VisualizationTab extends Window{
     }
 
 
-    public void init(Scene scene, Config config){
+    public void init(Scene scene){
         this.scene = scene;
-        this.config = config;
 
-        packetPane = new PacketPane(this.scene,config);
-        barPane = new BarPane(this.scene,config);
-        legendPane = new LegendPane(this.scene,config);
+        packetPane = new PacketPane(this.scene);
+        barPane = new BarPane(this.scene);
+        legendPane = new LegendPane(this.scene);
     }
 
 
