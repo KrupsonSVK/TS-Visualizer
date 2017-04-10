@@ -1,5 +1,6 @@
-package view;
+package model;
 
+import java.math.BigInteger;
 import java.util.*;
 
 
@@ -29,11 +30,22 @@ public class Sorter {
     }
 
 
-    public List<Integer> sortPIDs(Map<Integer, Integer> copyPIDs) {
-        List<Integer> unsorted = new ArrayList<Integer>();
+    public List<Integer> sortMapToListByKey(Map<Integer, Integer> map) {
+        List<Integer> unsorted = new ArrayList<>();
 
-        for (Map.Entry<Integer, Integer> entry : copyPIDs.entrySet()) {
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
             unsorted.add(entry.getKey());
+        }
+        Collections.sort(unsorted);
+
+        return unsorted;
+    }
+
+    public List<BigInteger> sortMapToListByValue(Map<BigInteger, BigInteger> map) {
+        List<BigInteger> unsorted = new ArrayList<>();
+
+        for (Map.Entry<BigInteger, BigInteger> entry : map.entrySet()) {
+            unsorted.add(entry.getValue());
         }
         Collections.sort(unsorted);
 

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static model.config.dvb.videoType;
+import static model.config.DVB.videoType;
 
 
 public class Stream {
@@ -25,10 +25,10 @@ public class Stream {
     private final HashMap PIDs;
     private final ArrayList packets;
     private final Map programs;
-    private final Map streams;
+    private final Tables tables;
 
 
-    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, HashMap PIDs, ArrayList packets, Map programs, Map streams) {
+    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, Map programs, Tables tables) {
         this.name = name;
         this.path = path;
         this.size = size;
@@ -41,52 +41,69 @@ public class Stream {
         this.packetSize = packetSize;
         this.numOfPackets = numOfPackets;
         this.numOfErrors = numOfErrors;
-        this.PIDs = PIDs;
-        this.packets = packets;
+        this.PIDs = tables.getPIDmap();
+        this.packets = tables.getPackets();
         this.programs = programs;
-        this.streams = streams;
+        this.tables = tables;
     }
 
 
     public String getName() {
         return name;
     }
+
     public String getPath() {
         return path;
     }
+
     public String getSize() {
         return size;
     }
+
     public String getCreationTime() {
         return creationTime;
     }
+
     public String getLastAccessTime() {
         return lastAccessTime;
     }
+
     public String getLastModifiedTime() {
         return lastModifiedTime;
     }
+
     public boolean isRegularFile() {
         return isRegularFile;
     }
+
     public boolean isReadonly() {
         return readonly;
     }
+
     public String getOwner() {
         return owner;
     }
+
     public int getPacketSize() {
         return packetSize;
     }
+
     public int getNumOfPackets() {
         return numOfPackets;
     }
+
+    public Tables getTables() {
+        return tables;
+    }
+
     public int getNumOfErrors() {
         return numOfErrors;
     }
+
     public HashMap getPIDs() {
         return PIDs;
     }
+
     public ArrayList getPackets() {
         return packets;
     }
@@ -95,9 +112,9 @@ public class Stream {
     }
 
     public int getPEScode(int pid) {
-        if (this.streams.get(pid) == null) {
+        if (tables.getStreamCodes().get(pid) == null) {
             return videoType;
         }
-        return (int) this.streams.get(pid);
+        return (int)tables.getStreamCodes().get(pid);
     }
 }

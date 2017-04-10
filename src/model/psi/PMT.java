@@ -3,7 +3,8 @@ package model.psi;
 
 import java.util.List;
 
-public class PMT_ extends PSI{
+public class PMT extends PSI{
+
     private int programNum;
     private byte versionNum;
     private byte currentNextIndicator;
@@ -15,15 +16,15 @@ public class PMT_ extends PSI{
     private List PMTloop;
     private long CRC;
 
-    public PMT_(short tableID, byte SSI, int sectionLength) {
+    public PMT(short tableID, byte SSI, int sectionLength) {
         super(tableID, SSI, sectionLength, null);
     }
 
-    public PMT_() {
+    public PMT() {
         super();
     }
 
-    public PMT_(short tableID, byte ssi, int sectionLength, int programNum, byte versionNum, byte currentNextIndicator, byte sectionNum, byte lastSectionNum, short pcr_pid, short programInfoLength, byte[] descriptors, long crc) {
+    public PMT(short tableID, byte ssi, int sectionLength, int programNum, byte versionNum, byte currentNextIndicator, byte sectionNum, byte lastSectionNum, short pcr_pid, short programInfoLength, byte[] descriptors, long crc) {
         super(tableID, ssi, sectionLength, null);
         this.programNum = programNum;
         this.versionNum = versionNum;

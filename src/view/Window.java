@@ -17,18 +17,15 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Stream;
-import model.config.dvb;
 import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
 
 import static app.Main.releaseDate;
-import static model.config.config.*;
+import static model.config.Config.*;
 
 
 public class Window {
-
-    private final dvb dvb;
 
     public Stage primaryStage;
     Stage aboutStage;
@@ -59,7 +56,6 @@ public class Window {
     MenuItem searchPacket;
     public MenuItem about;
     public MenuItem userGuide;
-    private TreeItem<String> nodes;
 
     private Task task;
 
@@ -67,7 +63,6 @@ public class Window {
     public Window(Stage primaryStage) {
 
         this.task = null;
-        this.dvb = new dvb();
 
         this.primaryStage = primaryStage;
         aboutStage = new Stage();
@@ -111,7 +106,7 @@ public class Window {
         alertBox = new Alert(Alert.AlertType.ERROR);
         progressWindow = new ProgressForm(progressStage);
 
-        detailTab = new DetailTab(nodes);
+        detailTab = new DetailTab();
         visualizationTab = new VisualizationTab();
         graphTab = new GraphTab();
 
@@ -121,13 +116,13 @@ public class Window {
         primaryStage.show();
 
         visualizationTab.init(scene);
+        detailTab.setScene(scene);
         graphTab.setScene(scene);
         mainMenu.toFront();
     }
 
 
     public Window() {
-        this.dvb = new dvb();
     }
 
 
@@ -243,5 +238,23 @@ public class Window {
         vBox.setAlignment(Pos.CENTER);
         userGuideStage.setScene(new Scene(vBox, 600, 450));
         userGuideStage.show();
+    }
+
+
+    private long midBits(long k, int m, int n){
+        return (k >> m) & ((1 << (n-m))-1);
+    }
+
+
+    public String parseTimestamp(long pts_dts){
+
+        long timestamp = (midBits(pts_dts,17,35) << 15) | midBits(pts_dts,1,16);
+
+        double milliseconds = timestamp / 90.;
+        double seconds = (milliseconds / 1000.) % 60.;
+        long minutes = ((long)milliseconds / (1000 * 60)) % 60;
+        long hours = ((long)milliseconds / (1000 * 60 * 60)) % 24;
+
+        return String.format("0x%05X (%02d:%02d:%06.3f) ", timestamp, hours, minutes, seconds, milliseconds);
     }
 }

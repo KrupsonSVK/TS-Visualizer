@@ -1,24 +1,23 @@
 package view.visualizationTab;
 
 
-import model.config.dvb;
+import model.*;
+import model.config.DVB;
 import javafx.scene.control.Tooltip;
-import model.AdaptationFieldHeader;
-import model.AdaptationFieldOptionalFields;
-import model.Payload;
-import model.TSpacket;
 import model.pes.PES;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Map;
 
-import static model.config.config.*;
-import static model.config.dvb.*;
+import static model.config.Config.*;
+import static model.config.DVB.*;
 
 public class PacketInfo extends Tooltip {
 
     private ArrayList<TSpacket> packets;
+    private Stream stream;
 
 
     PacketInfo(){
@@ -44,15 +43,29 @@ public class PacketInfo extends Tooltip {
                         createAdaptationFieldHeaderOutput(packet.getAdaptationFieldHeader()) +
                         createPESheaderOutput(packet.getPayload()) +
                         createDataOutput(getHexSequence(packet.getData())) +
-                        createASCIIoutput(packet.getData(), packet.getPID()) + "\n"
+                        createASCIIoutput(packet.getData(), packet.getPID()) +
+                        createPATOutput(packet.getPID(),stream.getTables().getPATmap()) + "\n"
         );
+    }
+
+
+    private String createPATOutput(int pid, Map<Integer, Integer> PATmap) {
+        if(pid == PATpid) {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for (Map.Entry<Integer, Integer> entry : PATmap.entrySet()) {
+                stringBuilder.append(toHex(entry.getKey()) + ":" +  toHex(entry.getValue()) + " (" + String.format("%04d",entry.getKey()) + " -> " + String.format("%04d",entry.getValue()) + ")\n");
+            }
+            return "\n\nProgram Association Table: \n\n            Service -> PMT PID\n" + stringBuilder.toString();
+        }
+        return "";
     }
 
 
     private String createHeaderOutput(TSpacket packet) {
         return (
                 "Header: \n\n" +
-                        "Packet PID: " + String.format("0x%04X", packet.getPID() & 0xFFFFF) + " (" + packet.getPID() + ")\n" +
+                        "Packet PID: " + toHex(packet.getPID()) + " (" + packet.getPID() + ")\n" +
                         "Transport Error Indicator: " + packet.getTransportErrorIndicator() + (packet.getTransportErrorIndicator() == 0x0 ? " (No error)" : " (Error packet)") + "\n" +
                         "Payload Start Indicator: " + packet.getPayloadStartIndicator() + (packet.getPayloadStartIndicator() == 0x0 ? " (Normal payload)" : " (Payload start)") + "\n" +
                         "Transport priority: " + packet.getTransportPriority() + (packet.getTransportPriority() == 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
@@ -70,7 +83,7 @@ public class PacketInfo extends Tooltip {
                 PES pesPacket = (PES) payload;
                 return (
                         "PES header: \n\n" +
-                                "Stream ID: " + String.format("0x%04X", pesPacket.getStreamID() & 0xFFFFF) +  " (" + pesPacket.getStreamID() + ") = " + dvb.getStreamDescription(pesPacket.getStreamID()) + "\n" +
+                                "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + DVB.getStreamDescription(pesPacket.getStreamID()) + "\n" +
                                 "PES packet length: " + pesPacket.getPESpacketLength() + " Bytes \n" +
                                 "PES scrambling control: " + pesPacket.getPESscramblingControl() + (pesPacket.getPESscramblingControl()==0x0 ? " (Not scrambled)" : " (Scrambled)") + "\n" +
                                 "PES priority: " + pesPacket.getPESpriority() + (pesPacket.getPESpriority()== 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
@@ -143,6 +156,11 @@ public class PacketInfo extends Tooltip {
     }
 
 
+    private String toHex(int pid) {
+        return String.format("0x%04X", pid & 0xFFFFF);
+    }
+
+
     private String createASCIIoutput(byte[] data, int pid){
         if(pid == EIT_STpid){
             StringBuilder stringBuilder = new StringBuilder("\n\nASCII data: \n\n");
@@ -208,11 +226,11 @@ public class PacketInfo extends Tooltip {
     }
 
 
-    private long midBits(long k, int m, int n){
-        return (k >> m) & ((1 << (n-m))-1);
+    void hideTooltip() {
+        if (this.isShowing()) {
+            this.hide();
+        }
     }
-
-
     public String parseTimestamp(long pts_dts){
 
         long timestamp = (midBits(pts_dts,17,35) << 15) | midBits(pts_dts,1,16);
@@ -225,15 +243,16 @@ public class PacketInfo extends Tooltip {
         return String.format("0x%05X (%02d:%02d:%06.3f) ", timestamp, hours, minutes, seconds, milliseconds);
     }
 
-
-    void hideTooltip() {
-        if (this.isShowing()) {
-            this.hide();
-        }
+    private long midBits(long k, int m, int n){
+        return (k >> m) & ((1 << (n-m))-1);
     }
 
 
     public void setPackets(ArrayList<TSpacket> packets) {
         this.packets = packets;
+    }
+
+    public void setStream(Stream stream) {
+        this.stream = stream;
     }
 }

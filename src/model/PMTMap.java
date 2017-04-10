@@ -4,9 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by krupson on 18.3.2017.
- */
+
 public class PMTMap implements Map {
 
     @Override

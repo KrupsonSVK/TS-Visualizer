@@ -1,49 +1,81 @@
 package view;
 
+import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.layout.VBox;
-import model.TSpacket;
 import model.Stream;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static model.config.Config.windowHeigth;
+import static model.config.Config.windowWidth;
 
-public class DetailTab {
+
+public class DetailTab extends Other {
 
     TreeItem<String> nodes;
     Tab tab;
 
-    DetailTab(TreeItem<String> nodes){
+
+    DetailTab(){
         this.nodes = nodes;
         tab = new Tab("Stream details");
     }
 
-    //TODO prerobit... preco vobec toto vracia daku scroll pane
-    //TODO tuto dotiahnut ten scrolltab ci co to je az po spodok windowu (sceny)
-    public void createTreeTab(Stream streamDescriptor) {
-        VBox vbox = new VBox(new TreeView<String>(createTree(streamDescriptor)));
-        vbox.setFillWidth(true);
-        ScrollPane scrollPane = new ScrollPane(vbox);
+
+    void createTreeTab(Stream streamDescriptor) {
+
+        ScrollPane scrollPane = new ScrollPane(new TreeView<>(createTree(streamDescriptor)));
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setPrefSize(windowWidth,windowHeigth);
 
-        this.tab.setContent(scrollPane);
+        tab.setContent(scrollPane);
     }
 
 
-    public TreeItem<String> createTree(Stream streamDescriptor) {
+    private TreeItem<String> createTree(Stream streamDescriptor) {
 
+        TreeItem<String> rootNode = createRootNode(streamDescriptor);
+
+        TreeItem<String> PSInode = new TreeItem<>("PSI");
+        {
+            TreeItem PATnode = createPATnode((HashMap<Integer, Integer>) streamDescriptor.getTables().getPATmap());
+
+            TreeItem<String> CATnode = new TreeItem<>("CAT");
+            TreeItem<String> BATnode = new TreeItem<>("BAT");
+
+            TreeItem PMTnode = createPMTnode(
+                    (HashMap<Integer, String>) streamDescriptor.getTables().getProgramMap(),
+                    (HashMap<Integer, Integer>)streamDescriptor.getTables().getPMTmap(),
+                    (HashMap<Integer, Integer>) streamDescriptor.getTables().getESmap()
+            );
+
+            TreeItem<String> NITnode = new TreeItem<>("NIT");
+            TreeItem<String> SDTnode = new TreeItem<>("SDT");
+            TreeItem<String> TDTnode = new TreeItem<>("TDT");
+            TreeItem<String> TOTnode = new TreeItem<>("TOT");
+            TreeItem<String> SITnode = new TreeItem<>("SIT");
+            TreeItem<String> SynNode = new TreeItem<>("Sync");
+
+            PSInode.getChildren().addAll(PATnode, CATnode, BATnode, PMTnode, NITnode, SDTnode, TDTnode, TOTnode, SITnode, SynNode);
+        }
+        TreeItem PIDnode = createPIDnode(streamDescriptor.getPIDs());
+
+        rootNode.getChildren().addAll(PSInode, PIDnode);
+
+        return this.nodes = rootNode;
+    }
+
+
+    private TreeItem<String> createRootNode(Stream streamDescriptor) {
         TreeItem<String> rootNode = new TreeItem<>(streamDescriptor.getName());
         rootNode.setExpanded(true);
-
-        TreeItem<String> psi = new TreeItem<>("PSI");
-        TreeItem<String> pids = new TreeItem<>("PIDs");
-        TreeItem<String> packetsRootNode = new TreeItem<>("PSI");
 
         rootNode.getChildren().addAll(
                 new TreeItem<>("Path: " + streamDescriptor.getPath()),
@@ -55,21 +87,76 @@ public class DetailTab {
                 new TreeItem<>("Read-only: " + streamDescriptor.isReadonly()),
                 new TreeItem<>("Owner: " + streamDescriptor.getOwner()),
                 new TreeItem<>("TS Packets: " + streamDescriptor.getNumOfPackets() + "x"),
-                new TreeItem<>("TSpacket size: " + streamDescriptor.getPacketSize() + " B"),
-                new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x"),
-                pids, packetsRootNode
-        );
+                new TreeItem<>("TS packet size: " + streamDescriptor.getPacketSize() + " B"),
+                new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x")
+                );
+        return rootNode;
+    }
 
-        HashMap<Integer, Integer> PIDmap = streamDescriptor.getPIDs();
-        ArrayList<TSpacket> packetList = streamDescriptor.getPackets();
 
-        for (Map.Entry<Integer, Integer> x : PIDmap.entrySet()) {
-            TreeItem<String> s = new TreeItem<>("0x" + Integer.toHexString(x.getKey()) + " (" + x.getKey() + ")");
-            s.getChildren().add(new TreeItem<>("packets: " + x.getValue() + "x "));
-            pids.getChildren().add(s);
+    private TreeItem createPMTnode(HashMap<Integer, String> programMap,  HashMap<Integer, Integer> PMTmap, HashMap<Integer, Integer> ESmap) {
+        TreeItem<String> PMTnode = new TreeItem<>("PMT");
+
+        for (Map.Entry<Integer, String> programEntry : programMap.entrySet()) {
+            TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()));
+
+            for (Map.Entry<Integer, Integer> PMTentry : PMTmap.entrySet()) {
+
+                if (programEntry.getKey() == PMTentry.getValue()) {
+                    for (Map.Entry<Integer, Integer> ESentry : ESmap.entrySet()) {
+
+                        if (ESentry.getKey().equals(PMTentry.getKey())) {
+                            TreeItem<String> node = new TreeItem<>("Component PID: " + toHex(ESentry.getValue()));
+                            node.getChildren().add(new TreeItem<>("Stream type: " + getElementaryStreamDescriptor(ESentry.getValue())));
+                            programNode.getChildren().add(node);
+                        }
+                    }
+                    PMTnode.getChildren().add(programNode);
+                }
+            }
         }
+        return PMTnode;
+    }
 
-//        TreeItem<String> hundredThousandNode, tenThousandNode, thousandNode, hundredNode, node;
+
+    private TreeItem createPATnode(HashMap<Integer, Integer> PATmap) {
+        TreeItem<String> PATnode = new TreeItem<>("PAT");
+
+        for (Map.Entry<Integer, Integer> pid : PATmap.entrySet()) {
+            TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()));
+
+            serviceNode.getChildren().add(new TreeItem<>("Program number: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")"));
+            serviceNode.getChildren().add(new TreeItem<>( "Program PMT PID: " + toHex(pid.getValue()) + " (" + pid.getValue() + ")"));
+
+            PATnode.getChildren().add(serviceNode);
+        }
+        return PATnode;
+    }
+
+
+    private TreeItem<String> createPIDnode(HashMap<Integer, Integer> PIDmap) {
+        TreeItem<String> PIDnode = new TreeItem<>("PIDs");
+
+        for (Map.Entry<Integer, Integer> pid : PIDmap.entrySet()) {
+            TreeItem<String> node = new TreeItem<>(toHex(pid.getKey()) + " (" + pid.getKey() + ")");
+            node.getChildren().add(new TreeItem<>("Number of packets: " + pid.getValue() + "x "));
+            PIDnode.getChildren().add(node);
+        }
+        return PIDnode;
+    }
+
+
+    private String toHex(int pid) {
+        return String.format("0x%04X", pid & 0xFFFFF);
+    }
+
+
+    public void setScene(Scene scene) {
+//        this.scene = scene;
+    }
+
+
+    //        TreeItem<String> hundredThousandNode, tenThousandNode, thousandNode, hundredNode, node;
 //
 //        ArrayList<TreeItem<String>> hundredThousandNodes = new ArrayList<>();
 //        ArrayList<TreeItem<String>> tenThousandNodes = new ArrayList<>();
@@ -131,18 +218,5 @@ public class DetailTab {
             hundredNode.getChildren().add(packetNode);
 
 */
-        psi.getChildren().addAll(
-                new TreeItem<>("PATcode"),
-                new TreeItem<>("CAT"),
-                new TreeItem<>("BAT"),
-                new TreeItem<>("PMTs"),
-                new TreeItem<>("NIT"),
-                new TreeItem<>("SDT"),
-                new TreeItem<>("TDT"),
-                new TreeItem<>("TOT"),
-                new TreeItem<>("SIT"),
-                new TreeItem<>("Sync"));
-
-        return this.nodes = rootNode;
-    }
 }
+

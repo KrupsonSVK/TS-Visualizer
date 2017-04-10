@@ -1,5 +1,6 @@
 package app;
 
+import app.streamAnalyzer.StreamParser;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.stage.Stage;
@@ -28,7 +29,7 @@ public class Controller {
 
         this.primaryStage = primaryStage;
         this.view = view;
-        this.streamParser = new StreamParser();
+        this.streamParser = new StreamParser(null);
         this.stream = null;
         this.XML = null;
 
@@ -205,7 +206,7 @@ public class Controller {
                 streamParserThread = null;
 
                 System.gc();
-                streamParser = new StreamParser();
+                streamParser = new StreamParser(null);
                 fileHandler= new FileHandler();
             }
         }

@@ -2,7 +2,7 @@ package view.visualizationTab;
 
 import javafx.scene.paint.Paint;
 import javafx.stage.Screen;
-import model.config.dvb;
+import model.config.DVB;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -19,8 +19,8 @@ import model.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static model.config.dvb.*;
-import static model.config.config.*;
+import static model.config.DVB.*;
+import static model.config.Config.*;
 
 
 public class PacketPane extends VisualizationTab implements Drawer {
@@ -49,6 +49,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
         this.sortedPIDs = sortedPIDs;
 
         tooltip.setPackets(packets);
+        tooltip.setStream(stream);
 
         pane = new Pane();
         pane.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -85,7 +86,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
                 double newPos = xPos + index * packetImageWidth;
                 boolean isPayloadStart = packet.getPayload()!=null ? packet.getPayload().hasPESheader() : false;
                 boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
-                drawPacketImg(graphicsContextPacketCanvas, sortedPIDs.indexOf(pid), newPos, dvb.getType(packet,stream), pid, dvb.getProgramName(stream, pid), isAdaptationField , isPayloadStart);
+                drawPacketImg(graphicsContextPacketCanvas, sortedPIDs.indexOf(pid), newPos, DVB.getType(packet,stream), pid, DVB.getProgramName(stream, pid), isAdaptationField , isPayloadStart);
                 pane.getChildren().add(createListenerRect( sortedPIDs.indexOf(pid), newPos, packet.hashCode()));
             }
             index++;
@@ -133,16 +134,16 @@ public class PacketPane extends VisualizationTab implements Drawer {
             graphicsContext.drawImage(typeIcon, xPos + 2 * typeIconSize + xPadding, yPos + typeIconSize, typeIconSize, typeIconSize);
         }
         if (isAdaptationField){
-            Image icon = (Image) typeIcons.get(dvb.adaptationFieldIcon);
+            Image icon = (Image) typeIcons.get(DVB.adaptationFieldIcon);
             graphicsContext.drawImage(icon, xPos + margin,  yPos + typeIconSize + margin +  typeIconSize,specialIconSize, specialIconSize);
         }
         if (isPayloadStart){
-            Image icon = (Image) typeIcons.get(dvb.PESheaderIcon);
+            Image icon = (Image) typeIcons.get(DVB.PESheaderIcon);
             graphicsContext.drawImage(icon, xPos + 2*typeIconSize + xPadding , yPos + 2*typeIconSize + margin/2 , specialIconSize, specialIconSize);
         }
 
         graphicsContext.setFont(new Font(fontSize));
-        graphicsContext.strokeText("PID: " + pid + "\n" + dvb.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
+        graphicsContext.strokeText("PID: " + pid + "\n" + DVB.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
     }
 
 

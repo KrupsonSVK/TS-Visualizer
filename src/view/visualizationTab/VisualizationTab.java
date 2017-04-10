@@ -1,11 +1,10 @@
 package view.visualizationTab;
 
-import model.config.dvb;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import model.Stream;
 import model.TSpacket;
-import view.Sorter;
+import model.Sorter;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -18,8 +17,7 @@ import view.Window;
 
 import java.util.*;
 
-import static model.config.dvb.*;
-import static model.config.config.*;
+import static model.config.Config.*;
 
 
 public class VisualizationTab extends Window{
@@ -67,7 +65,7 @@ public class VisualizationTab extends Window{
         packets = stream.getPackets();
         HashMap originalPIDmaps = new HashMap<>(stream.getPIDs());
         Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMap(originalPIDmaps));
-        sortedPIDs = sorter.sortPIDs(originalPIDmaps);
+        sortedPIDs = sorter.sortMapToListByKey(originalPIDmaps);
 
         packetPane.createScrollPane(stream, packets, sortedPIDs, stream.getPIDs().size());
         barPane.createScrollPane(stream, packets, sortedPIDs, stream.getPIDs().size());

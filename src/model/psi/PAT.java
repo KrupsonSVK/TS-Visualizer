@@ -5,9 +5,7 @@ import java.util.Map;
 
 public class PAT extends PSI {
 
-    private short tableID;
-    private byte ssi;
-    private int sectionLength;
+
     private int tsID;
     private short versionNum;
     private byte CNI;

@@ -1,7 +1,5 @@
 package view.visualizationTab;
 
-import model.config.config;
-import model.config.dvb;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -18,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static model.config.dvb.*;
-import static model.config.config.*;
+import static model.config.Config.*;
 
 
 public class LegendPane extends VisualizationTab implements Drawer{

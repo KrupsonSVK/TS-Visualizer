@@ -6,10 +6,10 @@ import javafx.scene.paint.Color;
 import java.util.HashMap;
 import java.util.Map;
 
-import static model.config.dvb.*;
+import static model.config.DVB.*;
 
 
-public class config {
+public class Config {
 
     public final static double packetImageWidth = 100;
     public final static double packetImageHeight = 60;

@@ -13,15 +13,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import model.config.dvb;
+import model.config.DVB;
 import model.Stream;
 import model.TSpacket;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static model.config.dvb.*;
-import static model.config.config.*;
+import static model.config.Config.*;
 
 
 public class BarPane extends VisualizationTab implements Drawer{
@@ -79,8 +78,8 @@ public class BarPane extends VisualizationTab implements Drawer{
             contextMenu.getItems().add(item);
         }
         for(Integer pid : sortedPIDs){
-            if(dvb.isPSI(pid)){
-                CheckMenuItem item = new CheckMenuItem(dvb.getPacketName(pid));
+            if(DVB.isPSI(pid)){
+                CheckMenuItem item = new CheckMenuItem(DVB.getPacketName(pid));
                 item.setDisable(true);
                 item.setSelected(false);
                 contextMenu.getItems().add(item);
@@ -118,7 +117,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
         double xPos = 0;
         for(TSpacket packet : packets){
-            if(dvb.isPSI(packet.getPID())){
+            if(DVB.isPSI(packet.getPID())){
                 drawOneBar(gcb, packet.getPID(), (int) xPos, widthOfBar, height);
             }
             xPos += increment;

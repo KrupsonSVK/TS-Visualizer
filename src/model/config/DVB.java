@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class dvb {
+public class DVB {
 
     public final static int tsPacketSize = 188;
     public final static int tsHeaderSize = 4;
@@ -38,6 +38,7 @@ public class dvb {
     public final static int AFLlength = 1;
 
     public final static int mandatoryPATfields = 72;
+    public final static int mandatoryPMTfields = 40;
 
     public final static int PCR_PIDlength = 13;
     public final static int programInfoLengthLength = 12;
@@ -115,6 +116,146 @@ public class dvb {
     public static final int PESheaderIcon = 0xF7;
     public static final int privateType = 0xF8;
     public static final int defaultType = 0xFF;
+
+    public static final int	video_stream_descriptor	= 0x02;
+    public static final int	audio_stream_descriptor	= 0x03;
+    public static final int	hierarchy_descriptor = 0x04;
+    public static final int	tegistration_descriptor = 0x05;
+    public static final int	data_stream_descriptor = 0x06;
+    public static final int	target_background_grid_descriptor =	0x07;
+    public static final int	video_window_descriptor	= 0x08;
+    public static final int	CA_descriptor =	0x09;
+    public static final int	ISO_639_language_descriptor	= 0x0A;
+    public static final int	system_clock_descriptor	= 0x0B;
+    public static final int	multiplex_buffer_utilization_descriptor	= 0x0C;
+    public static final int	copyright_descriptor =	0x0D;
+    public static final int	maximum_bitrate_descriptor = 0x0E;
+    public static final int	private_data_indicator_descriptor =	0x0F;
+    public static final int	smoothing_buffer_descriptor	= 0x10;
+    public static final int	STD_descriptor = 0x11;
+    public static final int	BP_descriptor =	0x12;
+
+
+    public static String getElementaryStreamDescriptor(int descriptor) {
+        if ( descriptor>=0x1C && descriptor<=0x7F) {
+            return "ITU-T Rec. H.222 | ISO/IEC 13818-1 Reserved";
+        }
+        else if ( descriptor>=0x80 && descriptor<=0xFF) {
+            return "User defined";
+        }
+        else {
+            switch (descriptor) {
+                case 0x00:
+                    return "Reserved";
+                case 0x01:
+                    return "ISO/IEC 11172-2 (MPEG-1 video) in a packetized stream	";
+                case 0x02:
+                    return "ITU-T Rec. H.262 and ISO/IEC 13818-2 (MPEG-2 higher rate interlaced video) in a packetized stream	";
+                case 0x03:
+                    return "ISO/IEC 11172-3 (MPEG-1 audio) in a packetized stream	";
+                case 0x04:
+                    return "ISO/IEC 13818-3 (MPEG-2 halved sample rate audio) in a packetized stream	";
+                case 0x05:
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 tabled data) privately defined	";
+                case 0x06:
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 packetized data) privately defined (i.e., DVB subtitles/VBI and AC-3)	";
+                case 0x07:
+                    return "ISO/IEC 13522 (MHEG) in a packetized stream	";
+                case 0x08:
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 DSM CC in a packetized stream	";
+                case 0x09:
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1/11172-1 auxiliary data in a packetized stream	";
+                case 0x0A:
+                    return "ISO/IEC 13818-6 DSM CC multiprotocol encapsulation	";
+                case 0x0B:
+                    return "ISO/IEC 13818-6 DSM CC U-N messages	";
+                case 0x0C:
+                    return "ISO/IEC 13818-6 DSM CC stream descriptors	";
+                case 0x0D:
+                    return "ISO/IEC 13818-6 DSM CC tabled data	";
+                case 0x0E:
+                    return "ISO/IEC 13818-1 auxiliary data in a packetized stream	";
+                case 0x0F:
+                    return "ISO/IEC 13818-7 ADTS AAC (MPEG-2 lower bit-rate audio) in a packetized stream	";
+                case 0x10:
+                    return "ISO/IEC 14496-2 (MPEG-4 H.263 based video) in a packetized stream	";
+                case 0x11:
+                    return "ISO/IEC 14496-3 (MPEG-4 LOAS multi-format framed audio) in a packetized stream	";
+                case 0x12:
+                    return "ISO/IEC 14496-1 (MPEG-4 FlexMux) in a packetized stream	";
+                case 0x13:
+                    return "ISO/IEC 14496-1 (MPEG-4 FlexMux) in ISO/IEC 14496 tables	";
+                case 0x14:
+                    return "ISO/IEC 13818-6 DSM CC synchronized download protocol	";
+                case 0x15:
+                    return "Packetized metadata	";
+                case 0x16:
+                    return "Sectioned metadata	";
+                case 0x17:
+                    return "ISO/IEC 13818-6 DSM CC Data Carousel metadata	";
+                case 0x18:
+                    return "ISO/IEC 13818-6 DSM CC Object Carousel metadata	";
+                case 0x19:
+                    return "ISO/IEC 13818-6 Synchronized Download Protocol metadata	";
+                case 0x1A:
+                    return "ISO/IEC 13818-11 IPMP	";
+                case 0x1B:
+                    return "ITU-T Rec. H.264 and ISO/IEC 14496-10 (lower bit-rate video) in a packetized stream";
+                default:
+                    return "Unidentified ES descriptor";
+            }
+        }
+    }
+
+
+    public static String getLoopDescriptor(int descriptor) {
+        if (descriptor == 0x00 || descriptor == 0x01) {
+            return "Reserved";
+        } else if (descriptor >= 0x13 || descriptor <= 0x3F) {
+            return "ITU-T Rec. H.262 | ISO/IEC 13818-1 Reserved";
+        } else if (descriptor >= 0x40 || descriptor <= 0xFF) {
+            return "User private";
+        } else {
+            switch (descriptor) {
+                case video_stream_descriptor:
+                    return "video_stream_descriptor";
+                case audio_stream_descriptor:
+                    return "audio_stream_descriptor";
+                case hierarchy_descriptor:
+                    return "hierarchy_descriptor";
+                case tegistration_descriptor:
+                    return "tegistration_descriptor";
+                case data_stream_descriptor:
+                    return "data_stream_descriptor";
+                case target_background_grid_descriptor:
+                    return "target_background_grid_descriptor";
+                case video_window_descriptor:
+                    return "video_window_descriptor";
+                case CA_descriptor:
+                    return "CA_descriptor";
+                case ISO_639_language_descriptor:
+                    return "ISO_639_language_descriptor";
+                case system_clock_descriptor:
+                    return "system_clock_descriptor";
+                case multiplex_buffer_utilization_descriptor:
+                    return "multiplex_buffer_utilization_descriptoR";
+                case copyright_descriptor:
+                    return "copyright_descriptor";
+                case maximum_bitrate_descriptor:
+                    return "maximum_bitrate_descriptor";
+                case private_data_indicator_descriptor:
+                    return "private_data_indicator_descriptor";
+                case smoothing_buffer_descriptor:
+                    return "smoothing_buffer_descriptor";
+                case STD_descriptor:
+                    return "STD_descriptor";
+                case BP_descriptor:
+                    return "BP_descriptor";
+                default:
+                    return "Unidentified descriptor";
+            }
+        }
+    }
 
 
     public static int getPEStype(int streamID){
