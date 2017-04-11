@@ -18,7 +18,9 @@ import model.Stream;
 import model.TSpacket;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static model.config.Config.*;
 
@@ -34,7 +36,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler,lookingGlassOnMouseDraggedEventHandler;
     private Stream stream;
     private ArrayList<TSpacket> packets;
-    private List sortedPIDs;
+    private Map sortedPIDs;
     private double oldSceneX, oldTranslateX, xPos, initDiff, lastValue;
 
 
@@ -43,7 +45,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
 
-    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines){
+    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, Map sortedPIDs, int lines){
 
         lastValue = initDiff = oldSceneX = oldTranslateX = xPos = 0;
 
@@ -51,7 +53,7 @@ public class BarPane extends VisualizationTab implements Drawer{
         this.stream = stream;
         this.sortedPIDs = sortedPIDs;
 
-        contextMenu = createContextMenu(sortedPIDs);
+        contextMenu = createContextMenu();
 
         scrollPane = new ScrollPane();
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -70,14 +72,15 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
 
-    private ContextMenu createContextMenu(List<Integer> sortedPIDs) {
+    private ContextMenu createContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
         {
             CheckMenuItem item = new CheckMenuItem("All");
             item.setSelected(true);
             contextMenu.getItems().add(item);
         }
-        for(Integer pid : sortedPIDs){
+        for(Map.Entry<Integer,Integer> entry : ((HashMap<Integer,Integer>)sortedPIDs).entrySet()){
+            int pid = entry.getKey();
             if(DVB.isPSI(pid)){
                 CheckMenuItem item = new CheckMenuItem(DVB.getPacketName(pid));
                 item.setDisable(true);
@@ -176,10 +179,10 @@ public class BarPane extends VisualizationTab implements Drawer{
             ((Rectangle) (mouseEvent.getSource())).setX(xPos);
 
             packetPane.setXpos(-xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
-            packetPane.drawCanvas(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+            packetPane.drawCanvas(stream, packets, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
 
             legendPane.setXpos(-xPos * getLookingGlassMoveCoeff());
-            legendPane.drawCanvas(stream, packets, sortedPIDs, -xPos * getLookingGlassMoveCoeff() );
+            legendPane.drawCanvas(stream, packets,  -xPos * getLookingGlassMoveCoeff() );
         };
 
         scrollPane.setOnMouseClicked((MouseEvent mouseEvent) -> {
@@ -208,12 +211,12 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
     @Override
-    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, double xPos) {
 
     }
 
     @Override
-    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, double xPos) {
 
     }
 
@@ -239,5 +242,9 @@ public class BarPane extends VisualizationTab implements Drawer{
 
     public void setLegendPane(LegendPane legendPane) {
         this.legendPane = legendPane;
+    }
+
+    public void setSortedPIDs(Map sortedPIDs) {
+        this.sortedPIDs = sortedPIDs;
     }
 }

@@ -22,7 +22,7 @@ public class Stream {
     private final int packetSize;
     private final int numOfPackets;
     private final int numOfErrors;
-    private final HashMap PIDs;
+    private final HashMap mapPIDs;
     private final ArrayList packets;
     private final Map programs;
     private final Tables tables;
@@ -41,7 +41,7 @@ public class Stream {
         this.packetSize = packetSize;
         this.numOfPackets = numOfPackets;
         this.numOfErrors = numOfErrors;
-        this.PIDs = tables.getPIDmap();
+        this.mapPIDs = tables.getPIDmap();
         this.packets = tables.getPackets();
         this.programs = programs;
         this.tables = tables;
@@ -100,13 +100,14 @@ public class Stream {
         return numOfErrors;
     }
 
-    public HashMap getPIDs() {
-        return PIDs;
+    public HashMap getMapPIDs() {
+        return mapPIDs;
     }
 
     public ArrayList getPackets() {
         return packets;
     }
+
     public Map getPrograms() {
         return programs;
     }

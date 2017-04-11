@@ -1,12 +1,8 @@
 package model.config;
 
-import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import model.Stream;
 import model.TSpacket;
 
-import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 public class DVB {
@@ -27,13 +23,14 @@ public class DVB {
     public final static int PSImaxPID = 0x001F;
 
     public final static int nil = -1 ;
+
     public final static int PSIcommonFieldsLength = 24;
     public final static int tableIDlength = 8;
     public final static int programNumberLength = 16;
     public final static int sectionLengthLength = 12;
     public final static int versionNumLength = 5;
     public final static int sectionNumLength = 8;
-    public final static int tsIDlength = 16;
+    public final static int transportStreamIDlength = 16;
     public final static int CRClength = 32;
     public final static int AFLlength = 1;
 
@@ -45,6 +42,21 @@ public class DVB {
     public final static int streamTypeLength = 8;
     public final static int elementaryPIDlength = 13;
     public final static int ESinfoLengthLength = 12;
+
+    public final static int serviceIDlength = 16;
+    public final static int eventIDlength = 16;
+    public final static int networkIDlength = 16;
+    public final static int startTimeLength = 40;
+    public final static int durationLength = 24;
+    public final static int runningStatusLength = 3;
+    public final static int descriptorsLengthLength = 12;
+
+    public final static int serviceTypeLength = 8;
+    public final static int serviceProviderLengthLength = 8;
+    public final static int serviceNameLengthLength = 8;
+    public final static int ISOlanguageCodeLength = 24;
+    public final static int eventNameLengthLength = 8;
+    public final static int textLengthLength = 8;
 
     public final static int packetStartCodePrefix = 0x000001;
     public final static int packetStartCodePrefixLength = 24;
@@ -71,6 +83,8 @@ public class DVB {
     public final static int PEScrcLength = 16;
     public final static int PESextensionLength = 42;
 
+    public final static int descriptorTagLength = 8;
+    public final static int descriptorLengthLength = 8;
 
     public static final int PATpid = 0x00;
     public static final int CATpid = 0x01;
@@ -117,10 +131,11 @@ public class DVB {
     public static final int privateType = 0xF8;
     public static final int defaultType = 0xFF;
 
+    //MPEG ES descriptors
     public static final int	video_stream_descriptor	= 0x02;
     public static final int	audio_stream_descriptor	= 0x03;
     public static final int	hierarchy_descriptor = 0x04;
-    public static final int	tegistration_descriptor = 0x05;
+    public static final int registration_descriptor = 0x05;
     public static final int	data_stream_descriptor = 0x06;
     public static final int	target_background_grid_descriptor =	0x07;
     public static final int	video_window_descriptor	= 0x08;
@@ -134,6 +149,56 @@ public class DVB {
     public static final int	smoothing_buffer_descriptor	= 0x10;
     public static final int	STD_descriptor = 0x11;
     public static final int	BP_descriptor =	0x12;
+
+    //DVB SI descriptors
+    public static final int network_name_descriptor = 0x40;	//	NIT
+    public static final int service_list_descriptor = 0x41;	//	NIT, BAT
+    public static final int stuffing_descriptor = 0x42;	//	NIT, BAT, SDT, EIT, SIT
+    public static final int satellite_delvery_system_descriptor = 0x43	;	//	NIT
+    public static final int cable_delivery_system_descriptor = 0x44	;	//	NIT
+    public static final int VBI_data_descriptor = 0x45;	//	PMT
+    public static final int VBI_teletext_descriptor = 0x46;	//	PMT
+    public static final int bouquet_name_descriptor = 0x47;	//	BAT, SDT, SIT
+    public static final int service_descriptor = 0x48;	//	SDT, SIT
+    public static final int country_availability_descriptor = 0x49	;	//	BAT, SDT< SIT
+    public static final int linkage_descriptor	= 0x4A;	//	NIT, BAT, SDT, EIT, SIT
+    public static final int NVOD_reference_descriptor = 0x4B;	//	SDT, SIT
+    public static final int time_shifted_service_descriptor = 0x4C;	//	SDT, SIT
+    public static final int short_event_descriptor	= 0x4D;	//	EIT, SIT
+    public static final int extended_event_descriptor = 0x4E;	//	EIT, SIT
+    public static final int time_shifted_event_descriptor = 0x4F;	//	EIT, SIT
+    public static final int component_descriptor = 0x50;	//	EIT, SIT
+    public static final int mosaic_descriptor = 0x51;	//	SDT, PMT
+    public static final int stream_identifier_descriptor = 0x52;	//	PMT
+    public static final int CA_identifier_descriptor = 0x53;	//	BAT, SDT, EIT, SIT
+    public static final int content_descriptor	= 0x54;	//	EIT, SIT
+    public static final int parental_rating_descriptor	= 0x55;	//	EIT, SIT
+    public static final int teletext_descriptor = 0x56	;	//	PMT
+    public static final int telephone_descriptor = 0x57;	//	PMT
+    public static final int local_time_offset_descriptor = 0x58;	//	TOT
+    public static final int subtitling_descriptor = 0x59;	//	NIT
+    public static final int terrestrial_delivery_system_descriptor	= 0x5A;	//	NIT
+    public static final int multilingual_network_name_descriptor = 0x5B;	//	NIT
+    public static final int multilingual_bouquet_name_descriptor =	0x5C;	//	BAT
+    public static final int multilingual_service_name_descriptor =	0x5D;	//	SDT, SIT
+    public static final int multilingual_component_descriptor = 0x5E;	//	EIT, SIT
+    public static final int private_data_specifier_descriptor = 0x5F;	//	NIT, BAT, SDT, EIT, PMT, SIT
+    public static final int service_mode_descriptor = 0x60;	//	PMT
+    public static final int short_smoothing_buffer_descriptor = 0x61;	//	EIT, SIT
+    public static final int frequency_list_descriptor = 0x62;	//	NIT
+    public static final int partial_tranport_stream_descriptor	= 0x63;	//	SIT
+    public static final int data_broadcast_descriptor = 0x64;	//	PMT
+    public static final int CA_system_descriptor = 0x65;   //	PMT, EIT
+    public static final int data_broadcast_id_descriptor = 0x66;	//	PMT
+    public static final int transport_stream_descriptor = 0x67;	//	 
+    public static final int DSNG_descriptor = 0x68;	//	 
+    public static final int PDC_descriptor	= 0x69;	//	EIT
+    public static final int AC3_descriptor = 0x6A;	//	PMT
+    public static final int ancilliary_data_descriptor	= 0x6B;	//	PMT
+    public static final int cell_list_descriptor = 0x6C;	//	NIT
+    public static final int cell_frequency_link_descriptor	= 0x6D;	//	NIT
+    public static final int announcement_support_descriptor = 0x6E;	//	NIT
+    public static final int user_defined_descriptor = 0x80-0xFE;	//
 
 
     public static String getElementaryStreamDescriptor(int descriptor) {
@@ -223,8 +288,8 @@ public class DVB {
                     return "audio_stream_descriptor";
                 case hierarchy_descriptor:
                     return "hierarchy_descriptor";
-                case tegistration_descriptor:
-                    return "tegistration_descriptor";
+                case registration_descriptor:
+                    return "registration_descriptor";
                 case data_stream_descriptor:
                     return "data_stream_descriptor";
                 case target_background_grid_descriptor:
@@ -366,6 +431,27 @@ public class DVB {
             return PSItype;
         return getPEStype(stream.getPEScode(packet.getPID()));
     }
+
+
+    protected boolean isSDT(short tableID) {
+        return tableID == SDSactualTableID || tableID == SDSotherTableID;
+    }
+
+
+    protected boolean isEIT(short tableID) {
+        if(tableID == EISactualPresentTableID || tableID == EISotherPresentTableID){
+            return true;
+        }
+        else if(tableID >= 0x50 || tableID <= 0x5F){ //EISactualPresentTableIDschedule
+            return true;
+        }
+        else if(tableID >= 0x60 || tableID <= 0x6F){ //EISotherPresentTableIDschedule
+            return true;
+        }
+        return false;
+    }
+
+
 
 
     public static  boolean isPSI(int pid) {

@@ -65,7 +65,7 @@ public class DetailTab extends Other {
 
             PSInode.getChildren().addAll(PATnode, CATnode, BATnode, PMTnode, NITnode, SDTnode, TDTnode, TOTnode, SITnode, SynNode);
         }
-        TreeItem PIDnode = createPIDnode(streamDescriptor.getPIDs());
+        TreeItem PIDnode = createPIDnode(streamDescriptor.getMapPIDs());
 
         rootNode.getChildren().addAll(PSInode, PIDnode);
 
@@ -98,7 +98,7 @@ public class DetailTab extends Other {
         TreeItem<String> PMTnode = new TreeItem<>("PMT");
 
         for (Map.Entry<Integer, String> programEntry : programMap.entrySet()) {
-            TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()));
+            TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()) + " (" + programEntry.getKey() + ")");
 
             for (Map.Entry<Integer, Integer> PMTentry : PMTmap.entrySet()) {
 
@@ -123,7 +123,7 @@ public class DetailTab extends Other {
         TreeItem<String> PATnode = new TreeItem<>("PAT");
 
         for (Map.Entry<Integer, Integer> pid : PATmap.entrySet()) {
-            TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()));
+            TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")");
 
             serviceNode.getChildren().add(new TreeItem<>("Program number: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")"));
             serviceNode.getChildren().add(new TreeItem<>( "Program PMT PID: " + toHex(pid.getValue()) + " (" + pid.getValue() + ")"));

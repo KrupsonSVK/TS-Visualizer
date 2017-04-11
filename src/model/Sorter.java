@@ -2,6 +2,7 @@ package model;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class Sorter {
@@ -17,9 +18,11 @@ public class Sorter {
     }
 
 
-    public <K, V extends Comparable<? super V>> Map<K, V> sortHashMap(Map<K, V> map) {
+    public <K, V extends Comparable<? super V>> Map<K, V> sortHashMapByKey(Map<K, V> map) {
 
-        SortedSet<Integer> keys = new TreeSet<Integer>((Collection<? extends Integer>) map.keySet());
+        SortedSet<Integer> keys = new TreeSet<Integer>(
+                (Collection<? extends Integer>) map.keySet()
+        );
 
         Map<K, V> result = new LinkedHashMap<>();
 
@@ -30,7 +33,23 @@ public class Sorter {
     }
 
 
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortHashMapByValue(Map<K, V> map) {
+
+        return map.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(/*Collections.reverseOrder()*/))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                        )
+                );
+    }
+
+
     public List<Integer> sortMapToListByKey(Map<Integer, Integer> map) {
+
         List<Integer> unsorted = new ArrayList<>();
 
         for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
@@ -42,6 +61,7 @@ public class Sorter {
     }
 
     public List<BigInteger> sortMapToListByValue(Map<BigInteger, BigInteger> map) {
+
         List<BigInteger> unsorted = new ArrayList<>();
 
         for (Map.Entry<BigInteger, BigInteger> entry : map.entrySet()) {

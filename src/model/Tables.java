@@ -12,10 +12,11 @@ public class Tables {
     private ArrayList<TSpacket> packets;
     private Map ESmap;
     private Map PATmap;
-    private Map PMTmap;
+    private HashMap PMTmap;
     private Map timeMap;
     private Map streamCodes;
     private Map packetsSizeMap;
+    private Map serviceNamesMap;
     private int PATmapVersion;
     private int PMTmapVersion;
 
@@ -30,7 +31,7 @@ public class Tables {
         this.PMTmap = new HashMap();
     }
 
-    public Tables(HashMap<Integer, Integer> PIDmap, HashMap<Integer, Integer> errorMap, ArrayList<TSpacket> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, Map PMTmap) {
+    public Tables(HashMap<Integer, Integer> PIDmap, HashMap<Integer, Integer> errorMap, ArrayList<TSpacket> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, HashMap PMTmap, Map serviceNamesMap) {
         this.PIDmap = PIDmap;
         this.errorMap = errorMap;
         this.packets = packets;
@@ -40,6 +41,7 @@ public class Tables {
         this.packetsSizeMap = timeMap;
         this.ESmap = ESmap;
         this.PMTmap = PMTmap;
+        this.serviceNamesMap = serviceNamesMap;
         PATmapVersion = nil;
         PMTmapVersion = nil;
     }
@@ -65,12 +67,17 @@ public class Tables {
 
     public void updatePMT(HashMap PMTmap, byte versionNum) {
 //        if (versionNum > PMTmapVersion) {
-        Map newMap = new HashMap();
+        HashMap newMap = new HashMap();
         newMap.putAll(this.PMTmap);
         newMap.putAll(PMTmap);
         this.PMTmap = newMap;
 //            PMTmapVersion = versionNum;
 //        }
+    }
+
+
+    public void updateServiceName(int PID, String serviceName) {
+        this.serviceNamesMap.put(PID,serviceName);
     }
 
 
@@ -127,7 +134,7 @@ public class Tables {
         return streamCodes;
     }
 
-    public Map getPMTmap() {
+    public  HashMap<Integer, Integer> getPMTmap() {
         return PMTmap;
     }
 
@@ -137,6 +144,10 @@ public class Tables {
 
     public Map getESmap() {
         return ESmap;
+    }
+
+    public Map getServiceNamesMap() {
+        return serviceNamesMap;
     }
 
 
@@ -164,7 +175,7 @@ public class Tables {
         this.PATmap = PATmap;
     }
 
-    public void setPMTmap(Map PMTmap) {
+    public void setPMTmap(HashMap PMTmap) {
         this.PMTmap = PMTmap;
     }
 

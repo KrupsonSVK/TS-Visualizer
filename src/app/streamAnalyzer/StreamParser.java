@@ -171,7 +171,8 @@ public class StreamParser extends Parser {
                 tables.getPATmap(),
                 tables.getTimeMap(),
                 tables.getESmap(),
-                tables.getPMTmap()
+                tables.getPMTmap(),
+                tables.getServiceNamesMap()
         );
     }
 

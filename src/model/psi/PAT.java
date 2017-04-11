@@ -6,7 +6,7 @@ import java.util.Map;
 public class PAT extends PSI {
 
 
-    private int tsID;
+    private int transportStreamID;
     private short versionNum;
     private byte CNI;
     private int sectionNum;
@@ -19,9 +19,9 @@ public class PAT extends PSI {
     }
 
 
-    public PAT(short tableID, byte ssi, int sectionLength, int tsID, short versionNum, byte CNI, int sectionNum, int lastSectionNum, Map PATmap, long CRC) {
+    public PAT(short tableID, byte ssi, int sectionLength, int transportStreamID, short versionNum, byte CNI, int sectionNum, int lastSectionNum, Map PATmap, long CRC) {
         super(tableID, ssi, sectionLength,null);
-        this.tsID= tsID;
+        this.transportStreamID = transportStreamID;
         this.versionNum = versionNum;
         this.CNI = CNI;
         this.sectionNum = sectionNum ;
@@ -33,24 +33,30 @@ public class PAT extends PSI {
     public PAT(short i, byte ssi, int sectionLength, int programNum, byte versionNum, byte currentNextIndicator, byte sectionNum, byte lastSectionNum, short pcr_pid, short programInfoLength, byte[] descriptors, long crc) {
     }
 
-    public int getTsID() {
-        return tsID;
+    public int getTransportStreamID() {
+        return transportStreamID;
     }
+
     public short getVersionNum() {
         return versionNum;
     }
+
     public byte getCNI() {
         return CNI;
     }
+
     public int getSectionNum() {
         return sectionNum;
     }
+
     public int getLastSectionNum() {
         return lastSectionNum;
     }
+
     public Map getPATmap() {
         return PATmap;
     }
+
     public long getCRC() {
         return CRC;
     }

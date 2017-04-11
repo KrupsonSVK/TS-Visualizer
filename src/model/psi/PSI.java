@@ -20,12 +20,14 @@ public class PSI extends Payload {
         super(true,false);
     }
 
-    public short tableID() {
+    public short getTableID() {
         return tableID;
     }
+
     public byte getSSI() {
         return SSI;
     }
+
     public int getSectionLength() {
         return sectionLength;
     }

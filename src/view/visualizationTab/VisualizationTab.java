@@ -18,6 +18,7 @@ import view.Window;
 import java.util.*;
 
 import static model.config.Config.*;
+import static model.config.DVB.nil;
 
 
 public class VisualizationTab extends Window{
@@ -27,7 +28,8 @@ public class VisualizationTab extends Window{
     private Sorter sorter;
     private Scene scene;
     private CheckBox groupByCheckBox;
-    List<Integer> sortedPIDs;
+    Map sortedPIDs;
+    HashMap originalPIDmaps;
     public ArrayList<TSpacket> packets;
     private Slider zoomer;
     private PacketPane packetPane;
@@ -44,7 +46,6 @@ public class VisualizationTab extends Window{
 
     public void init(Scene scene){
         this.scene = scene;
-
         packetPane = new PacketPane(this.scene);
         barPane = new BarPane(this.scene);
         legendPane = new LegendPane(this.scene);
@@ -63,18 +64,19 @@ public class VisualizationTab extends Window{
         barPane.setLegendPane(legendPane);
 
         packets = stream.getPackets();
-        HashMap originalPIDmaps = new HashMap<>(stream.getPIDs());
-        Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMap(originalPIDmaps));
-        sortedPIDs = sorter.sortMapToListByKey(originalPIDmaps);
+        originalPIDmaps = new HashMap<>(stream.getMapPIDs());
+        sortedPIDs = ungroup(originalPIDmaps);
 
-        packetPane.createScrollPane(stream, packets, sortedPIDs, stream.getPIDs().size());
-        barPane.createScrollPane(stream, packets, sortedPIDs, stream.getPIDs().size());
-        legendPane.createScrollPane(stream, packets, sortedPIDs, stream.getPIDs().size());
+        packetPane.createScrollPane(stream, packets, sortedPIDs, stream.getMapPIDs().size());
+        barPane.createScrollPane(stream, packets, sortedPIDs, stream.getMapPIDs().size());
+        legendPane.createScrollPane(stream, packets, sortedPIDs, stream.getMapPIDs().size());
 
-        packetPane.drawCanvas(stream, packets,sortedPIDs,0);
-        legendPane.drawCanvas(stream, packets,sortedPIDs, 0);
+        packetPane.drawCanvas(stream, packets,0);
+        legendPane.drawCanvas(stream, packets,0);
 
+        Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
         legendPane.createLabels(sortedMapPIDs);
+
         HBox labelsLegendScrollPaneBox = new HBox(legendPane.labelScrollPane, legendPane.scrollPane);
 
         HBox comboCheckboxBar = createComboCheckBoxBar(stream);
@@ -136,13 +138,20 @@ public class VisualizationTab extends Window{
 
         groupByCheckBoxEvent = event -> {
             if (groupByCheckBox.isSelected()) {
-                System.out.print("Zgrupene");
-                //TODO combobox change
-                //packetScrollPane = createPacketScrollPane(packets, sortedPIDs, stream.getPrograms().size());
-            } else {
-                System.out.print("Odgrupene");
-                //TODO combobox change
-                //packetScrollPane = createPacketScrollPane(packets, sortedPIDs, stream.getPrograms().size());
+                sortedPIDs = groupByProgrammes(originalPIDmaps);
+                packetPane.setSortedPIDs(sortedPIDs);
+                legendPane.setSortedPIDs(sortedPIDs);
+                barPane.setSortedPIDs(sortedPIDs);
+                Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
+                legendPane.createLabels(sortedMapPIDs);
+            }
+            else {
+                sortedPIDs = ungroup(originalPIDmaps);
+                packetPane.setSortedPIDs(sortedPIDs);
+                legendPane.setSortedPIDs(sortedPIDs);
+                barPane.setSortedPIDs(sortedPIDs);
+                Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
+                legendPane.createLabels(sortedMapPIDs);
             }
         };
 
@@ -157,5 +166,43 @@ public class VisualizationTab extends Window{
                 packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));
             }
         });
+
+        groupByCheckBox.setOnAction(groupByCheckBoxEvent);
+    }
+
+
+    private Map groupByProgrammes(HashMap originalPIDmaps) {
+
+        List<Integer> sorted = sorter.sortMapToListByKey(originalPIDmaps);
+        Map<Integer,Integer> PMTmap = stream.getTables().getPMTmap();
+
+        for (Map.Entry<Integer, Integer> entry : ((Map<Integer,Integer>)originalPIDmaps).entrySet()) {
+            PMTmap.putIfAbsent(entry.getKey(),entry.getKey());
+        }
+        Map<Integer,Integer> sortedPMTmap = sorter.sortHashMapByValue(PMTmap);
+        HashMap gruppedMap = new HashMap<Integer,Integer>();
+
+        int index = 0;
+        int previous = nil;
+        for (Map.Entry<Integer, Integer> entry : sortedPMTmap.entrySet()) {
+            gruppedMap.put(entry.getKey(),index);
+            if ( previous != entry.getValue() ){
+                previous = entry.getValue();
+                index++;
+            }
+        }
+        Map vymazat = sorter.sortHashMapByValue(gruppedMap);
+        return sorter.sortHashMapByValue(gruppedMap);
+    }
+
+
+    private HashMap ungroup(Map originalPIDmaps) {
+        List<Integer> sorted = sorter.sortMapToListByKey(originalPIDmaps);
+        HashMap ungruppedMap = new HashMap<Integer,Integer>();
+
+        for(Integer item : sorted){
+            ungruppedMap.put(item,sorted.indexOf(item));
+        }
+        return ungruppedMap;
     }
 }

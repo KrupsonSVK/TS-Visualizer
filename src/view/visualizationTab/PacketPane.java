@@ -17,7 +17,9 @@ import javafx.scene.text.Font;
 import model.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static model.config.DVB.*;
 import static model.config.Config.*;
@@ -41,7 +43,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
 
-    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, int lines) {
+    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, Map sortedPIDs, int lines) {
 
         initVvalue = initYpos = oldTranslateY = yPos = oldSceneX = oldTranslateX = xPos = 0;
 
@@ -67,11 +69,11 @@ public class PacketPane extends VisualizationTab implements Drawer {
         }
         canvas = new Canvas(scene.getWidth(), canvasHeigth);
 
-        addListenersAndHandlers(stream, packets, sortedPIDs);
+        addListenersAndHandlers(stream, packets);
     }
 
     @Override
-    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, double xPos) {
 
         GraphicsContext graphicsContextPacketCanvas = canvas.getGraphicsContext2D();
 
@@ -86,8 +88,8 @@ public class PacketPane extends VisualizationTab implements Drawer {
                 double newPos = xPos + index * packetImageWidth;
                 boolean isPayloadStart = packet.getPayload()!=null ? packet.getPayload().hasPESheader() : false;
                 boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
-                drawPacketImg(graphicsContextPacketCanvas, sortedPIDs.indexOf(pid), newPos, DVB.getType(packet,stream), pid, DVB.getProgramName(stream, pid), isAdaptationField , isPayloadStart);
-                pane.getChildren().add(createListenerRect( sortedPIDs.indexOf(pid), newPos, packet.hashCode()));
+                drawPacketImg(graphicsContextPacketCanvas, (Integer)sortedPIDs.get(pid), newPos, DVB.getType(packet,stream), pid, DVB.getProgramName(stream, pid), isAdaptationField , isPayloadStart);
+                pane.getChildren().add(createListenerRect( (Integer)sortedPIDs.get(pid), newPos, packet.hashCode()));
             }
             index++;
         }
@@ -147,7 +149,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
 
-    public void addListenersAndHandlers(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs) {
+    public void addListenersAndHandlers(Stream stream, ArrayList<TSpacket> packets) {
 
         pane.setOnMousePressed(mouseEvent -> {
             updateX(mouseEvent);
@@ -164,10 +166,10 @@ public class PacketPane extends VisualizationTab implements Drawer {
             xPos += translate(mouseEvent.getSceneX());
             xPos = stayInRange(xPos);
 
-            drawCanvas(stream, packets, sortedPIDs, xPos);
+            drawCanvas(stream, packets, xPos);
 
             legendPane.setXpos(xPos / legendPaneMoveCoeff);
-            legendPane.drawCanvas(stream, packets, sortedPIDs, xPos / legendPaneMoveCoeff);
+            legendPane.drawCanvas(stream, packets, xPos / legendPaneMoveCoeff);
 
             barPane.setXpos(-xPos / legendPaneMoveCoeff / getLookingGlassMoveCoeff());
             barPane.lookingGlass.setX(-xPos / legendPaneMoveCoeff / getLookingGlassMoveCoeff());
@@ -184,14 +186,14 @@ public class PacketPane extends VisualizationTab implements Drawer {
             canvas.setWidth(newWidth);
             scrollPane.setMaxWidth(newWidth);
 
-            drawCanvas(stream, packets, sortedPIDs, xPos);
+            drawCanvas(stream, packets,  xPos);
         });
 
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeigth = scene.getHeight() - legendScrollPaneHeight - barScrollPaneHeight;
             scrollPane.setMaxHeight(newHeigth);
 
-            drawCanvas(stream, packets, sortedPIDs, xPos);
+            drawCanvas(stream, packets,  xPos);
         });
 
         scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
@@ -219,10 +221,10 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
 
     @Override
-    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, List sortedPIDs, double xPos) {
+    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, double xPos) {
         pane.getChildren().clear();
 
-        drawPackets(stream, packets, sortedPIDs, xPos);
+        drawPackets(stream, packets, xPos);
         pane.getChildren().add(canvas);
         canvas.toBack();
     }
@@ -262,5 +264,9 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
     public void setBarPane(BarPane barPane) {
         this.barPane = barPane;
+    }
+
+    public void setSortedPIDs(Map sortedPIDs) {
+        this.sortedPIDs = sortedPIDs;
     }
 }
