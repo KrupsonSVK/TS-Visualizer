@@ -1,6 +1,7 @@
 package view.visualizationTab;
 
 
+import javafx.scene.control.TreeItem;
 import model.*;
 import model.config.DVB;
 import javafx.scene.control.Tooltip;
@@ -9,6 +10,7 @@ import model.pes.PES;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static model.config.Config.*;
@@ -44,8 +46,48 @@ public class PacketInfo extends Tooltip {
                         createPESheaderOutput(packet.getPayload()) +
                         createDataOutput(getHexSequence(packet.getData())) +
                         createASCIIoutput(packet.getData(), packet.getPID()) +
-                        createPATOutput(packet.getPID(),stream.getTables().getPATmap()) + "\n"
+                        createPATOutput(packet.getPID(),stream.getTables().getPATmap()) +
+                        createPMTOutput(packet.getPID(),stream.getTables().getPMTmap(),stream.getTables().getESmap(), stream.getTables().getPATmap()) + "\n"
         );
+    }
+
+
+    private <K,V> String createPMTOutput(Integer PID, HashMap<K, V> PMTmap, Map<K, V> ESmap, Map PATmap) {
+
+        if (isPMT(PATmap,PID)) {
+            Integer service = (Integer)getByValue(PATmap, PID);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for (Map.Entry<K, V> programEntry : PMTmap.entrySet()) {
+
+                if (programEntry.getValue().equals(service)) {
+                    for (Map.Entry<K, V> ESentry : ESmap.entrySet()) {
+
+                        if (ESentry.getKey().equals(programEntry.getKey())) {
+                            stringBuilder.append("Component PID: " + toHex((Integer) ESentry.getKey()) + " (" + ESentry.getKey().toString() + ")" + "\n");
+                            stringBuilder.append("-stream type: " + getElementaryStreamDescriptor((Integer) ESentry.getValue()) + "\n");
+                        }
+                    }
+                }
+            }
+            return ("\n\nProgram Map Table:\n\nProgram: " + toHex(service) + " (" + stream.getPrograms().get(service) + ")\n" + stringBuilder.toString());
+        } else {
+            return "";
+        }
+    }
+
+
+    boolean isPMT(Map PATmap, int PID) {
+        return getByValue(PATmap,PID) != null;
+    }
+
+
+    public <K, V> K getByValue(Map<K,V> map, V value) {
+        return map.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(value))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
     }
 
 

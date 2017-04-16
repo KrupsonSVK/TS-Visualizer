@@ -95,10 +95,13 @@ public class DVB {
     public static final int RST_STpid = 0x13;
     public static final int TDT_TOT_STpid = 0x14;
     public static final int netSyncPid = 0x15;
+    public static final int RNTpid = 0x16;
+    public static final int bandSignallingPID = 0x1C;
+    public static final int measurementPID = 0x1D;
     public static final int DITpid = 0x1E;
     public static final int SITpid = 0x1F;
-    public static final int PMTpid = 0xFF;
-    public static final int nullPacket = 0x1FFF;
+    public static final int PMTpid = nil;
+    public static final int nullPacketPID = 0x1FFF;
 
     public static final int PAStableID = 0x00;
     public static final int CAStableID = 0x01;
@@ -126,10 +129,14 @@ public class DVB {
     public static final int CAStype = 0xF3;
     public static final int PSMtype = 0xF4;
     public static final int MHEGtype = 0xF5;
-    public static final int adaptationFieldIcon = 0xF6;
-    public static final int PESheaderIcon = 0xF7;
-    public static final int privateType = 0xF8;
-    public static final int defaultType = 0xFF;
+    public static final int privateType = 0xF6;
+    public static final int defaultType = 0xF7;
+    public static final int adaptationFieldIcon = 0xF8;
+    public static final int PESheaderIcon = 0xF9;
+    public static final int PMTicon = 0xFA;
+    public static final int DVBicon = 0xFB;
+    public static final int payloadStartIcon = 0xFC;
+
 
     //MPEG ES descriptors
     public static final int	video_stream_descriptor	= 0x02;
@@ -213,59 +220,59 @@ public class DVB {
                 case 0x00:
                     return "Reserved";
                 case 0x01:
-                    return "ISO/IEC 11172-2 (MPEG-1 video) in a packetized stream	";
+                    return "ISO/IEC 11172-2 (MPEG-1 video)";
                 case 0x02:
-                    return "ITU-T Rec. H.262 and ISO/IEC 13818-2 (MPEG-2 higher rate interlaced video) in a packetized stream	";
+                    return "ITU-T Rec. H.262 and ISO/IEC 13818-2 (MPEG-2 higher rate interlaced video)";
                 case 0x03:
-                    return "ISO/IEC 11172-3 (MPEG-1 audio) in a packetized stream	";
+                    return "ISO/IEC 11172-3 (MPEG-1 audio)";
                 case 0x04:
-                    return "ISO/IEC 13818-3 (MPEG-2 halved sample rate audio) in a packetized stream	";
+                    return "ISO/IEC 13818-3 (MPEG-2 halved sample rate audio)";
                 case 0x05:
                     return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 tabled data) privately defined	";
                 case 0x06:
-                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 packetized data) privately defined (i.e., DVB subtitles/VBI and AC-3)	";
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 packetized data) privately defined (i.e., DVB subtitles/VBI and AC-3)";
                 case 0x07:
-                    return "ISO/IEC 13522 (MHEG) in a packetized stream	";
+                    return "ISO/IEC 13522 (MHEG)";
                 case 0x08:
-                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 DSM CC in a packetized stream	";
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 DSM CC ";
                 case 0x09:
-                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1/11172-1 auxiliary data in a packetized stream	";
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1/11172-1 auxiliary data ";
                 case 0x0A:
-                    return "ISO/IEC 13818-6 DSM CC multiprotocol encapsulation	";
+                    return "ISO/IEC 13818-6 DSM CC multiprotocol encapsulation";
                 case 0x0B:
-                    return "ISO/IEC 13818-6 DSM CC U-N messages	";
+                    return "ISO/IEC 13818-6 DSM CC U-N messages";
                 case 0x0C:
-                    return "ISO/IEC 13818-6 DSM CC stream descriptors	";
+                    return "ISO/IEC 13818-6 DSM CC stream descriptors";
                 case 0x0D:
-                    return "ISO/IEC 13818-6 DSM CC tabled data	";
+                    return "ISO/IEC 13818-6 DSM CC tabled data";
                 case 0x0E:
-                    return "ISO/IEC 13818-1 auxiliary data in a packetized stream	";
+                    return "ISO/IEC 13818-1 auxiliary data ";
                 case 0x0F:
-                    return "ISO/IEC 13818-7 ADTS AAC (MPEG-2 lower bit-rate audio) in a packetized stream	";
+                    return "ISO/IEC 13818-7 ADTS AAC (MPEG-2 lower bit-rate audio)";
                 case 0x10:
-                    return "ISO/IEC 14496-2 (MPEG-4 H.263 based video) in a packetized stream	";
+                    return "ISO/IEC 14496-2 (MPEG-4 H.263 based video)";
                 case 0x11:
-                    return "ISO/IEC 14496-3 (MPEG-4 LOAS multi-format framed audio) in a packetized stream	";
+                    return "ISO/IEC 14496-3 (MPEG-4 LOAS multi-format framed audio) ";
                 case 0x12:
-                    return "ISO/IEC 14496-1 (MPEG-4 FlexMux) in a packetized stream	";
+                    return "ISO/IEC 14496-1 (MPEG-4 FlexMux) ";
                 case 0x13:
-                    return "ISO/IEC 14496-1 (MPEG-4 FlexMux) in ISO/IEC 14496 tables	";
+                    return "ISO/IEC 14496-1 (MPEG-4 FlexMux) in ISO/IEC 14496 tables";
                 case 0x14:
-                    return "ISO/IEC 13818-6 DSM CC synchronized download protocol	";
+                    return "ISO/IEC 13818-6 DSM CC synchronized download protocol";
                 case 0x15:
-                    return "Packetized metadata	";
+                    return "Packetized metadata";
                 case 0x16:
-                    return "Sectioned metadata	";
+                    return "Sectioned metadata";
                 case 0x17:
-                    return "ISO/IEC 13818-6 DSM CC Data Carousel metadata	";
+                    return "ISO/IEC 13818-6 DSM CC Data Carousel metadata";
                 case 0x18:
-                    return "ISO/IEC 13818-6 DSM CC Object Carousel metadata	";
+                    return "ISO/IEC 13818-6 DSM CC Object Carousel metadata";
                 case 0x19:
-                    return "ISO/IEC 13818-6 Synchronized Download Protocol metadata	";
+                    return "ISO/IEC 13818-6 Synchronized Download Protocol metadata";
                 case 0x1A:
-                    return "ISO/IEC 13818-11 IPMP	";
+                    return "ISO/IEC 13818-11 IPMP";
                 case 0x1B:
-                    return "ITU-T Rec. H.264 and ISO/IEC 14496-10 (lower bit-rate video) in a packetized stream";
+                    return "ITU-T Rec. H.264 and ISO/IEC 14496-10 (lower bit-rate video)";
                 default:
                     return "Unidentified ES descriptor";
             }
@@ -414,6 +421,9 @@ public class DVB {
             case DITpid : return "DIT";
             case SITpid : return "SIT";
             case PMTpid : return "PMT";
+            case RNTpid : return "RNT";
+            case bandSignallingPID : return "bandSignalling";
+            case measurementPID : return "measurement";
             default: return "PES";
         }
     }
@@ -426,10 +436,14 @@ public class DVB {
     }
 
 
-    public static  int getType(TSpacket packet, Stream stream) {
-        if (isPSI(packet.getPID()))
+    public static  int getType(int PID, Stream stream) {
+        if (isPSI(PID)) {
             return PSItype;
-        return getPEStype(stream.getPEScode(packet.getPID()));
+        }
+        if (PID == nullPacketPID){
+            return nullPacketPID;
+        }
+        return getPEStype(stream.getPEScode(PID));
     }
 
 
@@ -452,9 +466,12 @@ public class DVB {
     }
 
 
-
-
-    public static  boolean isPSI(int pid) {
-        return getPacketName(pid) != "PES";
+    public static boolean isPSI(int PID) {
+        if(getPacketName(PID) == "PES"){
+            if( PID < 0x17 || PID > 0x1B || PID != nullPacketPID){
+                return false;
+            }
+        }
+        return true;
     }
 }

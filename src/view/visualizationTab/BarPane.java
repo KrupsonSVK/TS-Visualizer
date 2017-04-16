@@ -247,4 +247,8 @@ public class BarPane extends VisualizationTab implements Drawer{
     public void setSortedPIDs(Map sortedPIDs) {
         this.sortedPIDs = sortedPIDs;
     }
+
+    public double getXpos() {
+        return xPos;
+    }
 }

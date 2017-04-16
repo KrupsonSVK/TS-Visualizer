@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -17,12 +18,14 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Stream;
+import model.config.DVB;
 import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
 
 import static app.Main.releaseDate;
 import static model.config.Config.*;
+import static model.config.DVB.DVBicon;
 
 
 public class Window {
@@ -61,6 +64,8 @@ public class Window {
 
 
     public Window(Stage primaryStage) {
+
+        primaryStage.getIcons().add((Image) typeIcons.get(DVBicon));
 
         this.task = null;
 

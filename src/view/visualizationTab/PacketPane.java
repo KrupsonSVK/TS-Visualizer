@@ -17,8 +17,6 @@ import javafx.scene.text.Font;
 import model.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static model.config.DVB.*;
@@ -35,6 +33,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     private LegendPane legendPane;
     private BarPane barPane;
     private double oldSceneX, oldTranslateX, xPos, yPos, initYpos, oldTranslateY, initVvalue;
+    private double xpos;
 
 
     public PacketPane(Scene scene) {
@@ -83,13 +82,18 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
         int index = 0;
         for (TSpacket packet : packets) {
-            if (isInViewport(scene, index * packetImageWidth, -xPos)) {
-                int pid = packet.getPID();
-                double newPos = xPos + index * packetImageWidth;
-                boolean isPayloadStart = packet.getPayload()!=null ? packet.getPayload().hasPESheader() : false;
-                boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
-                drawPacketImg(graphicsContextPacketCanvas, (Integer)sortedPIDs.get(pid), newPos, DVB.getType(packet,stream), pid, DVB.getProgramName(stream, pid), isAdaptationField , isPayloadStart);
-                pane.getChildren().add(createListenerRect( (Integer)sortedPIDs.get(pid), newPos, packet.hashCode()));
+            int pid = packet.getPID();
+            Integer yPos = (Integer) sortedPIDs.get(pid);
+            if(yPos != null) {
+                if (isInViewport(scene, index * packetImageWidth, -xPos)) {
+                    double newPos = xPos + index * packetImageWidth;
+                    boolean hasPESheader = packet.getPayload() != null && packet.getPayload().hasPESheader();
+                    boolean isPayloadStart = packet.getPayloadStartIndicator() == 1;
+                    boolean isPMT = isPMT(stream.getTables().getPATmap(),packet.getPID());
+                    boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
+                    drawPacketImg(graphicsContextPacketCanvas, yPos, newPos, getType(packet.getPID(), stream), pid, DVB.getProgramName(stream, pid), isAdaptationField, isPayloadStart, isPMT,hasPESheader );
+                    pane.getChildren().add(createListenerRect(yPos, newPos, packet.hashCode()));
+                }
             }
             index++;
         }
@@ -116,10 +120,11 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
 
-    private void drawPacketImg(GraphicsContext graphicsContext,  int yPos, double xPos, int type, int pid, String name, boolean isAdaptationField, boolean isPayloadStart) {
+    private void drawPacketImg(GraphicsContext graphicsContext,  int yPos, double xPos, int type, int pid, String name, boolean isAdaptationField, boolean isPayloadStart, boolean isPMT, boolean hasPESheader) {
         double offset = 50;
         double xPadding = 8;
-        double margin = 4;
+        double margin = specialIconSize/4;
+        double xMargin = specialIconSize/4;
 
         xPos -= packetImageHeight / 2;
         yPos *= packetImageHeight;
@@ -127,22 +132,29 @@ public class PacketPane extends VisualizationTab implements Drawer {
         Image packetImage = (Image) packetImages.get(pid);
         graphicsContext.drawImage(packetImage, xPos, yPos, packetImageWidth, packetImageHeight);
 
-        if(pid == nullPacket){
-            Image typeIcon = (Image) typeIcons.get(nullPacket);
-            graphicsContext.drawImage(typeIcon, xPos + 2*typeIconSize + xPadding , yPos + typeIconSize , typeIconSize, typeIconSize);
-        }
-        else {
-            Image typeIcon = (Image) typeIcons.get(type);
-            graphicsContext.drawImage(typeIcon, xPos + 2 * typeIconSize + xPadding, yPos + typeIconSize, typeIconSize, typeIconSize);
-        }
+        Image typeIcon = (Image) typeIcons.get(type);
+        graphicsContext.drawImage(typeIcon, xPos + 2 * typeIconSize + xPadding + 1, yPos + typeIconSize, typeIconSize, typeIconSize);
+
         if (isAdaptationField){
-            Image icon = (Image) typeIcons.get(DVB.adaptationFieldIcon);
-            graphicsContext.drawImage(icon, xPos + margin,  yPos + typeIconSize + margin +  typeIconSize,specialIconSize, specialIconSize);
+            Image icon = (Image) typeIcons.get(adaptationFieldIcon);
+            graphicsContext.drawImage(icon, xPos + xMargin,  yPos + typeIconSize + margin +  typeIconSize,specialIconSize, specialIconSize);
+            xMargin += typeIconSize;
+        }
+        if (isPMT){
+            Image icon = (Image) typeIcons.get(PMTicon);
+            graphicsContext.drawImage(icon, xPos + xMargin,  yPos + typeIconSize + margin +  typeIconSize, specialIconSize, specialIconSize);
+            xMargin += typeIconSize;
         }
         if (isPayloadStart){
-            Image icon = (Image) typeIcons.get(DVB.PESheaderIcon);
-            graphicsContext.drawImage(icon, xPos + 2*typeIconSize + xPadding , yPos + 2*typeIconSize + margin/2 , specialIconSize, specialIconSize);
+            Image icon = (Image) typeIcons.get(payloadStartIcon);
+            graphicsContext.drawImage(icon, xPos + xMargin ,  yPos + typeIconSize + margin +  typeIconSize, specialIconSize, specialIconSize);
+            xMargin += typeIconSize;
         }
+        if (hasPESheader){
+            Image icon = (Image) typeIcons.get(PESheaderIcon);
+            graphicsContext.drawImage(icon, xPos + xMargin , yPos + typeIconSize + margin , specialIconSize, specialIconSize);
+        }
+
 
         graphicsContext.setFont(new Font(fontSize));
         graphicsContext.strokeText("PID: " + pid + "\n" + DVB.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
@@ -268,5 +280,9 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
     public void setSortedPIDs(Map sortedPIDs) {
         this.sortedPIDs = sortedPIDs;
+    }
+
+    public double getXpos() {
+        return xPos;
     }
 }

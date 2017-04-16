@@ -1,7 +1,5 @@
 package view.visualizationTab;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import model.Stream;
 import model.TSpacket;
 import model.Sorter;
@@ -18,6 +16,7 @@ import view.Window;
 import java.util.*;
 
 import static model.config.Config.*;
+import static model.config.DVB.isPSI;
 import static model.config.DVB.nil;
 
 
@@ -28,8 +27,10 @@ public class VisualizationTab extends Window{
     private Sorter sorter;
     private Scene scene;
     private CheckBox groupByCheckBox;
+    private ComboBox<String> filterComboBox;
     Map sortedPIDs;
-    HashMap originalPIDmaps;
+    HashMap originalPIDmap;
+    Map filteredPIDs;
     public ArrayList<TSpacket> packets;
     private Slider zoomer;
     private PacketPane packetPane;
@@ -64,8 +65,8 @@ public class VisualizationTab extends Window{
         barPane.setLegendPane(legendPane);
 
         packets = stream.getPackets();
-        originalPIDmaps = new HashMap<>(stream.getMapPIDs());
-        sortedPIDs = ungroup(originalPIDmaps);
+        originalPIDmap = new HashMap<>(stream.getMapPIDs());
+        sortedPIDs = ungroup(originalPIDmap);
 
         packetPane.createScrollPane(stream, packets, sortedPIDs, stream.getMapPIDs().size());
         barPane.createScrollPane(stream, packets, sortedPIDs, stream.getMapPIDs().size());
@@ -75,7 +76,8 @@ public class VisualizationTab extends Window{
         legendPane.drawCanvas(stream, packets,0);
 
         Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
-        legendPane.createLabels(sortedMapPIDs);
+        Map labeledPIDs = createLabeledPIDs(sortedMapPIDs, stream.getTables().getPMTmap(), null);
+        legendPane.createLabels(labeledPIDs);
 
         HBox labelsLegendScrollPaneBox = new HBox(legendPane.labelScrollPane, legendPane.scrollPane);
 
@@ -95,7 +97,9 @@ public class VisualizationTab extends Window{
 
     private HBox createComboCheckBoxBar(Stream stream) {
 
-        ComboBox<String> filterComboBox = createFilterComboBox(stream);
+        filterComboBox = createFilterComboBox(stream);
+        filterComboBox.setOnAction(programComboBoxEvent);
+
         groupByCheckBox = new CheckBox("Group by programmes");
         groupByCheckBox.setOnAction(groupByCheckBoxEvent);
 
@@ -137,62 +141,139 @@ public class VisualizationTab extends Window{
     private void addListenersAndHandlers() {
 
         groupByCheckBoxEvent = event -> {
-            if (groupByCheckBox.isSelected()) {
-                sortedPIDs = groupByProgrammes(originalPIDmaps);
-                packetPane.setSortedPIDs(sortedPIDs);
-                legendPane.setSortedPIDs(sortedPIDs);
-                barPane.setSortedPIDs(sortedPIDs);
-                Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
-                legendPane.createLabels(sortedMapPIDs);
-            }
-            else {
-                sortedPIDs = ungroup(originalPIDmaps);
-                packetPane.setSortedPIDs(sortedPIDs);
-                legendPane.setSortedPIDs(sortedPIDs);
-                barPane.setSortedPIDs(sortedPIDs);
-                Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
-                legendPane.createLabels(sortedMapPIDs);
-            }
+            groupProgrammes(filteredPIDs,stream.getTables().getPMTmap());
         };
 
-        programComboBoxEvent = event -> {
-            System.out.print("volim programovy filter");
+        programComboBoxEvent = (ActionEvent event) -> {
+            filteredPIDs = filterProgram(stream.getTables().getPMTmap());
+            groupProgrammes(filteredPIDs,stream.getTables().getPMTmap());
         };
 
-        zoomer.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
-                //TODO implement zoomer
-                packetPane.scrollPane.setScaleX( 1 + ((new_val.doubleValue()-50) / 50));
-                packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));
-            }
+        zoomer.valueProperty().addListener((ov, old_val, new_val) -> {
+            //TODO implement zoomer
+            packetPane.scrollPane.setScaleX( 1 + ((new_val.doubleValue()-50) / 50));
+            packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));
         });
 
         groupByCheckBox.setOnAction(groupByCheckBoxEvent);
+        filterComboBox.setOnAction(programComboBoxEvent);
     }
 
 
-    private Map groupByProgrammes(HashMap originalPIDmaps) {
+    private <K, V> Map filterProgram(Map<K, V> PMTmap) {
 
-        List<Integer> sorted = sorter.sortMapToListByKey(originalPIDmaps);
-        Map<Integer,Integer> PMTmap = stream.getTables().getPMTmap();
-
-        for (Map.Entry<Integer, Integer> entry : ((Map<Integer,Integer>)originalPIDmaps).entrySet()) {
-            PMTmap.putIfAbsent(entry.getKey(),entry.getKey());
+        String selectedProgram = filterComboBox.getValue();
+        if (selectedProgram.equals("All")){
+            return null;
         }
-        Map<Integer,Integer> sortedPMTmap = sorter.sortHashMapByValue(PMTmap);
-        HashMap gruppedMap = new HashMap<Integer,Integer>();
+        Integer programPID = (Integer)getByValue(stream.getPrograms(), selectedProgram);
 
-        int index = 0;
-        int previous = nil;
-        for (Map.Entry<Integer, Integer> entry : sortedPMTmap.entrySet()) {
-            gruppedMap.put(entry.getKey(),index);
-            if ( previous != entry.getValue() ){
-                previous = entry.getValue();
-                index++;
+        Map filteredMap = new HashMap();
+        for (Map.Entry<K, V> entry : PMTmap.entrySet()) {
+            if(entry.getValue().equals(programPID)) {
+                filteredMap.put(entry.getKey(), entry.getValue());
+                System.out.println(entry.getKey() + ":" + entry.getValue());
             }
         }
-        Map vymazat = sorter.sortHashMapByValue(gruppedMap);
+        return filteredMap;
+    }
+
+
+    public <K, V> K getByValue(Map<K,V> map, V value) {
+        return map.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(value))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
+
+
+    private void groupProgrammes(Map filteredPIDs, Map PMTmap) {
+
+        if (groupByCheckBox.isSelected()) {
+            sortedPIDs = groupByProgrammes(filteredPIDs, originalPIDmap, PMTmap);
+            Map labeledPIDs = createLabeledPIDs(null, PMTmap, sortedPIDs);
+            updatePanes(sortedPIDs,labeledPIDs);
+        }
+        else {
+            Map PIDs = (filteredPIDs != null) ? filteredPIDs : originalPIDmap;
+            sortedPIDs = ungroup(PIDs);
+            Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sorter.sortHashMapByKey(sortedPIDs));
+            Map labeledPIDs = createLabeledPIDs(sortedMapPIDs,PMTmap,null);
+            updatePanes(sortedPIDs,labeledPIDs);
+        }
+    }
+
+
+    private void updatePanes(Map sortedPIDs, Map labeledPIDs) {
+        //TODO legend pane jump bug
+        packetPane.setSortedPIDs(sortedPIDs);
+        legendPane.setSortedPIDs(sortedPIDs);
+        barPane.setSortedPIDs(sortedPIDs);
+        packetPane.drawPackets(stream,packets,packetPane.getXpos());
+        legendPane.drawPackets(stream,packets,packetPane.getXpos());
+        legendPane.createLabels(labeledPIDs);
+    }
+
+
+    private Map createLabeledPIDs(Map<Integer, Integer> sortedMapPIDs, Map PMTmap, Map<Integer, Integer> gruppedPMTmap) {
+        Map resultMap = new HashMap();
+        if(gruppedPMTmap==null){
+            for (Map.Entry<Integer, Integer> entry : sortedMapPIDs.entrySet()) {
+                resultMap.put(entry.getKey(),"PID: ");
+            }
+        }
+        else{
+            int previous = nil;
+            for (Map.Entry<Integer, Integer> entry : gruppedPMTmap.entrySet()) {
+                if ( previous != entry.getValue() ){
+                    Integer PID = entry.getKey();
+                    previous = entry.getValue();
+
+                    if(!isPSI(PID) && stream.getPrograms().get(PMTmap.get(PID)) != null){
+                        resultMap.put(PMTmap.get(PID),"Program: ");
+                    }
+                    else {
+                        resultMap.put(PID, "PID: ");
+                    }
+                }
+            }
+        }
+        Map map = sorter.sortHashMapByKey(resultMap);
+        return map;
+    }
+
+
+    private <K,V> Map groupByProgrammes(Map<K,V> filteredPIDs, Map originalPIDmap, Map PMTmap) {
+        HashMap gruppedMap = new HashMap<Integer,Integer>();
+
+        if( filteredPIDs == null ){
+            Map<Integer,Integer> enhancedPMTmap = enhancePMTmap(originalPIDmap, PMTmap);
+            int index = nil;
+            Integer previous = nil;
+            for (Map.Entry<Integer,Integer> entry : enhancedPMTmap.entrySet()) {
+                if (!previous.equals(entry.getValue())) {
+                    previous = entry.getValue();
+                    index++;
+                }
+                gruppedMap.put(entry.getKey(), index);
+            }
+        }
+        else {
+            for (Map.Entry<K,V> entry : filteredPIDs.entrySet()) {
+                gruppedMap.put(entry.getKey(), 0);
+            }
+        }
         return sorter.sortHashMapByValue(gruppedMap);
+    }
+
+
+    private <K,V> Map<Integer,Integer> enhancePMTmap(Map<K,V> originalPIDmaps, Map<K,V> PMT ) {
+
+        for (Map.Entry<K,V> entry : (originalPIDmaps).entrySet()) {
+            PMT.putIfAbsent(entry.getKey(),(V)entry.getKey());
+        }
+        return sorter.sortHashMapByValue((Map<Integer,Integer>)PMT);
     }
 
 
@@ -205,4 +286,10 @@ public class VisualizationTab extends Window{
         }
         return ungruppedMap;
     }
+
+
+    boolean isPMT(Map PATmap, int PID) {
+        return getByValue(PATmap,PID) != null;
+    }
 }
+

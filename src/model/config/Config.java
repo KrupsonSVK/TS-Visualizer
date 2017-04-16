@@ -30,15 +30,16 @@ public class Config {
 
     public final static double inset = 5;
     public final static double mouseSensitivityVertical = 1.; // 2.5;
-    public final static double labelWidth = 135;
+    public final static double labelWidth = 150;
     public final static double fontSize = 8.5;
-    public final static int offsetLP = 2;
+    public final static int offsetMiniPacket = 2;
     public final static int asciiLineSize = 50;
     public static final int bytePair = 4;
     public static final int hexLine = 32;
 
     public final static double secondaryFrameSize = 1.25;
-    public final static double primaryFrameSize = 2.5;
+    public final static double primaryFrameSize = 2.50;
+    public final static double ovalSize = 2.50;
 
     public final static Color defaultColor = Color.rgb(240,240,240);
     public final static String resourcesPath = "/resources/";
@@ -69,12 +70,15 @@ public class Config {
                 put(audioType, new Image(getClass().getResourceAsStream(resourcesPath + "audio.png")));
                 put(CAStype, new Image(getClass().getResourceAsStream(resourcesPath + "cas.png")));
                 put(PSMtype, new Image(getClass().getResourceAsStream(resourcesPath + "map.png")));
-                put(PSMtype, new Image(getClass().getResourceAsStream(resourcesPath + "map.png")));
+                put(PSMtype, new Image(getClass().getResourceAsStream(resourcesPath + "mheg.png")));
                 put(MHEGtype, new Image(getClass().getResourceAsStream(resourcesPath + "map.png")));
                 put(adaptationFieldIcon, new Image(getClass().getResourceAsStream(resourcesPath + "adaptation.png")));
                 put(PESheaderIcon, new Image(getClass().getResourceAsStream(resourcesPath + "pesheader.png")));
+                put(payloadStartIcon, new Image(getClass().getResourceAsStream(resourcesPath + "payloadStart.png")));
+                put(PMTicon, new Image(getClass().getResourceAsStream(resourcesPath + "pmt.png")));
+                put(DVBicon, new Image(getClass().getResourceAsStream(resourcesPath + "dvb.png")));
                 put(privateType, new Image(getClass().getResourceAsStream(resourcesPath + "private.png")));
-                put(nullPacket, new Image(getClass().getResourceAsStream(resourcesPath + "null.png")));
+                put(nullPacketPID, new Image(getClass().getResourceAsStream(resourcesPath + "null.png")));
                 put(defaultType, new Image(getClass().getResourceAsStream(resourcesPath + "default.png")));
             }
         };
@@ -93,7 +97,11 @@ public class Config {
             case netSyncPid : return "violet.png";
             case DITpid : return "pink.png";
             case SITpid : return "darkblue.png";
-            case PMTpid : return "black.png";
+            case PMTpid : return "red.png";
+            case RNTpid : return "darkblue.png";
+            case bandSignallingPID : return "darkblue.png";
+            case measurementPID : return "darkblue.png";
+            case nullPacketPID : return "black.png";
             default: return "grey.png";
         }
     }
@@ -112,7 +120,11 @@ public class Config {
             case netSyncPid : return Color.VIOLET;
             case DITpid : return Color.PINK;
             case SITpid : return Color.DARKBLUE;
-            case PMTpid : return Color.DARKBLUE;
+            case PMTpid : return Color.LIGHTGREEN;
+            case RNTpid : return Color.DARKBLUE;
+            case bandSignallingPID : return Color.DARKBLUE;
+            case measurementPID : return Color.DARKBLUE;
+            case nullPacketPID : return Color.BLACK;
             default: return Color.GREY;
         }
     }
