@@ -2,7 +2,6 @@ package app.streamAnalyzer;
 
 import javafx.concurrent.Task;
 import model.*;
-import model.pes.PES;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +31,10 @@ public class StreamParser extends Parser {
 
     public void parseStream(byte[] buffer) {
 
+        super.tables =  new Tables();
+        PESparser.tables = super.tables;
+        PSIparser.tables = super.tables;
+
         this.task = new Task<Tables>() {
             @Override
             public Tables call() throws InterruptedException, IOException {
@@ -39,6 +42,11 @@ public class StreamParser extends Parser {
                 ArrayList<TSpacket> packets = new ArrayList<>();
                 boolean isPATanalyzed = false;
                 int firstPosition = nil;
+                long packetIndex = 0;
+                int totalPackets = 0;
+
+                int tickInterval = nil;
+                int tick = 0;
 
                 for (int i = 0; i < buffer.length; i += tsPacketSize) {
 
@@ -48,52 +56,58 @@ public class StreamParser extends Parser {
                     }
                     if (i == 0) {
                         i = seekBeginning(buffer, i);
+
                         if (i == nil) {
                             throw new IOException("File does not contain TS stream!");
                         }
                         firstPosition = i;
+                        totalPackets = sumPackets(buffer,i);
+                        tickInterval = totalPackets/100;
                     }
                     if (buffer[i] == syncByte) {
 
                         byte[] packet = Arrays.copyOfRange(buffer, i, i + tsPacketSize);
 
                         int header = headerParser.parseHeader(packet);
+                        byte[] binaryHeader = toBinary(header,tsHeaderBinaryLength);
 
-                        byte[] binaryHeader = new byte[tsHeaderBinaryLength];
-                        for (int index = 0; index < tsHeaderBinaryLength; index++) {
-                            binaryHeader[tsHeaderBinaryLength - index - 1] = getBit(header, index);
+                        TSpacket analyzedHeader =  headerParser.analyzeHeader(binaryHeader,packet,packetIndex++);
+                        if(isPATanalyzed) {
+                            tables.updatePIDmap(analyzedHeader.getPID());
+                            if(tick == tickInterval){
+                                tables.updateBitrateTable();
+                                tick=0;
+                            }
+                            tick++;
                         }
-                        TSpacket analyzedHeader =  headerParser.analyzeHeader(binaryHeader,packet);
 
                         if (adaptationFieldParser.isAdaptationField(analyzedHeader)) {
 
                             short adaptationFieldHeader =  adaptationFieldParser.parseAdaptationFieldHeader(packet);
+                            byte[] binaryAdaptationFieldHeader = toBinary(adaptationFieldHeader,tsAdaptationFieldHeaderBinaryLength);
 
-                            byte[] binaryAdaptationFieldHeader = new byte[tsAdaptationFieldHeaderBinaryLength];
-                            for (int index = 0; index < tsAdaptationFieldHeaderBinaryLength; index++) {
-                                binaryAdaptationFieldHeader[tsAdaptationFieldHeaderBinaryLength - index - 1] = getBit(adaptationFieldHeader, index);
-                            }
                             analyzedHeader.setAdaptationFieldHeader(adaptationFieldParser.analyzeAdaptationFieldHeader(binaryAdaptationFieldHeader));
 
                             short adaptationFieldLength = analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength();
-                            if (adaptationFieldLength > 0) {
+                            if (adaptationFieldLength > 1 && isOptionalField(analyzedHeader.getAdaptationFieldHeader())) {
 
-                                int optionalFieldsBinaryLength = adaptationFieldLength * byteBinaryLength;
-                                byte[] binaryAdaptationFieldOptional = new byte[optionalFieldsBinaryLength];
+                                int[] adaptationOptionalFields = parseNfields(packet, 6, adaptationFieldLength-1);
+                                byte[] binaryAdaptationFieldOptional = intToBinary(adaptationOptionalFields, adaptationFieldLength-1);
 
-                                for (int index = 0; ++index <= optionalFieldsBinaryLength; ) {
-                                    binaryAdaptationFieldOptional[optionalFieldsBinaryLength - index] = getBit(optionalFieldsBinaryLength, index);
-                                }
                                 analyzedHeader.getAdaptationFieldHeader().setAdaptationFieldOptionalFields(
                                         adaptationFieldParser.analyzeAdaptationFieldOptionalFields(analyzedHeader.getAdaptationFieldHeader(), binaryAdaptationFieldOptional)
                                 );
+                                if(isPATanalyzed) {
+                                    tables.updatePCRmap(analyzedHeader.getAdaptationFieldHeader().getOptionalFields());
+                                }
                             }
                         }
                         if(isPayload(analyzedHeader.getAdaptationFieldControl())) {
-                            if (!isPATanalyzed) {
+                            if (!isPATanalyzed) { //TODO if PAT not analysed, skip PES and Adaptation field parsing
                                 if (analyzedHeader.getPID() == PATpid) {
                                     PSIparser.analyzePAT(analyzedHeader, packet);
                                     i = firstPosition;
+                                    packetIndex = 0;
                                     isPATanalyzed = true;
                                 }
                                 continue;
@@ -117,7 +131,35 @@ public class StreamParser extends Parser {
                 }
                 return createTables(packets);
             }
+
+
+            private int sumPackets(byte[] buffer, int i) {
+                int totalPackets = 0;
+                for (; i < buffer.length; i += tsPacketSize) {
+                    if (buffer[i] == syncByte) {
+                        totalPackets++;
+                    }
+                }
+                return totalPackets-1;
+            }
         };
+    }
+
+
+    private byte[] toBinary(int source, int length) {
+        byte[] binaryField = new byte[length];
+        for (int index = 0; index < length; index++) {
+            binaryField[length - index - 1] = getBit(source, index);
+        }
+        return binaryField;
+    }
+
+
+    private boolean isOptionalField(AdaptationFieldHeader adaptationFieldHeader) {
+        if (adaptationFieldHeader.getPCRF() == 0x01 || adaptationFieldHeader.getOPCRF() == 0x01 || adaptationFieldHeader.getSplicingPointFlag() == 0x01 || adaptationFieldHeader.getAFEflag() == 0x01) {
+            return true;
+        }
+        return false;
     }
 
 
@@ -159,12 +201,11 @@ public class StreamParser extends Parser {
             else {
                 PIDmap.put(packet.getPID(), PIDmap.get(packet.getPID()) + 1);
             }
-            if (packet.getTransportErrorIndicator() == 1) {
+            if (packet.getTransportErrorIndicator() == 0x01) {
                 ErrorMap.put(packet.getPID(), ErrorMap.get(packet.getPID()) + 1);
             }
         }
         return new Tables(
-                PIDmap,
                 ErrorMap,
                 packets,
                 tables.getStreamCodes(),
@@ -172,7 +213,11 @@ public class StreamParser extends Parser {
                 tables.getTimeMap(),
                 tables.getESmap(),
                 tables.getPMTmap(),
-                tables.getServiceNamesMap()
+                tables.getServiceNamesMap(),
+                tables.getPIDmap(),
+                tables.getPCRmap(),
+                tables.getProgramMap(),
+                tables.getBitrateMap()
         );
     }
 
@@ -192,13 +237,13 @@ public class StreamParser extends Parser {
         else {
             size = String.format("%.2f Bytes", (double) attr.size());
         }
-        for (Integer value : tables.getPIDmap().values()) {
-            packets += value;
+        for (Object value : tables.getPIDmap().values()) {
+            packets += (Integer)value; //TODO remove redundant
         }
-        for (Integer value : tables.getErrorMap().values()) {
+        for (Integer value : ((HashMap<Integer,Integer>)tables.getErrorMap()).values()) {
             errors += value;
         }
-        Map programs = createPrograms((HashMap<Integer, Integer>) tables.getPMTmap());
+     tables.setProgramMap(createPrograms(tables.getPMTmap()));
 
         return new Stream(
                 file.getName(),
@@ -213,7 +258,6 @@ public class StreamParser extends Parser {
                 StreamParser.getTsPacketSize(),
                 packets,
                 errors,
-                programs,
                 tables
         );
     }

@@ -11,9 +11,9 @@ public class HeaderParser extends Parser {
     }
 
 
-    TSpacket analyzeHeader(byte[] header, byte[] packet) {
+    TSpacket analyzeHeader(byte[] header, byte[] packet, long index) {
 
-        int position = 8;
+        int position = syncByteBinarySize;
         byte transportErrorIndicator = header[position++];
         byte payloadStartIndicator = header[position++];
         byte transportPriority = header[position++];
@@ -23,7 +23,7 @@ public class HeaderParser extends Parser {
         byte continuityCounter = (byte) binToInt(header, 28, 32);
         short adaptationFieldLength =  0;
 
-        return new TSpacket(transportErrorIndicator, payloadStartIndicator, transportPriority, PID, tranportScramblingControl, adaptationFieldControl, continuityCounter, adaptationFieldLength, packet);
+        return new TSpacket(index,transportErrorIndicator, payloadStartIndicator, transportPriority, PID, tranportScramblingControl, adaptationFieldControl, continuityCounter, adaptationFieldLength, packet);
     }
 
 

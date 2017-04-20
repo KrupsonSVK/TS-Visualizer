@@ -2,6 +2,8 @@ package model;
 
 public class TSpacket {
 
+    private final long index;
+
     private final byte transportErrorIndicator;
     private final byte payloadStartIndicator;
     private final byte transportPriority;
@@ -9,11 +11,14 @@ public class TSpacket {
     private final byte transportScramblingControl;
     private final byte adaptationFieldControl;
     private final byte continuityCounter;
+
     private AdaptationFieldHeader adaptationFieldHeader;
     private Payload payload;
+
     private byte[] data;
 
-    public TSpacket(byte transportErrorIndicator, byte payloadStartIndicator, byte transportPriority, short PID, byte transportScramblingControl, byte adaptationFieldControl, byte continuityCounter, short adaptationFieldLength, byte[] data) {
+    public TSpacket(long index, byte transportErrorIndicator, byte payloadStartIndicator, byte transportPriority, short PID, byte transportScramblingControl, byte adaptationFieldControl, byte continuityCounter, short adaptationFieldLength, byte[] data) {
+        this.index = index;
         this.transportErrorIndicator =  transportErrorIndicator;
         this.payloadStartIndicator =  payloadStartIndicator;
         this.transportPriority = transportPriority;
@@ -24,6 +29,10 @@ public class TSpacket {
         this.data = data;
     }
 
+
+    public long getIndex() {
+        return index;
+    }
 
     public char getTransportErrorIndicator() {
         return (char) transportErrorIndicator;
@@ -65,6 +74,7 @@ public class TSpacket {
         return data;
     }
 
+
     public void setAdaptationFieldHeader(AdaptationFieldHeader adaptationFieldHeader) {
         this.adaptationFieldHeader = adaptationFieldHeader;
     }
@@ -72,5 +82,4 @@ public class TSpacket {
     public void setPayload(Payload payload) {
         this.payload = payload;
     }
-
 }

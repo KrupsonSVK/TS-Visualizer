@@ -4,6 +4,8 @@ import model.AdaptationFieldHeader;
 import model.AdaptationFieldOptionalFields;
 import model.Tables;
 
+import java.math.BigInteger;
+
 
 public class AdaptationFieldParser extends Parser {
 
@@ -44,10 +46,10 @@ public class AdaptationFieldParser extends Parser {
         byte SSF = 0;
 
         if (adaptationFieldHeader.getPCRF() == 0x1) {
-            PCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 48);
+            PCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += PCRLegth);
         }
         if (adaptationFieldHeader.getOPCRF() == 0x1) {
-            OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += 48);
+            OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += PCRLegth);
         }
         if (adaptationFieldHeader.getSplicingPointFlag() == 0x1){
             spliceCountdown = (byte) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);

@@ -102,10 +102,10 @@ public class LegendPane extends VisualizationTab implements Drawer {
             Integer yPos = (Integer) sortedPIDs.get(pid);
             if(yPos != null) {
                 if (isInViewport(scene, index * miniPacketImageSize, -xPos)) {
-                    boolean isPayloadStart = packet.getPayload() != null && packet.getPayload().hasPESheader();
+                    boolean hasPESheader = packet.getPayload() != null ? packet.getPayload().hasPESheader() : false;
                     boolean isAdaptationField = packet.getAdaptationFieldHeader() != null;
                     boolean isPMT = isPMT(stream.getTables().getPATmap(),packet.getPID());
-                    drawMiniPacket(graphicsContextLegendCanvas, pid, xPos + index * miniPacketImageSize, yPos.doubleValue(), isAdaptationField, isPayloadStart, isPMT);
+                    drawMiniPacket(graphicsContextLegendCanvas, pid, xPos + index * miniPacketImageSize, yPos.doubleValue(), isAdaptationField, hasPESheader, isPMT);
                 }
             }
             index++;
@@ -123,10 +123,10 @@ public class LegendPane extends VisualizationTab implements Drawer {
     }
 
 
-    private void drawMiniPacket(GraphicsContext graphicsContext, int type, double x, double y, boolean isAdaptationField, boolean isPayloadStart, boolean isPMT) {
+    private void drawMiniPacket(GraphicsContext graphicsContext, int type, double x, double y, boolean isAdaptationField, boolean hasPESheader, boolean isPMT) {
 
-        if (isAdaptationField && isPayloadStart){
-            graphicsContext.setFill(payloadStartColor);
+        if (isAdaptationField && hasPESheader){
+            graphicsContext.setFill(hasPESheaderColor);
             graphicsContext.fillRect(x + offsetMiniPacket, y * miniPacketImageSize + offsetMiniPacket, miniPacketImageSize- offsetMiniPacket, miniPacketImageSize- offsetMiniPacket);
             graphicsContext.setFill(adaptationFieldColor);
             graphicsContext.fillRect(x + posOffset(secondaryFrameSize), y * miniPacketImageSize + posOffset(secondaryFrameSize) , miniPacketImageSize -  sizeOffset(secondaryFrameSize), miniPacketImageSize - sizeOffset(secondaryFrameSize));//x,y,height, width, archeigth, arcwidh
@@ -140,8 +140,8 @@ public class LegendPane extends VisualizationTab implements Drawer {
             graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
 
         }
-        else if (isPayloadStart){
-            graphicsContext.setFill(payloadStartColor);
+        else if (hasPESheader){
+            graphicsContext.setFill(hasPESheaderColor);
             graphicsContext.fillRect(x + offsetMiniPacket, y * miniPacketImageSize + offsetMiniPacket, miniPacketImageSize- offsetMiniPacket, miniPacketImageSize- offsetMiniPacket);
             graphicsContext.setFill(getPacketColor(type));
             graphicsContext.fillRect(x + posOffset(primaryFrameSize), y * miniPacketImageSize + posOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize), miniPacketImageSize - sizeOffset(primaryFrameSize));
@@ -246,7 +246,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
 
     @Override
     public double getLookingGlassMoveCoeff() {
-        return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
+        return miniPacketImageSize / scene.getWidth() * stream.getTables().getPackets().size() ;
     }
 
     @Override

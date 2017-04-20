@@ -65,12 +65,12 @@ public class Parser extends DVB {
     }
 
 
-    protected Map createPrograms(HashMap<Integer, Integer> inputMap) {
+    protected Map createPrograms(Map inputMap) {
         HashMap<Integer, String> outputMap = new HashMap<>();
         Set<Integer> keys = inputMap.keySet(); // The set of keys in the map.
 
         for (Integer key : keys) {
-            Integer value = inputMap.get(key);
+            Integer value = (Integer) inputMap.get(key);
             outputMap.put(value, Integer.toString(value));
         }
         return outputMap;

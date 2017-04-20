@@ -38,7 +38,7 @@ public class PESparser extends Parser {
                 tables.updateStreamCodes(analyzedHeader.getPID(), Integer.valueOf(streamID));
                 tables.updatePacketsSizeMap(analyzedHeader.getPID(), PESpacketLength);
 
-                PES pes = analyzePESoptionalHeader(
+                return analyzePESoptionalHeader(
                         new PES(
                                 streamID,
                                 PESpacketLength,
@@ -69,21 +69,25 @@ public class PESparser extends Parser {
 
         int PESheaderDataLength = (int) binToInt(binaryPESFields, position, position += PESheaderDataLengthLength);
 
-        long PTSdts = nil;
+        long PTS = nil;
+        long DTS = nil;
         long ESCR = nil;
         long ESrate = nil;
         int DSMtrickMode = nil;
         int AdditionalCopyInfo = nil;
         long PEScrc = nil;
 
-        if(PTSdtsFlags >= 1) {
-            if(PTSdtsFlags == 2) {
-                PTSdts = binToInt(binaryPESFields, position, position += PTSdtsLength);
+        if(PTSdtsFlags > 1) {
+            if(PTSdtsFlags == 3) {
+                PTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                DTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                //tables.updateTimeMap(pid, BigInteger.valueOf(DTS)); //TODO
             }
             else {
-                PTSdts = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                PTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
             }
-            tables.updateTimeMap(pid, BigInteger.valueOf(PTSdts));
+            tables.updateTimeMap(pid, BigInteger.valueOf(PTS));
+
         }
         if (ESCRflag == 1) {
             ESCR = binToInt(binaryPESFields, position, position += ESCRlength);
@@ -114,7 +118,8 @@ public class PESparser extends Parser {
                 PEScrcFlag,
                 PESextensionFlag,
                 PESheaderDataLength,
-                PTSdts,
+                PTS,
+                DTS,
                 ESCR,
                 ESrate,
                 DSMtrickMode,

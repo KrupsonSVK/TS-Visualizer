@@ -22,13 +22,10 @@ public class Stream {
     private final int packetSize;
     private final int numOfPackets;
     private final int numOfErrors;
-    private final HashMap mapPIDs;
-    private final ArrayList packets;
-    private final Map programs;
     private final Tables tables;
 
 
-    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, Map programs, Tables tables) {
+    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, Tables tables) {
         this.name = name;
         this.path = path;
         this.size = size;
@@ -41,9 +38,6 @@ public class Stream {
         this.packetSize = packetSize;
         this.numOfPackets = numOfPackets;
         this.numOfErrors = numOfErrors;
-        this.mapPIDs = tables.getPIDmap();
-        this.packets = tables.getPackets();
-        this.programs = programs;
         this.tables = tables;
     }
 
@@ -98,18 +92,6 @@ public class Stream {
 
     public int getNumOfErrors() {
         return numOfErrors;
-    }
-
-    public HashMap getMapPIDs() {
-        return mapPIDs;
-    }
-
-    public ArrayList getPackets() {
-        return packets;
-    }
-
-    public Map getPrograms() {
-        return programs;
     }
 
     public int getPEScode(int pid) {

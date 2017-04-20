@@ -6,6 +6,8 @@ import model.*;
 import model.config.DVB;
 import javafx.scene.control.Tooltip;
 import model.pes.PES;
+import model.psi.PMT;
+import model.psi.PSI;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -40,37 +42,50 @@ public class PacketInfo extends Tooltip {
 
     private String createPacketInfo(TSpacket packet) {
 
-        return (
-                createHeaderOutput(packet) +
+        return ( createHeaderOutput(packet) +
                         createAdaptationFieldHeaderOutput(packet.getAdaptationFieldHeader()) +
                         createPESheaderOutput(packet.getPayload()) +
+                        createPSItableOutput(packet.getPayload()) +
                         createDataOutput(getHexSequence(packet.getData())) +
                         createASCIIoutput(packet.getData(), packet.getPID()) +
                         createPATOutput(packet.getPID(),stream.getTables().getPATmap()) +
-                        createPMTOutput(packet.getPID(),stream.getTables().getPMTmap(),stream.getTables().getESmap(), stream.getTables().getPATmap()) + "\n"
+                        createPMTOutput(packet.getPID(),packet.getPayload(),stream.getTables().getPMTmap(),stream.getTables().getESmap(), stream.getTables().getPATmap()) + "\n"
         );
     }
 
 
-    private <K,V> String createPMTOutput(Integer PID, HashMap<K, V> PMTmap, Map<K, V> ESmap, Map PATmap) {
+    private String createPSItableOutput(Payload payload) {
+        if(payload instanceof PSI) {
+            return ( "PSI Table:\n\n" + "Table type: " + getTableName(((PSI)payload).getTableID()) + "\n" + "\n\n");
+        }
+        return "";
+    }
+
+
+    private <K,V> String createPMTOutput(Integer PID, Payload payload, Map PMTmap, Map<K, V> ESmap, Map PATmap) {
 
         if (isPMT(PATmap,PID)) {
             Integer service = (Integer)getByValue(PATmap, PID);
-            StringBuilder stringBuilder = new StringBuilder();
+            //Program Map Table:  P")
 
-            for (Map.Entry<K, V> programEntry : PMTmap.entrySet()) {
+            StringBuilder descriptionBuilder = new StringBuilder("Program Map Table:\n\n");
+            descriptionBuilder.append("Program: " + toHex(service) + " (" + stream.getTables().getProgramMap().get(service) + ")\n");
+            descriptionBuilder.append("PCR PID: " + toHex(((PMT)payload).getPCR_PID()) + " (" + ((PMT)payload).getPCR_PID() + ")\n");
+            StringBuilder componentBuilder = new StringBuilder();
+
+            for (Map.Entry<K, V> programEntry : ((Map<K, V>)PMTmap).entrySet()) {
 
                 if (programEntry.getValue().equals(service)) {
                     for (Map.Entry<K, V> ESentry : ESmap.entrySet()) {
 
                         if (ESentry.getKey().equals(programEntry.getKey())) {
-                            stringBuilder.append("Component PID: " + toHex((Integer) ESentry.getKey()) + " (" + ESentry.getKey().toString() + ")" + "\n");
-                            stringBuilder.append("-stream type: " + getElementaryStreamDescriptor((Integer) ESentry.getValue()) + "\n");
+                            componentBuilder.append("Component PID: " + toHex((Integer) ESentry.getKey()) + " (" + ESentry.getKey().toString() + ")" + "\n");
+                            componentBuilder.append("-stream type: " + getElementaryStreamDescriptor((Integer) ESentry.getValue()) + "\n");
                         }
                     }
                 }
             }
-            return ("\n\nProgram Map Table:\n\nProgram: " + toHex(service) + " (" + stream.getPrograms().get(service) + ")\n" + stringBuilder.toString());
+            return ("\n\n" + descriptionBuilder.toString() +"\n" + componentBuilder.toString());
         } else {
             return "";
         }
@@ -105,9 +120,8 @@ public class PacketInfo extends Tooltip {
 
 
     private String createHeaderOutput(TSpacket packet) {
-        return (
-                "Header: \n\n" +
-                        "Packet PID: " + toHex(packet.getPID()) + " (" + packet.getPID() + ")\n" +
+        return ("Header: \n\n" +
+                        "Packet PID: " + toHex(packet.getPID()) + " (" + packet.getPID() + ") - " + getPacketName(packet.getPID()) + "\n" +
                         "Transport Error Indicator: " + packet.getTransportErrorIndicator() + (packet.getTransportErrorIndicator() == 0x0 ? " (No error)" : " (Error packet)") + "\n" +
                         "Payload Start Indicator: " + packet.getPayloadStartIndicator() + (packet.getPayloadStartIndicator() == 0x0 ? " (Normal payload)" : " (Payload start)") + "\n" +
                         "Transport priority: " + packet.getTransportPriority() + (packet.getTransportPriority() == 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
@@ -123,23 +137,22 @@ public class PacketInfo extends Tooltip {
         if (payload != null) {
             if (payload.hasPESheader()) {
                 PES pesPacket = (PES) payload;
-                return (
-                        "PES header: \n\n" +
-                                "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + DVB.getStreamDescription(pesPacket.getStreamID()) + "\n" +
-                                "PES packet length: " + pesPacket.getPESpacketLength() + " Bytes \n" +
-                                "PES scrambling control: " + pesPacket.getPESscramblingControl() + (pesPacket.getPESscramblingControl()==0x0 ? " (Not scrambled)" : " (Scrambled)") + "\n" +
-                                "PES priority: " + pesPacket.getPESpriority() + (pesPacket.getPESpriority()== 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
-                                "Data alignment indicator: " + pesPacket.getDataAlignmentIndicator() + (pesPacket.getDataAlignmentIndicator()==0x1 ? " (PES packet header is immediately followed \n" + "by the video start code or audio syncword \n" + "indicated in the data_stream_alignment_descriptor)" : " (Normal payload)") + "\n" +
-                                "Copyright: " + pesPacket.getCopyright() + (pesPacket.getCopyright()==0x1 ? " (Content copyrighted)" : " (Copyright not defined)") + "\n" +
-                                "Original or copy: " + pesPacket.getOriginalOrCopy() + (pesPacket.getOriginalOrCopy()==0x1 ? " (Original)" : " (Copy)") + "\n" +
-                                "PTS DTS flags: " + pesPacket.getPTSdtsFlags() + (pesPacket.getPTSdtsFlags()==0x3 ? " (PTS and DTS present)" : (pesPacket.getPTSdtsFlags()==2 ? " (PTS present)" : " (PTS and DTS not present)")) + "\n" +
-                                "ES rate flag: " + pesPacket.getESrateFlag() + (pesPacket.getESrateFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
-                                "DSM trick mode flag: " + pesPacket.getDSMtrickModeFlag()  + (pesPacket.getDSMtrickModeFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
-                                "Additional copy info flag: " + pesPacket.getAdditionalCopyInfoFlag() + (pesPacket.getAdditionalCopyInfoFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
-                                "PES CRC flag: " + pesPacket.getPEScrcFlag() + (pesPacket.getPEScrcFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
-                                "PES extension flag: " + pesPacket.getPESextensionFlag() + (pesPacket.getPESextensionFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
-                                "PES header data length: " + pesPacket.getPESheaderDataLength() + " Bytes\n" +
-                                createPESoptionalFieldsOutput(pesPacket) + "\n\n"
+                return ("PES header: \n\n" +
+                        "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + DVB.getStreamDescription(pesPacket.getStreamID()) + "\n" +
+                        "PES packet length: " + pesPacket.getPESpacketLength() + " Bytes \n" +
+                        "PES scrambling control: " + pesPacket.getPESscramblingControl() + (pesPacket.getPESscramblingControl()==0x0 ? " (Not scrambled)" : " (Scrambled)") + "\n" +
+                        "PES priority: " + pesPacket.getPESpriority() + (pesPacket.getPESpriority()== 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
+                        "Data alignment indicator: " + pesPacket.getDataAlignmentIndicator() + (pesPacket.getDataAlignmentIndicator()==0x1 ? " (PES packet header is immediately followed \n" + "by the video start code or audio syncword \n" + "indicated in the data_stream_alignment_descriptor)" : " (Normal payload)") + "\n" +
+                        "Copyright: " + pesPacket.getCopyright() + (pesPacket.getCopyright()==0x1 ? " (Content copyrighted)" : " (Copyright not defined)") + "\n" +
+                        "Original or copy: " + pesPacket.getOriginalOrCopy() + (pesPacket.getOriginalOrCopy()==0x1 ? " (Original)" : " (Copy)") + "\n" +
+                        "PTS DTS flags: " + pesPacket.getPTSdtsFlags() + (pesPacket.getPTSdtsFlags()==0x3 ? " (PTS and DTS present)" : (pesPacket.getPTSdtsFlags()==2 ? " (PTS present)" : " (PTS and DTS not present)")) + "\n" +
+                        "ES rate flag: " + pesPacket.getESrateFlag() + (pesPacket.getESrateFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
+                        "DSM trick mode flag: " + pesPacket.getDSMtrickModeFlag()  + (pesPacket.getDSMtrickModeFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
+                        "Additional copy info flag: " + pesPacket.getAdditionalCopyInfoFlag() + (pesPacket.getAdditionalCopyInfoFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
+                        "PES CRC flag: " + pesPacket.getPEScrcFlag() + (pesPacket.getPEScrcFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
+                        "PES extension flag: " + pesPacket.getPESextensionFlag() + (pesPacket.getPESextensionFlag()==0x1 ? " (Present)" : " (Not present)") + "\n" +
+                        "PES header data length: " + pesPacket.getPESheaderDataLength() + " Bytes\n" +
+                        createPESoptionalFieldsOutput(pesPacket) + "\n\n"
                 );
             }
         }
@@ -148,32 +161,36 @@ public class PacketInfo extends Tooltip {
 
 
     private String createPESoptionalFieldsOutput(PES optionalPESheader) {
-        return (
-                (optionalPESheader.getPTSdtsFlags() >= 0x2 ? "PTS: " + parseTimestamp(optionalPESheader.getPTS()) + "\n" : "" ) +
-                        (optionalPESheader.getPTSdtsFlags() == 0x3 ? "DTS:" + parseTimestamp(optionalPESheader.getPTS()) + "\n" : "" ) +
-                        (optionalPESheader.getESCRflag() == 0x1 ? "ESCR: " + String.format("0x%06X", optionalPESheader.getESCR() & 0xFFFFF) + "\n" : "" ) +
-                        (optionalPESheader.getESrateFlag() == 0x1 ? "ES rate: " + String.format("0x%03X", optionalPESheader.getESrate() & 0xFFFFF) + "\n" : "" ) +
-                        (optionalPESheader.getDSMtrickModeFlag() == 0x1 ? "DSM trick mode: " + String.format("0x%01X", optionalPESheader.getDSMtrickModeFlag() & 0xFFFFF) + "\n" : "" ) +
-                        (optionalPESheader.getAdditionalCopyInfoFlag() == 0x1 ? "Additional copy info: " + String.format("0x%01X", optionalPESheader.getAdditionalCopyInfoFlag() & 0xFFFFF) + "\n" : "" ) +
-                        (optionalPESheader.getPEScrcFlag() == 0x1 ? "PES CRC: " + String.format("0x%02X", optionalPESheader.getPEScrcFlag() & 0xFFFFF) + "\n" : "" )
+        StringBuilder timestampBuilder = new StringBuilder();
+        if(optionalPESheader.getPTSdtsFlags() >= 0x2){
+            timestampBuilder.append("PTS: " + String.format("0x%09X", optionalPESheader.getPTStimestamp()) + optionalPESheader.parseTimestamp(optionalPESheader.getPTStimestamp()) + "\n");
+        }
+        if(optionalPESheader.getPTSdtsFlags() == 0x3){
+            timestampBuilder.append("DTS: " + String.format("0x%09X", optionalPESheader.getDTStimestamp()&0xFFFFFFFF)  + optionalPESheader.parseTimestamp(optionalPESheader.getDTStimestamp()) + "\n");
+        }
+        return (timestampBuilder.toString() +
+                (optionalPESheader.getESCRflag() == 0x1 ? "ESCR: " + String.format("0x%06X", optionalPESheader.getESCR() & 0xFFFFF) + "\n" : "" ) +
+                (optionalPESheader.getESrateFlag() == 0x1 ? "ES rate: " + String.format("0x%03X", optionalPESheader.getESrate() & 0xFFFFF) + "\n" : "" ) +
+                (optionalPESheader.getDSMtrickModeFlag() == 0x1 ? "DSM trick mode: " + String.format("0x%01X", optionalPESheader.getDSMtrickModeFlag() & 0xFFFFF) + "\n" : "" ) +
+                (optionalPESheader.getAdditionalCopyInfoFlag() == 0x1 ? "Additional copy info: " + String.format("0x%01X", optionalPESheader.getAdditionalCopyInfoFlag() & 0xFFFFF) + "\n" : "" ) +
+                (optionalPESheader.getPEScrcFlag() == 0x1 ? "PES CRC: " + String.format("0x%02X", optionalPESheader.getPEScrcFlag() & 0xFFFFF) + "\n" : "" )
         );
     }
 
 
     private String createAdaptationFieldHeaderOutput(AdaptationFieldHeader adaptationFieldHeader) {
         if (adaptationFieldHeader != null) {
-            return (
-                    "Adaptation field: \n\n" +
-                            "Adaptation field length: " + adaptationFieldHeader.getAdaptationFieldLength() + " Bytes\n" +
-                            "Discontinuity indicator: " + adaptationFieldHeader.getDI() + (adaptationFieldHeader.getDI()==0x1 ? " (Discontinuity state)" : " (Continuous state)") + "\n" +
-                            "Random access indicator: " + adaptationFieldHeader.getRAI() + (adaptationFieldHeader.getRAI()==0x1 ? " (Discontinuity state)" : " (Continuous state)") + "\n" +
-                            "Elementary stream priority indicator: " + adaptationFieldHeader.getESPI() + (adaptationFieldHeader.getESPI()==0x1 ? " (Random access info is present)" : " (No random access)") + "\n" +
-                            "PCR flag: " + adaptationFieldHeader.getPCRF() + (adaptationFieldHeader.getPCRF()==0x1 ? " (Program Clock Refercence present)" : " (Not present)") + "\n" +
-                            "OPCR flag: " + adaptationFieldHeader.getOPCRF() + (adaptationFieldHeader.getOPCRF()==0x1 ? " (Original Program Clock Refercence present)" : " (Not present)") + "\n" +
-                            "Splicing point flag: " + adaptationFieldHeader.getSplicingPointFlag() + (adaptationFieldHeader.getSplicingPointFlag()==0x1 ? " (Splicing point present)" : " (Not present)") + "\n" +
-                            "Transport private data flag: " + adaptationFieldHeader.getTPDflag() + (adaptationFieldHeader.getTPDflag()==0x1 ? " (Private data present)" : " (Not present)") + "\n" +
-                            "Adaptation field extension flag: " + adaptationFieldHeader.getAFEflag() + (adaptationFieldHeader.getAFEflag()==0x1 ? " (Extension present)" : " (Not present)") + "\n" +
-                            createAdaptationOtionalFieldsOutput(adaptationFieldHeader, adaptationFieldHeader.getOptionalFields()) + "\n\n"
+            return ("Adaptation field: \n\n" +
+                    "Adaptation field length: " + adaptationFieldHeader.getAdaptationFieldLength() + " Bytes\n" +
+                    "Discontinuity indicator: " + adaptationFieldHeader.getDI() + (adaptationFieldHeader.getDI()==0x1 ? " (Discontinuity state)" : " (Continuous state)") + "\n" +
+                    "Random access indicator: " + adaptationFieldHeader.getRAI() + (adaptationFieldHeader.getRAI()==0x1 ? " (Discontinuity state)" : " (Continuous state)") + "\n" +
+                    "Elementary stream priority indicator: " + adaptationFieldHeader.getESPI() + (adaptationFieldHeader.getESPI()==0x1 ? " (Random access info is present)" : " (No random access)") + "\n" +
+                    "PCR flag: " + adaptationFieldHeader.getPCRF() + (adaptationFieldHeader.getPCRF()==0x1 ? " (Program Clock Refercence present)" : " (Not present)") + "\n" +
+                    "OPCR flag: " + adaptationFieldHeader.getOPCRF() + (adaptationFieldHeader.getOPCRF()==0x1 ? " (Original Program Clock Refercence present)" : " (Not present)") + "\n" +
+                    "Splicing point flag: " + adaptationFieldHeader.getSplicingPointFlag() + (adaptationFieldHeader.getSplicingPointFlag()==0x1 ? " (Splicing point present)" : " (Not present)") + "\n" +
+                    "Transport private data flag: " + adaptationFieldHeader.getTPDflag() + (adaptationFieldHeader.getTPDflag()==0x1 ? " (Private data present)" : " (Not present)") + "\n" +
+                    "Adaptation field extension flag: " + adaptationFieldHeader.getAFEflag() + (adaptationFieldHeader.getAFEflag()==0x1 ? " (Extension present)" : " (Not present)") + "\n" +
+                    createAdaptationOtionalFieldsOutput(adaptationFieldHeader, adaptationFieldHeader.getOptionalFields()) + "\n\n"
             );
         }
         return "";
@@ -182,12 +199,19 @@ public class PacketInfo extends Tooltip {
 
     private String createAdaptationOtionalFieldsOutput(AdaptationFieldHeader adaptationField, AdaptationFieldOptionalFields optionalFields) {
         if (optionalFields != null) {
-            return (
-                    (adaptationField.getPCRF() == 0x1 ? "PCR: " + parseTimestamp(optionalFields.getPCR()) + "\n" : "") +
-                            (adaptationField.getOPCRF() == 0x1 ? "OPCR:" + parseTimestamp(optionalFields.getOPCR()) + "\n" : "") +
-                            (adaptationField.getSplicingPointFlag() == 0x1 ? "Splicing point: " + String.format("0x%06X", optionalFields.getSpliceCoutdown() & 0xFFFFF) + "\n" : "") +
-                            (adaptationField.getTPDflag() == 0x1 ? "TPD length: " + (optionalFields.getTPDlength() & 0xFFFFF) + " Bytes\n" : "") +
-                            (adaptationField.getTPDflag() == 0x1 ? "Transport private data:\n" + createHexOutput(getHexSequence(optionalFields.getTPD())) + "\n" : "")
+            StringBuilder timestampBuilder = new StringBuilder();
+
+            if(adaptationField.getPCRF()  == 0x1){
+                timestampBuilder.append("PCR: " + String.format("0x%09X", adaptationField.getOptionalFields().getPCRtimestamp() & 0xFFFFFFFF)  + optionalFields.parseTimestamp(adaptationField.getOptionalFields().getPCRtimestamp()) + "\n");
+            }
+            if(adaptationField.getOPCRF() == 0x1) {
+                timestampBuilder.append("OPCR: " + String.format("0x%09X", adaptationField.getOptionalFields().getOPCRtimestamp() & 0xFFFFFFFF)   + optionalFields.parseTimestamp(adaptationField.getOptionalFields().getOPCRtimestamp()) + "\n");
+            }
+            return ( timestampBuilder.toString() +
+                    (adaptationField.getSplicingPointFlag() == 0x1 ? "Splicing point: " + String.format("0x%06X", optionalFields.getSpliceCoutdown() & 0xFFFFF) + "\n" : "") +
+                    (adaptationField.getTPDflag() == 0x1 ? "TPD length: " + (optionalFields.getTPDlength() & 0xFFFFF) + " Bytes\n" : "") +
+                    (adaptationField.getTPDflag() == 0x1 ? "Transport private data:\n" + createHexOutput(getHexSequence(optionalFields.getTPD())) + "\n" : "")
+                    //TODO correct transport private hex output
                     //  (adaptationField.getAFEflag() == 0x1 ? "Additional copy info: " + String.format("0x%01X", optionalFields.getAFEFlength() & 0xFFFFF) + "\n" : "")
                     //  (adaptationField.getLTWF() == 0x1 ? "PES CRC: " + String.format("0x%02X", optionalFields.getLTW() & 0xFFFFF) + "\n" : "") +
                     //  (adaptationField.getPRF() == 0x1 ? "PES CRC: " + String.format("0x%02X", optionalFields.getPiecewise_rate() & 0xFFFFF) + "\n" : "") +
@@ -273,22 +297,6 @@ public class PacketInfo extends Tooltip {
             this.hide();
         }
     }
-    public String parseTimestamp(long pts_dts){
-
-        long timestamp = (midBits(pts_dts,17,35) << 15) | midBits(pts_dts,1,16);
-
-        double milliseconds = timestamp / 90.;
-        double seconds = (milliseconds / 1000.) % 60.;
-        long minutes = ((long)milliseconds / (1000 * 60)) % 60;
-        long hours = ((long)milliseconds / (1000 * 60 * 60)) % 24;
-
-        return String.format("0x%05X (%02d:%02d:%06.3f) ", timestamp, hours, minutes, seconds, milliseconds);
-    }
-
-    private long midBits(long k, int m, int n){
-        return (k >> m) & ((1 << (n-m))-1);
-    }
-
 
     public void setPackets(ArrayList<TSpacket> packets) {
         this.packets = packets;

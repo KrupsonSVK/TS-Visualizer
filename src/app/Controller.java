@@ -131,7 +131,6 @@ public class Controller {
                             e.printStackTrace();
                             view.showAlertBox(errorTitle, String.valueOf(e.getMessage()));
                         }
-                        view.scene.setOnMouseClicked(mouseEvent -> { System.out.println("scene x: " + view.scene.getX() + "  scene y: " + view.scene.getY() + "mouse x: " + mouseEvent.getX() + "  mouse y: " + mouseEvent.getY());});
 
                         visualizerThread = new Thread(view.getTask());
                         visualizerThread.start();

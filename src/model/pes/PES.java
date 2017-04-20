@@ -2,6 +2,9 @@ package model.pes;
 
 
 import model.Payload;
+import model.Timestamp;
+
+import static model.config.DVB.nil;
 
 public class PES extends Payload {
 
@@ -23,15 +26,18 @@ public class PES extends Payload {
 
     private int PESheaderDataLength;
 
-    private long PTSdts;
+    private long PTS;
+    private long DTS;
     private long ESCR;
     private long ESrate;
     private int DSMtrickMode;
     private int AdditionalCopyInfo;
     private long PEScrc;
 
+    private long PTStimestamp;
+    private long DTStimestamp;
 
-    public PES(PES header, byte PTSdtsFlags, byte ESCRflag, byte ESrateFlag, byte DSMtrickModeFlag, byte additionalCopyInfoFlag, byte PEScrcFlag, byte PESextensionFlag, int PESheaderDataLength, long PTSdts, long ESCR, long ESrate, int DSMtrickMode, int AdditionalCopyInfo, long PEScrc) {
+    public PES(PES header, byte PTSdtsFlags, byte ESCRflag, byte ESrateFlag, byte DSMtrickModeFlag, byte additionalCopyInfoFlag, byte PEScrcFlag, byte PESextensionFlag, int PESheaderDataLength, long PTS, long DTS, long ESCR, long ESrate, int DSMtrickMode, int AdditionalCopyInfo, long PEScrc) {
 
         super( false, true);
 
@@ -53,7 +59,18 @@ public class PES extends Payload {
 
         this.PESheaderDataLength = PESheaderDataLength;
 
-        this.PTSdts = PTSdts;
+        this.PTS = PTS;
+        this.DTS = DTS;
+
+        if(DTS == nil){
+            PTStimestamp = parsePTSdts(PTS,nil);
+            DTStimestamp = nil;
+        }
+        else {
+            PTStimestamp = parsePTSdts(nil,PTS);
+            DTStimestamp = parsePTSdts(nil,DTS);
+        }
+
         this.ESCR = ESCR;
         this.ESrate = ESrate;
         this.DSMtrickMode = DSMtrickMode;
@@ -79,7 +96,6 @@ public class PES extends Payload {
     public PES() {
         super(false, false);
     }
-
 
     public int getStreamID() {
         return streamID;
@@ -142,11 +158,19 @@ public class PES extends Payload {
     }
 
     public long getPTS() {
-        return PTSdts;
+        return PTS;
+    }
+
+    public long getPTStimestamp() {
+        return PTStimestamp;
+    }
+
+    public long getDTStimestamp() {
+        return DTStimestamp;
     }
 
     public long getDTS() {
-        return PTSdts;
+        return DTS;
     }
 
     public long getESCR() {

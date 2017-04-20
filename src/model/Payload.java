@@ -1,7 +1,7 @@
 package model;
 
 
-public class Payload {
+public class Payload extends Timestamp{
     protected byte[] data;
     private boolean isPSI;
     private  boolean hasPESheader;

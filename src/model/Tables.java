@@ -3,35 +3,46 @@ package model;
 import java.math.BigInteger;
 import java.util.*;
 
+import static model.Sorter.sortMapToListByValue;
 import static model.config.DVB.nil;
 
 public class Tables {
 
-    private HashMap<Integer, Integer> PIDmap;
-    private HashMap<Integer, Integer> errorMap;
     private ArrayList<TSpacket> packets;
+
+    private Map PIDmap;
+    private Map programMap;
+    private Map errorMap;
     private Map ESmap;
     private Map PATmap;
-    private HashMap PMTmap;
+    private Map PMTmap;
     private Map timeMap;
     private Map streamCodes;
     private Map packetsSizeMap;
+    private Map PCRmap;
     private Map serviceNamesMap;
+    private Map bitrateMap;
+
     private int PATmapVersion;
     private int PMTmapVersion;
 
-    private static final Sorter sorter = new Sorter();
-
 
     public Tables() {
+        this.PIDmap = new HashMap<>();
         this.streamCodes = new HashMap();
         this.timeMap = new HashMap();
         this.packetsSizeMap = new HashMap();
         this.ESmap = new HashMap();
         this.PMTmap = new HashMap();
+        this.PCRmap = new HashMap();
+        this.programMap = new HashMap();
+        this.bitrateMap = new HashMap();
+
+        PATmapVersion = nil;
+        PMTmapVersion = nil;
     }
 
-    public Tables(HashMap<Integer, Integer> PIDmap, HashMap<Integer, Integer> errorMap, ArrayList<TSpacket> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, HashMap PMTmap, Map serviceNamesMap) {
+    public Tables(Map errorMap, ArrayList<TSpacket> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, Map PMTmap, Map serviceNamesMap, Map PIDmap, Map PCRmap, Map programMap, Map bitrateMap) {
         this.PIDmap = PIDmap;
         this.errorMap = errorMap;
         this.packets = packets;
@@ -42,8 +53,9 @@ public class Tables {
         this.ESmap = ESmap;
         this.PMTmap = PMTmap;
         this.serviceNamesMap = serviceNamesMap;
-        PATmapVersion = nil;
-        PMTmapVersion = nil;
+        this.PCRmap = PCRmap;
+        this.programMap = programMap;
+        this.bitrateMap = bitrateMap;
     }
 
 
@@ -94,6 +106,29 @@ public class Tables {
     }
 
 
+    public void updatePCRmap(AdaptationFieldOptionalFields optionalFields) {
+        if(optionalFields != null){
+            if(optionalFields.getPCR() != nil){
+                //TODO create map(index,optionalFields.getPCRtimestamp())
+                PCRmap.put(PCRmap.size()+1L, new HashMap(PIDmap));
+            }
+
+        }
+    }
+
+
+    public void updatePIDmap(int PID) {
+        Integer value = (Integer) PIDmap.get(PID);
+        value = (value == null) ? 1 : value + 1;
+        PIDmap.put(PID, value);
+    }
+
+
+    public void updateBitrateTable() {
+        bitrateMap.put(bitrateMap.size()+1, new HashMap(PIDmap));
+    }
+
+
     public void updatePacketsSizeMap(Integer PID, Integer size) {
         packetsSizeMap.put(PID, size);
     }
@@ -106,19 +141,20 @@ public class Tables {
         timeMap.put(PID, timestamp);
     }
 
+
     public Map getTimeMap() {
         return timeMap;
     }
 
     public List getTimeListSorted() {
-        return sorter.sortMapToListByValue(timeMap);
+        return sortMapToListByValue(timeMap);
     }
 
-    public HashMap<Integer, Integer> getPIDmap() {
+    public Map getPIDmap() {
         return PIDmap;
     }
 
-    public HashMap<Integer, Integer> getErrorMap() {
+    public Map getErrorMap() {
         return errorMap;
     }
 
@@ -134,7 +170,7 @@ public class Tables {
         return streamCodes;
     }
 
-    public  HashMap<Integer, Integer> getPMTmap() {
+    public Map getPMTmap() {
         return PMTmap;
     }
 
@@ -148,6 +184,14 @@ public class Tables {
 
     public Map getServiceNamesMap() {
         return serviceNamesMap;
+    }
+
+    public Map getPCRmap() {
+        return PCRmap;
+    }
+
+    public Map getBitrateMap() {
+        return bitrateMap;
     }
 
 
@@ -175,7 +219,7 @@ public class Tables {
         this.PATmap = PATmap;
     }
 
-    public void setPMTmap(HashMap PMTmap) {
+    public void setPMTmap(Map PMTmap) {
         this.PMTmap = PMTmap;
     }
 
@@ -197,6 +241,10 @@ public class Tables {
 
     public void setPMTmapVersion(int PMTmapVersion) {
         this.PMTmapVersion = PMTmapVersion;
+    }
+
+    public void setProgramMap(Map programMap) {
+        this.programMap = programMap;
     }
 }
 

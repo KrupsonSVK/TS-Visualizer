@@ -7,22 +7,26 @@ import java.util.Map;
 
 public class DVB {
 
+    public final static int nil = -1 ;
+
+    public static final int intBinaryLength = 32;
+    public static final int byteBinaryLength = 8;
+
     public final static int tsPacketSize = 188;
     public final static int tsHeaderSize = 4;
-    public final static int tsHeaderBinaryLength = tsHeaderSize * 8;
+    public final static int tsHeaderBinaryLength = tsHeaderSize * byteBinaryLength;
     public final static int tsAdaptationFieldHeaderSize = 2;
-    public final static int tsAdaptationFieldHeaderBinaryLength = tsAdaptationFieldHeaderSize * 8;
+    public final static int tsAdaptationFieldHeaderBinaryLength = tsAdaptationFieldHeaderSize * byteBinaryLength;
 
     public final static int tsPayloadLength = tsPacketSize - tsHeaderSize;
     public final static int syncByte = 0x47;
     public final static int syncByteSize = 1;
+    public final static int syncByteBinarySize = syncByteSize * byteBinaryLength;
 
     public final static int adaptationFieldOnly = 2;
     public final static int adaptationFieldAndPayload = 3;
 
     public final static int PSImaxPID = 0x001F;
-
-    public final static int nil = -1 ;
 
     public final static int PSIcommonFieldsLength = 24;
     public final static int tableIDlength = 8;
@@ -37,6 +41,7 @@ public class DVB {
     public final static int mandatoryPATfields = 72;
     public final static int mandatoryPMTfields = 40;
 
+    public final static int PCRLegth = 48;
     public final static int PCR_PIDlength = 13;
     public final static int programInfoLengthLength = 12;
     public final static int streamTypeLength = 8;
@@ -120,9 +125,6 @@ public class DVB {
     public static final int DIStableID = 0x7E;
     public static final int SIStableID = 0x7F;
 
-    public static final int intBitLength = 32;
-    public static final int byteBinaryLength = 8;
-
     public static final int PSItype = 0xF0;
     public static final int videoType = 0xF1;
     public static final int audioType = 0xF2;
@@ -136,6 +138,7 @@ public class DVB {
     public static final int PMTicon = 0xFA;
     public static final int DVBicon = 0xFB;
     public static final int payloadStartIcon = 0xFC;
+    public static final int timestampIcon = 0xFD;
 
 
     //MPEG ES descriptors
@@ -208,8 +211,11 @@ public class DVB {
     public static final int user_defined_descriptor = 0x80-0xFE;	//
 
 
-    public static String getElementaryStreamDescriptor(int descriptor) {
-        if ( descriptor>=0x1C && descriptor<=0x7F) {
+    public static String getElementaryStreamDescriptor(Integer descriptor) {
+        if (descriptor == null){
+            return "Unidentified ES descriptor";
+        }
+        else if ( descriptor>=0x1C && descriptor<=0x7F) {
             return "ITU-T Rec. H.222 | ISO/IEC 13818-1 Reserved";
         }
         else if ( descriptor>=0x80 && descriptor<=0xFF) {
@@ -407,30 +413,110 @@ public class DVB {
     }
 
 
-    public static  String getPacketName(int pid) {
-        switch(pid){
-            case PATpid : return "PAT";
-            case CATpid : return "CAT";
-            case TDSTpid : return "TDST";
-            case NIT_STpid : return "NIT";
-            case SDT_BAT_STpid : return "SDT or BAT";
-            case EIT_STpid : return "EIT";
-            case RST_STpid : return "RST";
-            case TDT_TOT_STpid : return "TDT";
-            case netSyncPid : return "NetSync";
-            case DITpid : return "DIT";
-            case SITpid : return "SIT";
-            case PMTpid : return "PMT";
-            case RNTpid : return "RNT";
-            case bandSignallingPID : return "bandSignalling";
-            case measurementPID : return "measurement";
-            default: return "PES";
+    public static String getPacketName(int PID) {
+        switch(PID){
+            case PATpid :
+                return "PAT";
+            case CATpid :
+                return "CAT";
+            case TDSTpid :
+                return "TDST";
+            case NIT_STpid :
+                return "NIT or ST";
+            case SDT_BAT_STpid :
+                return "SDT, BAT or ST";
+            case EIT_STpid :
+                return "EIT or ST";
+            case RST_STpid :
+                return "RST or ST";
+            case TDT_TOT_STpid :
+                return "TDT, TOT or ST";
+            case netSyncPid :
+                return "NetSync";
+            case DITpid :
+                return "DIT";
+            case SITpid :
+                return "SIT";
+            case PMTpid :
+                return "PMT";
+            case RNTpid :
+                return "RNT";
+            case bandSignallingPID :
+                return "InbandSignal.";
+            case measurementPID :
+                return "Measur.";
+            default:
+                return "PES";
         }
     }
 
 
+    public static String getTableName(int PID) {
+        //TODO finish if else
+        // 0x04 - 0x3f "reserved"
+        // 0x50 - 0x5f "event info actual schedule"
+        // 0x60 - 0x6f "event info other schedule"
+        // 0x7b - 0x7d "reserved"
+        // 0x80 - 0xfe "user defined"
+
+        switch (PID) {
+            case 0x00:
+                return "program association";
+            case 0x01:
+                return "conditional access";
+            case 0x02:
+                return "program map";
+            case 0x03:
+                return "transport stream description";
+            case 0x40:
+                return "actual network info";
+            case 0x41:
+                return "other network info";
+            case 0x42:
+                return "actual service description";
+            case 0x46:
+                return "other service description";
+            case 0x4a:
+                return "bouquet association";
+            case 0x4e:
+                return "actual event info now";
+            case 0x4f:
+                return "other event info now";
+            case 0x70:
+                return "time data";
+            case 0x71:
+                return "running status";
+            case 0x72:
+                return "stuffing";
+            case 0x73:
+                return "time offset";
+            case 0x74:
+                return "application information";
+            case 0x75:
+                return "container";
+            case 0x76:
+                return "related content";
+            case 0x77:
+                return "content id";
+            case 0x78:
+                return "MPE-FEC";
+            case 0x79:
+                return "resolution notification";
+            case 0x7a:
+                return "MPE-IFEC";
+            case 0x7e:
+                return "discontinuity info";
+            case 0x7f:
+                return "selection info";
+            case 0xff:
+                return "reserved";
+        }
+        return "reserved";
+    }
+
+
     public static  String getProgramName(Stream stream, int pid) {
-        Map map = stream.getPrograms();
+        Map map = stream.getTables().getProgramMap();
         Object obj = map.get(pid);
         return obj == null ? "" : obj.toString();
     }

@@ -44,7 +44,7 @@ public class Config {
     public final static Color defaultColor = Color.rgb(240,240,240);
     public final static String resourcesPath = "/resources/";
     public final static Color adaptationFieldColor = Color.BLACK;
-    public final static Color payloadStartColor = Color.RED;
+    public final static Color hasPESheaderColor = Color.RED;
 
     public static Map  packetImages = new ImageHashMap<Integer,Image>(new Image(resourcesPath + "grey.png")){
             {
@@ -75,6 +75,7 @@ public class Config {
                 put(adaptationFieldIcon, new Image(getClass().getResourceAsStream(resourcesPath + "adaptation.png")));
                 put(PESheaderIcon, new Image(getClass().getResourceAsStream(resourcesPath + "pesheader.png")));
                 put(payloadStartIcon, new Image(getClass().getResourceAsStream(resourcesPath + "payloadStart.png")));
+                put(timestampIcon, new Image(getClass().getResourceAsStream(resourcesPath + "timestamp.png")));
                 put(PMTicon, new Image(getClass().getResourceAsStream(resourcesPath + "pmt.png")));
                 put(DVBicon, new Image(getClass().getResourceAsStream(resourcesPath + "dvb.png")));
                 put(privateType, new Image(getClass().getResourceAsStream(resourcesPath + "private.png")));
@@ -86,22 +87,38 @@ public class Config {
 
     public static  String getPacketImageName(int type){
         switch(type){
-            case PATpid : return "red.png";
-            case CATpid : return "lightgreen.png";
-            case TDSTpid : return "yellow.png";
-            case NIT_STpid : return "blue.png";
-            case SDT_BAT_STpid : return "brown.png";
-            case EIT_STpid : return "orange.png";
-            case RST_STpid : return "lightblue.png";
-            case TDT_TOT_STpid : return "darkgreen.png";
-            case netSyncPid : return "violet.png";
-            case DITpid : return "pink.png";
-            case SITpid : return "darkblue.png";
-            case PMTpid : return "red.png";
-            case RNTpid : return "darkblue.png";
-            case bandSignallingPID : return "darkblue.png";
-            case measurementPID : return "darkblue.png";
-            case nullPacketPID : return "black.png";
+            case PATpid :
+                return "red.png";
+            case CATpid :
+                return "lightgreen.png";
+            case TDSTpid :
+                return "yellow.png";
+            case NIT_STpid :
+                return "blue.png";
+            case SDT_BAT_STpid :
+                return "brown.png";
+            case EIT_STpid :
+                return "orange.png";
+            case RST_STpid :
+                return "lightblue.png";
+            case TDT_TOT_STpid :
+                return "darkgreen.png";
+            case netSyncPid :
+                return "violet.png";
+            case DITpid :
+                return "pink.png";
+            case SITpid :
+                return "darkblue.png";
+            case PMTpid :
+                return "red.png";
+            case RNTpid :
+                return "darkblue.png";
+            case bandSignallingPID :
+                return "darkblue.png";
+            case measurementPID :
+                return "darkblue.png";
+            case nullPacketPID :
+                return "black.png";
             default: return "grey.png";
         }
     }
@@ -109,23 +126,40 @@ public class Config {
 
     public static  Color getPacketColor(int type){
         switch(type){
-            case PATpid : return Color.RED;
-            case CATpid : return Color.LIGHTGREEN;
-            case TDSTpid : return Color.YELLOW;
-            case NIT_STpid : return Color.BLUE;
-            case SDT_BAT_STpid : return Color.BROWN;
-            case EIT_STpid : return Color.ORANGE;
-            case RST_STpid : return Color.LIGHTBLUE;
-            case TDT_TOT_STpid : return Color.DARKGREEN;
-            case netSyncPid : return Color.VIOLET;
-            case DITpid : return Color.PINK;
-            case SITpid : return Color.DARKBLUE;
-            case PMTpid : return Color.LIGHTGREEN;
-            case RNTpid : return Color.DARKBLUE;
-            case bandSignallingPID : return Color.DARKBLUE;
-            case measurementPID : return Color.DARKBLUE;
-            case nullPacketPID : return Color.BLACK;
-            default: return Color.GREY;
+            case PATpid :
+                return Color.RED;
+            case CATpid :
+                return Color.LIGHTGREEN;
+            case TDSTpid :
+                return Color.YELLOW;
+            case NIT_STpid :
+                return Color.BLUE;
+            case SDT_BAT_STpid :
+                return Color.BROWN;
+            case EIT_STpid :
+                return Color.ORANGE;
+            case RST_STpid :
+                return Color.LIGHTBLUE;
+            case TDT_TOT_STpid :
+                return Color.DARKGREEN;
+            case netSyncPid:
+                return Color.VIOLET;
+            case DITpid :
+                return Color.PINK;
+            case SITpid :
+                return Color.DARKBLUE;
+            case PMTpid :
+                return Color.LIGHTGREEN;
+            case RNTpid :
+                return Color.DARKBLUE;
+            case bandSignallingPID :
+                return Color.DARKBLUE;
+            case measurementPID :
+                return Color.DARKBLUE;
+            case nullPacketPID :
+                return Color.BLACK;
+            default:
+                return Color.GREY;
         }
     }
 

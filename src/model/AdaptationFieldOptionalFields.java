@@ -1,6 +1,8 @@
 package model;
 
-public class AdaptationFieldOptionalFields {
+import static model.config.DVB.nil;
+
+public class AdaptationFieldOptionalFields extends Timestamp {
 
     private final long PCR;
     private final long OPCR;
@@ -12,6 +14,9 @@ public class AdaptationFieldOptionalFields {
     private final byte piecewise_rate;
     private final byte seamless_splice;
 
+    private long PCRtimestamp;
+    private long OPCRtimestamp;
+
     public AdaptationFieldOptionalFields(long PCR, long OPCR, byte spliceCoutdown, short TPDlength, byte[] TPD, short AFElength, byte LTW, byte piecewise_rate, byte seamless_splice) {
         this.PCR = PCR;
         this.OPCR = OPCR;
@@ -22,7 +27,11 @@ public class AdaptationFieldOptionalFields {
         this.LTW = LTW;
         this.piecewise_rate = piecewise_rate;
         this.seamless_splice = seamless_splice;
+
+        PCRtimestamp = PCR==nil ? nil : parsePCRopcr(PCR);
+        OPCRtimestamp = OPCR==nil ? nil :parsePCRopcr(OPCR);
     }
+
 
     public long getPCR() {
         return PCR;
@@ -58,5 +67,13 @@ public class AdaptationFieldOptionalFields {
 
     public byte getSeamless_splice() {
         return seamless_splice;
+    }
+
+    public long getPCRtimestamp() {
+        return PCRtimestamp;
+    }
+
+    public long getOPCRtimestamp() {
+        return OPCRtimestamp;
     }
 }

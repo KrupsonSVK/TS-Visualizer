@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class Sorter {
+public abstract class Sorter {
 
 
     public <K, V> HashMap<V, K> reverse(Map<K, V> map) {
@@ -18,15 +18,15 @@ public class Sorter {
     }
 
 
-    public <K, V extends Comparable<? super V>> Map<K, V> sortHashMapByKey(Map<K, V> map) {
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortHashMapByKey(Map<K, V> map) {
 
-        SortedSet<Integer> keys = new TreeSet<Integer>(
-                (Collection<? extends Integer>) map.keySet()
+        SortedSet<V> keys = new TreeSet<V>(
+                (Collection<? extends V>) map.keySet()
         );
 
         Map<K, V> result = new LinkedHashMap<>();
 
-        for (Integer key : keys) {
+        for (V key : keys) {
             result.put((K) key, map.get(key));
         }
         return result;
@@ -48,7 +48,7 @@ public class Sorter {
     }
 
 
-    public List<Integer> sortMapToListByKey(Map<Integer, Integer> map) {
+    public static List<Integer> sortMapToListByKey(Map<Integer, Integer> map) {
 
         List<Integer> unsorted = new ArrayList<>();
 
@@ -60,7 +60,8 @@ public class Sorter {
         return unsorted;
     }
 
-    public List<BigInteger> sortMapToListByValue(Map<BigInteger, BigInteger> map) {
+
+    public static List<BigInteger> sortMapToListByValue(Map<BigInteger, BigInteger> map) {
 
         List<BigInteger> unsorted = new ArrayList<>();
 
@@ -71,4 +72,22 @@ public class Sorter {
 
         return unsorted;
     }
+
+
+    public static <K, V> Map.Entry<K, V> getFirstItem(Map<K, V> map) {
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            return entry;
+        }
+        return null;
+    }
+
+
+    public static <K, V> Map.Entry<K, V> getLastItem(Map<K, V> map) {
+        Map.Entry<K, V> last = null;
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            last = entry;
+        }
+        return last;
+    }
+
 }

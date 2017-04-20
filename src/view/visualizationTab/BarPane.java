@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import static model.config.Config.*;
+import static model.config.DVB.getPacketName;
+import static model.config.DVB.isPSI;
 
 
 public class BarPane extends VisualizationTab implements Drawer{
@@ -68,7 +70,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
     @Override
     public double getLookingGlassMoveCoeff() {
-        return miniPacketImageSize / scene.getWidth() * stream.getPackets().size() ;
+        return miniPacketImageSize / scene.getWidth() * stream.getTables().getPackets().size() ;
     }
 
 
@@ -81,8 +83,8 @@ public class BarPane extends VisualizationTab implements Drawer{
         }
         for(Map.Entry<Integer,Integer> entry : ((HashMap<Integer,Integer>)sortedPIDs).entrySet()){
             int pid = entry.getKey();
-            if(DVB.isPSI(pid)){
-                CheckMenuItem item = new CheckMenuItem(DVB.getPacketName(pid));
+            if(isPSI(pid)){
+                CheckMenuItem item = new CheckMenuItem(getPacketName(pid));
                 item.setDisable(true);
                 item.setSelected(false);
                 contextMenu.getItems().add(item);
@@ -109,7 +111,7 @@ public class BarPane extends VisualizationTab implements Drawer{
 
 
     private double getLookingGlassWidth() {
-        return (scene.getWidth() * scene.getWidth()) / (stream.getPackets().size() * miniPacketImageSize);
+        return (scene.getWidth() * scene.getWidth()) / (stream.getTables().getPackets().size() * miniPacketImageSize);
     }
 
 
@@ -120,7 +122,8 @@ public class BarPane extends VisualizationTab implements Drawer{
 
         double xPos = 0;
         for(TSpacket packet : packets){
-            if(DVB.isPSI(packet.getPID())){
+            if(isPSI(packet.getPID())){
+                //TODO also adaptiaitonfield, PES header and PMT packet
                 drawOneBar(gcb, packet.getPID(), (int) xPos, widthOfBar, height);
             }
             xPos += increment;
@@ -153,6 +156,9 @@ public class BarPane extends VisualizationTab implements Drawer{
 
 
     public void addListenersAndHandlers() {
+
+        //TODO on-right-click listnener to move looking glass to desired postion
+        //TODO set bounds to looking glass moves
 
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = scene.getWidth();
@@ -190,6 +196,7 @@ public class BarPane extends VisualizationTab implements Drawer{
                         contextMenu.hide();
                     }
                     if (mouseEvent.getButton().name() == "SECONDARY") {
+                        //TODO context menu filter (ALL, PAT, CAT, PMT,... Adaptationfield, PES header)
                         contextMenu.show(scrollPane,mouseEvent.getScreenX(),mouseEvent.getScreenY());
                     }
                 }

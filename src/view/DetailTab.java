@@ -40,7 +40,7 @@ public class DetailTab extends Other {
 
 
     private TreeItem<String> createTree(Stream streamDescriptor) {
-
+        //TODO functions and number of occurence of table, and types and number of tableIDs
         TreeItem<String> rootNode = createRootNode(streamDescriptor);
 
         TreeItem<String> PSInode = new TreeItem<>("PSI");
@@ -65,7 +65,7 @@ public class DetailTab extends Other {
 
             PSInode.getChildren().addAll(PATnode, CATnode, BATnode, PMTnode, NITnode, SDTnode, TDTnode, TOTnode, SITnode, SynNode);
         }
-        TreeItem PIDnode = createPIDnode(streamDescriptor.getMapPIDs());
+        TreeItem PIDnode = createPIDnode(streamDescriptor.getTables().getPIDmap(), streamDescriptor.getTables().getESmap());
 
         rootNode.getChildren().addAll(PSInode, PIDnode);
 
@@ -88,8 +88,11 @@ public class DetailTab extends Other {
                 new TreeItem<>("Owner: " + streamDescriptor.getOwner()),
                 new TreeItem<>("TS Packets: " + streamDescriptor.getNumOfPackets() + "x"),
                 new TreeItem<>("TS packet size: " + streamDescriptor.getPacketSize() + " B"),
-                new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x")
-                );
+                new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x"),
+                new TreeItem<>("Stream length: " + "TODO"),
+                new TreeItem<>("Bitrate: " + "TODO" + "Mbit/s")
+                //TODO get bitrate and length
+        );
         return rootNode;
     }
 
@@ -99,21 +102,24 @@ public class DetailTab extends Other {
 
         for (Map.Entry<Integer, String> programEntry : programMap.entrySet()) {
             TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()) + " (" + programEntry.getKey() + ")");
+            int index = 0;
 
             for (Map.Entry<Integer, Integer> PMTentry : PMTmap.entrySet()) {
 
-                if (programEntry.getKey() == PMTentry.getValue()) {
+                if (programEntry.getKey().equals(PMTentry.getValue())) {
+
                     for (Map.Entry<Integer, Integer> ESentry : ESmap.entrySet()) {
 
                         if (ESentry.getKey().equals(PMTentry.getKey())) {
-                            TreeItem<String> node = new TreeItem<>("Component PID: " + toHex(ESentry.getValue()));
+                            TreeItem<String> node = new TreeItem<>("Component " + index++ + ": ");
+                            node.getChildren().add(new TreeItem<>("PID: " + toHex(ESentry.getKey()) + " (" + ESentry.getKey() + ")"));
                             node.getChildren().add(new TreeItem<>("Stream type: " + getElementaryStreamDescriptor(ESentry.getValue())));
                             programNode.getChildren().add(node);
                         }
                     }
-                    PMTnode.getChildren().add(programNode);
                 }
             }
+            PMTnode.getChildren().add(programNode);
         }
         return PMTnode;
     }
@@ -134,12 +140,21 @@ public class DetailTab extends Other {
     }
 
 
-    private TreeItem<String> createPIDnode(HashMap<Integer, Integer> PIDmap) {
+    private <K, V> TreeItem<String> createPIDnode(Map<K, V> PIDmap, Map ESmap) {
         TreeItem<String> PIDnode = new TreeItem<>("PIDs");
 
-        for (Map.Entry<Integer, Integer> pid : PIDmap.entrySet()) {
-            TreeItem<String> node = new TreeItem<>(toHex(pid.getKey()) + " (" + pid.getKey() + ")");
+        for (Map.Entry<K, V> pid : PIDmap.entrySet()) {
+            TreeItem<String> node = new TreeItem<>(toHex((Integer) pid.getKey()) + " (" + pid.getKey() + ")");
+
+            StringBuilder name = new StringBuilder(getPacketName((Integer) pid.getKey()));
+            if (name.toString().equals("PES")) {
+                name.append(" (" + getElementaryStreamDescriptor((Integer) ESmap.get(pid.getKey())) + ")");
+            } else {
+                name = new StringBuilder("PSI (" + getPacketName((Integer) pid.getKey()) + ")");
+            }
+            node.getChildren().add(new TreeItem<>(name.toString()));
             node.getChildren().add(new TreeItem<>("Number of packets: " + pid.getValue() + "x "));
+
             PIDnode.getChildren().add(node);
         }
         return PIDnode;
