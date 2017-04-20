@@ -1,7 +1,7 @@
 package app.streamAnalyzer;
 
 
-import model.TSpacket;
+import model.packet.Packet;
 import model.Tables;
 import model.config.DVB;
 
@@ -33,7 +33,7 @@ public class Parser extends DVB {
     }
 
 
-    int calculatePosition(TSpacket analyzedHeader) {
+    int calculatePosition(Packet analyzedHeader) {
         int position=tsHeaderSize;
 
         if(isAdaptationField(analyzedHeader)) {
@@ -58,7 +58,7 @@ public class Parser extends DVB {
     }
 
 
-    boolean isAdaptationField(TSpacket header) {
+    boolean isAdaptationField(Packet header) {
         int adaptationFieldControl = header.getAdaptationFieldControl();
 
         return (adaptationFieldControl == adaptationFieldOnly || adaptationFieldControl == adaptationFieldAndPayload);

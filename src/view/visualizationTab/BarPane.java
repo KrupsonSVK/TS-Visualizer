@@ -13,13 +13,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import model.config.DVB;
 import model.Stream;
-import model.TSpacket;
+import model.packet.Packet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static model.config.Config.*;
@@ -37,7 +35,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     private LegendPane legendPane;
     private EventHandler<MouseEvent> lookingGlassOnMousePressedEventHandler,lookingGlassOnMouseDraggedEventHandler;
     private Stream stream;
-    private ArrayList<TSpacket> packets;
+    private ArrayList<Packet> packets;
     private Map sortedPIDs;
     private double oldSceneX, oldTranslateX, xPos, initDiff, lastValue;
 
@@ -47,7 +45,7 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
 
-    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, Map sortedPIDs, int lines){
+    public void createScrollPane(Stream stream, ArrayList<Packet> packets, Map sortedPIDs, int lines){
 
         lastValue = initDiff = oldSceneX = oldTranslateX = xPos = 0;
 
@@ -115,13 +113,13 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
 
-    private Image drawPacketsInBar(GraphicsContext gcb, Canvas barCanvas, ArrayList<TSpacket> packets, double width, double height) {
+    private Image drawPacketsInBar(GraphicsContext gcb, Canvas barCanvas, ArrayList<Packet> packets, double width, double height) {
 
         double increment = width / packets.size();
         int widthOfBar = (int) increment == 0 ? 1 : (int) increment; //if one packet is narrower than 1px
 
         double xPos = 0;
-        for(TSpacket packet : packets){
+        for(Packet packet : packets){
             if(isPSI(packet.getPID())){
                 //TODO also adaptiaitonfield, PES header and PMT packet
                 drawOneBar(gcb, packet.getPID(), (int) xPos, widthOfBar, height);
@@ -218,12 +216,12 @@ public class BarPane extends VisualizationTab implements Drawer{
     }
 
     @Override
-    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, double xPos) {
+    public void drawCanvas(Stream stream, ArrayList<Packet> packets, double xPos) {
 
     }
 
     @Override
-    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, double xPos) {
+    public void drawPackets(Stream stream, ArrayList<Packet> packets, double xPos) {
 
     }
 

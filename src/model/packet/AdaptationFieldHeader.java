@@ -1,4 +1,4 @@
-package model;
+package model.packet;
 
 
 public class AdaptationFieldHeader {

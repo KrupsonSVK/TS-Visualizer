@@ -1,7 +1,7 @@
 package view.visualizationTab;
 
 import model.Stream;
-import model.TSpacket;
+import model.packet.Packet;
 import model.Sorter;
 
 import javafx.event.ActionEvent;
@@ -34,7 +34,7 @@ public class VisualizationTab extends Window{
     Map sortedPIDs;
     HashMap originalPIDmap;
     Map filteredPIDs;
-    public ArrayList<TSpacket> packets;
+    public ArrayList<Packet> packets;
     private Slider zoomer;
     private PacketPane packetPane;
     private BarPane barPane;
@@ -207,11 +207,14 @@ public class VisualizationTab extends Window{
 
 
     private void updatePanes(Map sortedPIDs, Map labeledPIDs) {
+
         packetPane.setSortedPIDs(sortedPIDs);
         legendPane.setSortedPIDs(sortedPIDs);
         barPane.setSortedPIDs(sortedPIDs);
+
         packetPane.drawPackets(stream,packets,packetPane.getXpos());
         legendPane.drawPackets(stream,packets,legendPane.getXpos());
+
         legendPane.createLabels(labeledPIDs);
     }
 

@@ -1,7 +1,6 @@
 package app.streamAnalyzer;
 
-import model.TSpacket;
-import model.Tables;
+import model.packet.Packet;
 import model.pes.PES;
 
 import java.math.BigInteger;
@@ -14,7 +13,7 @@ public class PESparser extends Parser {
     }
 
 
-    PES analyzePES(TSpacket analyzedHeader, byte[] packet) {
+    PES analyzePES(Packet analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
 

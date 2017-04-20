@@ -1,7 +1,9 @@
-package model;
+package model.packet;
+
+import model.Timestamp;
 
 
-public class Payload extends Timestamp{
+public class Payload extends Timestamp {
     protected byte[] data;
     private boolean isPSI;
     private  boolean hasPESheader;

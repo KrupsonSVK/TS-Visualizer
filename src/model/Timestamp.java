@@ -1,8 +1,15 @@
 package model;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+
+import static model.Sorter.sortHashMapByKey;
 import static model.config.DVB.nil;
 
 public abstract class Timestamp {
+
 
     public String parseTimestamp(long milliseconds){
 
@@ -10,7 +17,7 @@ public abstract class Timestamp {
         final long minutes = (milliseconds / (1000 * 60)) % 60;
         final long hours = (milliseconds / (1000 * 60 * 60)) % 24;
 
-        return String.format("(%02d:%02d:%06.3f) ", hours, minutes, seconds, milliseconds);
+        return String.format("%02d:%02d:%06.3f", hours, minutes, seconds, milliseconds);
     }
 
 
@@ -24,7 +31,7 @@ public abstract class Timestamp {
     }
 
 
-    long parsePCRopcr(long PCRopcr){
+    protected long parsePCRopcr(long PCRopcr){
 
         final int extStart = 0;
         final int extEnd = 9;
@@ -53,4 +60,39 @@ public abstract class Timestamp {
         }
         return 0;
     };
+
+
+    protected <K,V extends Map<K, V>> Map createDeltaBitrateMap(Map<K, V> bitrateMap) {
+
+        NavigableMap<K, V> navigablePCRmap = new TreeMap<>(bitrateMap);
+        Map bitratePCRmap = new HashMap<K,V>();
+
+        for (Map.Entry<K, V> currentPIDmap : navigablePCRmap.entrySet()) {
+            Map.Entry<K, V> previousPIDmap = navigablePCRmap.lowerEntry(currentPIDmap.getKey());
+            V previousPIDmapValue = (previousPIDmap==null) ? null : previousPIDmap.getValue();
+            bitratePCRmap.put(currentPIDmap.getKey(),calculateBitrateDelta(currentPIDmap.getValue(),previousPIDmapValue));
+        }
+
+        return sortHashMapByKey(bitratePCRmap);
+    }
+
+
+    private<K,V> Map calculateBitrateDelta(Map<K,V> current, Map<K,V> previous) {
+        if (previous==null) {
+            return current;
+        }
+        Map deltaMap = new HashMap<K, V>();
+        for (Map.Entry<K, V> currentEntry : current.entrySet()) {
+            K currentKey = currentEntry.getKey();
+
+            Integer previousValue = (Integer) previous.get(currentKey);
+            previousValue = (previousValue==null) ? 0 : previousValue;
+
+            Integer currentValue = (currentEntry.getValue()==null) ? 0 : (Integer)currentEntry.getValue();
+            int delta = currentValue - previousValue;
+
+            deltaMap.put(currentKey,delta);
+        }
+        return deltaMap;
+    }
 }

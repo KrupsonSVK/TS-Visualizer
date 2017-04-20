@@ -1,7 +1,6 @@
 package app.streamAnalyzer;
 
-import model.TSpacket;
-import model.Tables;
+import model.packet.Packet;
 
 
 public class HeaderParser extends Parser {
@@ -11,7 +10,7 @@ public class HeaderParser extends Parser {
     }
 
 
-    TSpacket analyzeHeader(byte[] header, byte[] packet, long index) {
+    Packet analyzeHeader(byte[] header, byte[] packet, long index) {
 
         int position = syncByteBinarySize;
         byte transportErrorIndicator = header[position++];
@@ -23,7 +22,7 @@ public class HeaderParser extends Parser {
         byte continuityCounter = (byte) binToInt(header, 28, 32);
         short adaptationFieldLength =  0;
 
-        return new TSpacket(index,transportErrorIndicator, payloadStartIndicator, transportPriority, PID, tranportScramblingControl, adaptationFieldControl, continuityCounter, adaptationFieldLength, packet);
+        return new Packet(index,transportErrorIndicator, payloadStartIndicator, transportPriority, PID, tranportScramblingControl, adaptationFieldControl, continuityCounter, adaptationFieldLength, packet);
     }
 
 

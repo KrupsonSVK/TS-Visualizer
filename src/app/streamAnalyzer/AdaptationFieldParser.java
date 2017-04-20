@@ -1,10 +1,7 @@
 package app.streamAnalyzer;
 
-import model.AdaptationFieldHeader;
-import model.AdaptationFieldOptionalFields;
-import model.Tables;
-
-import java.math.BigInteger;
+import model.packet.AdaptationFieldHeader;
+import model.packet.AdaptationFieldOptionalFields;
 
 
 public class AdaptationFieldParser extends Parser {

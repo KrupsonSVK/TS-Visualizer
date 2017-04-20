@@ -90,4 +90,15 @@ public abstract class Sorter {
         return last;
     }
 
+
+    public static<K,V> Map.Entry<K, V> getIndexFromMap(Map<K,V> map, int index) {
+        int i = 0;
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            if (i == index) {
+                return entry;
+            }
+            i++;
+        }
+        return null;
+    }
 }

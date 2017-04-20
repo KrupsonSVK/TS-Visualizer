@@ -18,7 +18,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Stream;
-import model.config.DVB;
+import view.graphTabs.BitrateTab;
+import view.graphTabs.CompositionTab;
+import view.graphTabs.StructureTab;
 import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
@@ -35,7 +37,9 @@ public class Window {
     Stage progressStage;
     private Stage userGuideStage;
     private DetailTab detailTab;
-    private GraphTab graphTab;
+    private BitrateTab bitrateTab;
+    private StructureTab structureTab;
+    private CompositionTab compositionTab;
     private VisualizationTab visualizationTab;
     GridPane gridPane;
     public FileChooser fileChooser;
@@ -113,7 +117,9 @@ public class Window {
 
         detailTab = new DetailTab();
         visualizationTab = new VisualizationTab();
-        graphTab = new GraphTab();
+        bitrateTab = new BitrateTab();
+        structureTab = new StructureTab();
+        compositionTab = new CompositionTab();
 
         scene = new Scene(rootPane, windowWidth, windowHeigth);
         primaryStage.setTitle("TS Visualizer");
@@ -122,7 +128,10 @@ public class Window {
 
         visualizationTab.init(scene);
         detailTab.setScene(scene);
-        graphTab.setScene(scene);
+        bitrateTab.setScene(scene);
+        structureTab.setScene(scene);
+        compositionTab.setScene(scene);
+
         mainMenu.toFront();
     }
 
@@ -174,12 +183,19 @@ public class Window {
                     rootPane.setStyle("-fx-background-color: transparent");
                     detailTab.createTreeTab(streamDescriptor);
                     visualizationTab.visualizePackets(streamDescriptor);
-                    graphTab.drawGraph(streamDescriptor);
+                    drawGraphs(streamDescriptor);
                     createTabPane();
                 });
                 return null;
             }
         };
+    }
+
+
+    private void drawGraphs(Stream streamDescriptor) {
+        bitrateTab.drawGraph(streamDescriptor);
+        structureTab.drawGraph(streamDescriptor);
+        compositionTab.drawGraph(streamDescriptor);
     }
 
 
@@ -192,7 +208,7 @@ public class Window {
 
 
     public void createTabPane() {
-        tabPane.getTabs().addAll(detailTab.tab, visualizationTab.tab, graphTab.tab);
+        tabPane.getTabs().addAll(detailTab.tab, visualizationTab.tab, bitrateTab.tab, structureTab.tab, compositionTab.tab);
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         borderPane.setCenter(tabPane);
@@ -245,21 +261,4 @@ public class Window {
         userGuideStage.show();
     }
 
-
-    private long midBits(long k, int m, int n){
-        return (k >> m) & ((1 << (n-m))-1);
-    }
-
-
-    public String parseTimestamp(long pts_dts){
-
-        long timestamp = (midBits(pts_dts,17,35) << 15) | midBits(pts_dts,1,16);
-
-        double milliseconds = timestamp / 90.;
-        double seconds = (milliseconds / 1000.) % 60.;
-        long minutes = ((long)milliseconds / (1000 * 60)) % 60;
-        long hours = ((long)milliseconds / (1000 * 60 * 60)) % 24;
-
-        return String.format("0x%05X (%02d:%02d:%06.3f) ", timestamp, hours, minutes, seconds, milliseconds);
-    }
 }

@@ -15,6 +15,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import model.*;
+import model.packet.Packet;
 import model.pes.PES;
 
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
 
-    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, Map sortedPIDs, int lines) {
+    public void createScrollPane(Stream stream, ArrayList<Packet> packets, Map sortedPIDs, int lines) {
 
         initVvalue = initYpos = oldTranslateY = yPos = oldSceneX = oldTranslateX = xPos = 0;
 
@@ -73,7 +74,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
     @Override
-    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, double xPos) {
+    public void drawPackets(Stream stream, ArrayList<Packet> packets, double xPos) {
 
         GraphicsContext graphicsContextPacketCanvas = canvas.getGraphicsContext2D();
 
@@ -82,7 +83,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
         graphicsContextPacketCanvas.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         int index = 0;
-        for (TSpacket packet : packets) {
+        for (Packet packet : packets) {
             int pid = packet.getPID();
             Integer yPos = (Integer) sortedPIDs.get(pid);
             if(yPos != null) {
@@ -101,7 +102,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
 
-    private boolean hasTimestamp(TSpacket packet) {
+    private boolean hasTimestamp(Packet packet) {
         if(packet.getAdaptationFieldHeader()!=null) {
             if (packet.getAdaptationFieldHeader().getPCRF() == 0x01 || packet.getAdaptationFieldHeader().getOPCRF() == 0x01) {
                 return true;
@@ -171,6 +172,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
             if (hasPESheader) {
                 Image icon = (Image) typeIcons.get(PESheaderIcon);
                 graphicsContext.drawImage(icon, xPos + xMargin, y, specialIconSize, specialIconSize);
+                xMargin += typeIconSize;
             }
             if(hasTimestamp){
                 Image icon = (Image) typeIcons.get(timestampIcon);
@@ -182,7 +184,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
     }
 
 
-    public void addListenersAndHandlers(Stream stream, ArrayList<TSpacket> packets) {
+    public void addListenersAndHandlers(Stream stream, ArrayList<Packet> packets) {
 
         pane.setOnMousePressed(mouseEvent -> {
             updateX(mouseEvent);
@@ -254,7 +256,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
 
 
     @Override
-    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, double xPos) {
+    public void drawCanvas(Stream stream, ArrayList<Packet> packets, double xPos) {
         pane.getChildren().clear();
 
         drawPackets(stream, packets, xPos);

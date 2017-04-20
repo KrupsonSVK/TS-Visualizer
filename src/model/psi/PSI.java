@@ -1,7 +1,7 @@
 package model.psi;
 
 
-import model.Payload;
+import model.packet.Payload;
 
 public class PSI extends Payload {
 

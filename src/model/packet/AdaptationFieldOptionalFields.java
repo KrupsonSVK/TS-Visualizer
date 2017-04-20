@@ -1,4 +1,6 @@
-package model;
+package model.packet;
+
+import model.Timestamp;
 
 import static model.config.DVB.nil;
 

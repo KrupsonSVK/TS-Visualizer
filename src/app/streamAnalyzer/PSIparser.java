@@ -1,6 +1,6 @@
 package app.streamAnalyzer;
 
-import model.TSpacket;
+import model.packet.Packet;
 import model.psi.*;
 
 import java.io.UnsupportedEncodingException;
@@ -15,8 +15,8 @@ public class PSIparser extends Parser {
     }
 
 
-    PSI analyzePSI(TSpacket analyzedHeader, byte[] packet) {
-        TSpacket analyzedPacket = analyzedHeader;
+    PSI analyzePSI(Packet analyzedHeader, byte[] packet) {
+        Packet analyzedPacket = analyzedHeader;
 
         switch (analyzedHeader.getPID()) {
             case PATpid:
@@ -47,7 +47,7 @@ public class PSIparser extends Parser {
     }
 
 
-    model.psi.PAT analyzePAT(TSpacket analyzedHeader, byte[] packet) {
+    model.psi.PAT analyzePAT(Packet analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
         position += 1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
@@ -94,7 +94,7 @@ public class PSIparser extends Parser {
     }
 
 
-    PMT analyzePMT(TSpacket analyzedHeader, byte[] packet) {
+    PMT analyzePMT(Packet analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
         position+=1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
@@ -156,7 +156,7 @@ public class PSIparser extends Parser {
     }
 
 
-    private PSI analyzeSDT_BAT(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeSDT_BAT(Packet analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
         position += 1;
@@ -217,7 +217,7 @@ public class PSIparser extends Parser {
     }
 
 
-    private PSI analyzeEIT_ST(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeEIT_ST(Packet analyzedHeader, byte[] packet) {
 
         int position = calculatePosition(analyzedHeader);
         position += 1;
@@ -348,35 +348,35 @@ public class PSIparser extends Parser {
     }
 
 
-    private CАТ analyzeCAT(TSpacket analyzedHeader, byte[] packet) {
+    private CАТ analyzeCAT(Packet analyzedHeader, byte[] packet) {
         return new CАТ();
     }
 
-    private PSI analyzeSIT(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeSIT(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 
-    private PSI analyzeDITpid(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeDITpid(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 
-    private PSI analyzeNetSync(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeNetSync(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 
-    private PSI analyzeTDT_TOT(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeTDT_TOT(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 
-    private PSI analyzeRST_ST(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeRST_ST(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 
-    private PSI analyzeNIT_ST(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeNIT_ST(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 
-    private PSI analyzeTDST(TSpacket analyzedHeader, byte[] packet) {
+    private PSI analyzeTDST(Packet analyzedHeader, byte[] packet) {
         return null;
     }
 

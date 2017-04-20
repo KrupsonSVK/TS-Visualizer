@@ -1,5 +1,8 @@
 package model;
 
+import model.packet.AdaptationFieldOptionalFields;
+import model.packet.Packet;
+
 import java.math.BigInteger;
 import java.util.*;
 
@@ -8,7 +11,7 @@ import static model.config.DVB.nil;
 
 public class Tables {
 
-    private ArrayList<TSpacket> packets;
+    private ArrayList<Packet> packets;
 
     private Map PIDmap;
     private Map programMap;
@@ -42,7 +45,7 @@ public class Tables {
         PMTmapVersion = nil;
     }
 
-    public Tables(Map errorMap, ArrayList<TSpacket> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, Map PMTmap, Map serviceNamesMap, Map PIDmap, Map PCRmap, Map programMap, Map bitrateMap) {
+    public Tables(Map errorMap, ArrayList<Packet> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, Map PMTmap, Map serviceNamesMap, Map PIDmap, Map PCRmap, Map programMap, Map bitrateMap) {
         this.PIDmap = PIDmap;
         this.errorMap = errorMap;
         this.packets = packets;
@@ -125,7 +128,7 @@ public class Tables {
 
 
     public void updateBitrateTable() {
-        bitrateMap.put(bitrateMap.size()+1, new HashMap(PIDmap));
+        bitrateMap.put(bitrateMap.size(), new HashMap(PIDmap));
     }
 
 
@@ -158,7 +161,7 @@ public class Tables {
         return errorMap;
     }
 
-    public ArrayList<TSpacket> getPackets() {
+    public ArrayList<Packet> getPackets() {
         return packets;
     }
 
@@ -203,7 +206,7 @@ public class Tables {
         this.errorMap = errorMap;
     }
 
-    public void setPackets(ArrayList<TSpacket> packets) {
+    public void setPackets(ArrayList<Packet> packets) {
         this.packets = packets;
     }
 

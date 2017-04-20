@@ -90,7 +90,7 @@ public class DetailTab extends Other {
                 new TreeItem<>("TS packet size: " + streamDescriptor.getPacketSize() + " B"),
                 new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x"),
                 new TreeItem<>("Stream length: " + "TODO"),
-                new TreeItem<>("Bitrate: " + "TODO" + "Mbit/s")
+                new TreeItem<>("Bitrate: " + "TODO" + " Mbit/s")
                 //TODO get bitrate and length
         );
         return rootNode;
@@ -220,8 +220,8 @@ public class DetailTab extends Other {
 //        }
 
         /*
-            TreeItem<String> packetNode = new TreeItem("TSpacket no. " + i++);
-            TSpacket paketik = packetList.get(i-2);
+            TreeItem<String> packetNode = new TreeItem("Packet no. " + i++);
+            Packet paketik = packetList.get(i-2);
             packetNode.getChildren().addAll(
                     new TreeItem("PID: " + paketik.getPID())
                     //new TreeItem("Transport Error Indicator: " + paketik.getTransportErrorIndicator()),

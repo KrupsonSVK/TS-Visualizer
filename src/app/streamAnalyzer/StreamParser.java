@@ -2,6 +2,8 @@ package app.streamAnalyzer;
 
 import javafx.concurrent.Task;
 import model.*;
+import model.packet.AdaptationFieldHeader;
+import model.packet.Packet;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +41,7 @@ public class StreamParser extends Parser {
             @Override
             public Tables call() throws InterruptedException, IOException {
 
-                ArrayList<TSpacket> packets = new ArrayList<>();
+                ArrayList<Packet> packets = new ArrayList<>();
                 boolean isPATanalyzed = false;
                 int firstPosition = nil;
                 long packetIndex = 0;
@@ -71,7 +73,7 @@ public class StreamParser extends Parser {
                         int header = headerParser.parseHeader(packet);
                         byte[] binaryHeader = toBinary(header,tsHeaderBinaryLength);
 
-                        TSpacket analyzedHeader =  headerParser.analyzeHeader(binaryHeader,packet,packetIndex++);
+                        Packet analyzedHeader =  headerParser.analyzeHeader(binaryHeader,packet,packetIndex++);
                         if(isPATanalyzed) {
                             tables.updatePIDmap(analyzedHeader.getPID());
                             if(tick == tickInterval){
@@ -189,11 +191,11 @@ public class StreamParser extends Parser {
     }
 
 
-    private Tables createTables(ArrayList<TSpacket> packets) {
+    private Tables createTables(ArrayList<Packet> packets) {
         HashMap<Integer, Integer> PIDmap = new HashMap<>();
         HashMap<Integer, Integer> ErrorMap = new HashMap<>();
 
-        for (TSpacket packet : packets) {
+        for (Packet packet : packets) {
             if (PIDmap.get(packet.getPID()) == null) {
                 PIDmap.put(packet.getPID(), 1);
                 ErrorMap.put(packet.getPID(), 0);

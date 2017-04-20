@@ -1,8 +1,7 @@
 package model.pes;
 
 
-import model.Payload;
-import model.Timestamp;
+import model.packet.Payload;
 
 import static model.config.DVB.nil;
 

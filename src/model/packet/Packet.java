@@ -1,6 +1,6 @@
-package model;
+package model.packet;
 
-public class TSpacket {
+public class Packet {
 
     private final long index;
 
@@ -17,7 +17,7 @@ public class TSpacket {
 
     private byte[] data;
 
-    public TSpacket(long index, byte transportErrorIndicator, byte payloadStartIndicator, byte transportPriority, short PID, byte transportScramblingControl, byte adaptationFieldControl, byte continuityCounter, short adaptationFieldLength, byte[] data) {
+    public Packet(long index, byte transportErrorIndicator, byte payloadStartIndicator, byte transportPriority, short PID, byte transportScramblingControl, byte adaptationFieldControl, byte continuityCounter, short adaptationFieldLength, byte[] data) {
         this.index = index;
         this.transportErrorIndicator =  transportErrorIndicator;
         this.payloadStartIndicator =  payloadStartIndicator;

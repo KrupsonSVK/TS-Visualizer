@@ -1,10 +1,12 @@
 package view.visualizationTab;
 
 
-import javafx.scene.control.TreeItem;
 import model.*;
-import model.config.DVB;
 import javafx.scene.control.Tooltip;
+import model.packet.AdaptationFieldHeader;
+import model.packet.AdaptationFieldOptionalFields;
+import model.packet.Packet;
+import model.packet.Payload;
 import model.pes.PES;
 import model.psi.PMT;
 import model.psi.PSI;
@@ -12,7 +14,6 @@ import model.psi.PSI;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import static model.config.Config.*;
@@ -20,7 +21,7 @@ import static model.config.DVB.*;
 
 public class PacketInfo extends Tooltip {
 
-    private ArrayList<TSpacket> packets;
+    private ArrayList<Packet> packets;
     private Stream stream;
 
 
@@ -31,7 +32,7 @@ public class PacketInfo extends Tooltip {
 
     String getPacketInfo(int hashPacket) {
 
-        for (TSpacket packet : packets) {
+        for (Packet packet : packets) {
             if (packet.hashCode() == hashPacket) {
                 return createPacketInfo(packet);
             }
@@ -40,7 +41,7 @@ public class PacketInfo extends Tooltip {
     }
 
 
-    private String createPacketInfo(TSpacket packet) {
+    private String createPacketInfo(Packet packet) {
 
         return ( createHeaderOutput(packet) +
                         createAdaptationFieldHeaderOutput(packet.getAdaptationFieldHeader()) +
@@ -119,7 +120,7 @@ public class PacketInfo extends Tooltip {
     }
 
 
-    private String createHeaderOutput(TSpacket packet) {
+    private String createHeaderOutput(Packet packet) {
         return ("Header: \n\n" +
                         "Packet PID: " + toHex(packet.getPID()) + " (" + packet.getPID() + ") - " + getPacketName(packet.getPID()) + "\n" +
                         "Transport Error Indicator: " + packet.getTransportErrorIndicator() + (packet.getTransportErrorIndicator() == 0x0 ? " (No error)" : " (Error packet)") + "\n" +
@@ -138,7 +139,7 @@ public class PacketInfo extends Tooltip {
             if (payload.hasPESheader()) {
                 PES pesPacket = (PES) payload;
                 return ("PES header: \n\n" +
-                        "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + DVB.getStreamDescription(pesPacket.getStreamID()) + "\n" +
+                        "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + getStreamDescription(pesPacket.getStreamID()) + "\n" +
                         "PES packet length: " + pesPacket.getPESpacketLength() + " Bytes \n" +
                         "PES scrambling control: " + pesPacket.getPESscramblingControl() + (pesPacket.getPESscramblingControl()==0x0 ? " (Not scrambled)" : " (Scrambled)") + "\n" +
                         "PES priority: " + pesPacket.getPESpriority() + (pesPacket.getPESpriority()== 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
@@ -163,10 +164,10 @@ public class PacketInfo extends Tooltip {
     private String createPESoptionalFieldsOutput(PES optionalPESheader) {
         StringBuilder timestampBuilder = new StringBuilder();
         if(optionalPESheader.getPTSdtsFlags() >= 0x2){
-            timestampBuilder.append("PTS: " + String.format("0x%09X", optionalPESheader.getPTStimestamp()) + optionalPESheader.parseTimestamp(optionalPESheader.getPTStimestamp()) + "\n");
+            timestampBuilder.append("PTS: " + String.format("0x%09X ", optionalPESheader.getPTStimestamp()) + "(" + optionalPESheader.parseTimestamp(optionalPESheader.getPTStimestamp()) + ")\n");
         }
         if(optionalPESheader.getPTSdtsFlags() == 0x3){
-            timestampBuilder.append("DTS: " + String.format("0x%09X", optionalPESheader.getDTStimestamp()&0xFFFFFFFF)  + optionalPESheader.parseTimestamp(optionalPESheader.getDTStimestamp()) + "\n");
+            timestampBuilder.append("DTS: " + String.format("0x%09X ", optionalPESheader.getDTStimestamp()&0xFFFFFFFF)  + "(" + optionalPESheader.parseTimestamp(optionalPESheader.getDTStimestamp()) + ")\n");
         }
         return (timestampBuilder.toString() +
                 (optionalPESheader.getESCRflag() == 0x1 ? "ESCR: " + String.format("0x%06X", optionalPESheader.getESCR() & 0xFFFFF) + "\n" : "" ) +
@@ -298,7 +299,7 @@ public class PacketInfo extends Tooltip {
         }
     }
 
-    public void setPackets(ArrayList<TSpacket> packets) {
+    public void setPackets(ArrayList<Packet> packets) {
         this.packets = packets;
     }
 

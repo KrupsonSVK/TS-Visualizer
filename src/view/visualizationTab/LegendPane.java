@@ -10,7 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import model.Stream;
-import model.TSpacket;
+import model.packet.Packet;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
     }
 
 
-    public void createScrollPane(Stream stream, ArrayList<TSpacket> packets, Map sortedPIDs, int lines) {
+    public void createScrollPane(Stream stream, ArrayList<Packet> packets, Map sortedPIDs, int lines) {
 
         oldSceneX = oldTranslateX = xPos = 0;
         this.stream = stream;
@@ -81,7 +81,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
     }
 
     @Override
-    public void drawPackets(Stream stream, ArrayList<TSpacket> packets, double xPos) {
+    public void drawPackets(Stream stream, ArrayList<Packet> packets, double xPos) {
 
         GraphicsContext graphicsContextLegendCanvas = canvas.getGraphicsContext2D();
         {
@@ -97,7 +97,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
 
         int index = 0;
 
-        for (TSpacket packet : packets) {
+        for (Packet packet : packets) {
             int pid = packet.getPID();
             Integer yPos = (Integer) sortedPIDs.get(pid);
             if(yPos != null) {
@@ -187,7 +187,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
     }
 
 
-    public void addListenersAndHandlers(Stream stream, ArrayList<TSpacket> packets) {
+    public void addListenersAndHandlers(Stream stream, ArrayList<Packet> packets) {
 
         scrollPane.vvalueProperty().addListener((observable, oldValue, newValue) -> {
                     labelScrollPane.setVvalue(scrollPane.getVvalue());
@@ -236,7 +236,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
     }
 
     @Override
-    public void drawCanvas(Stream stream, ArrayList<TSpacket> packets, double xPos) {
+    public void drawCanvas(Stream stream, ArrayList<Packet> packets, double xPos) {
 
         drawPackets(stream,  packets, xPos);
 
