@@ -5,10 +5,11 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import static model.Sorter.getByValue;
 import static model.Sorter.sortHashMapByKey;
 import static model.config.DVB.nil;
 
-public abstract class Timestamp {
+public abstract class Timestamp{
 
 
     public String parseTimestamp(long milliseconds){
@@ -95,4 +96,22 @@ public abstract class Timestamp {
         }
         return deltaMap;
     }
+
+
+    protected <K, V> Map filterProgram(String selectedProgram, Map<K, V> PMTmap, Map<K, V> programMap) {
+
+        if (selectedProgram.equals("All")){
+            return null;
+        }
+        Integer programPID = (Integer)getByValue(programMap, (V) selectedProgram);
+
+        Map filteredMap = new HashMap();
+        for (Map.Entry<K, V> entry : PMTmap.entrySet()) {
+            if(entry.getValue().equals(programPID)) {
+                filteredMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return filteredMap;
+    }
+
 }

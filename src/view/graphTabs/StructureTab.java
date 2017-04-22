@@ -1,8 +1,11 @@
 package view.graphTabs;
 
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Scene;
 import javafx.scene.chart.*;
 import javafx.scene.control.CheckBox;
@@ -28,6 +31,7 @@ public class StructureTab extends Timestamp implements Graph{
 
     public StructureTab(){
         tab = new Tab("Structure");
+        groupByCheckBox = new CheckBox("Group by programmes");
     }
 
 
@@ -48,22 +52,25 @@ public class StructureTab extends Timestamp implements Graph{
 
         barChart.setPadding(new Insets(10,40,10,40));
         barChart.setPrefHeight(scene.getHeight());
+        barChart.setLegendSide(Side.LEFT);
 
         barChart.getData().addAll(createStructureChart());
 
         addListenersAndHandlers(barChart);
 
-        groupByCheckBox = new CheckBox("Group by programmes");
         HBox checkHBox = new HBox(groupByCheckBox);
         checkHBox.setAlignment(Pos.CENTER);
         checkHBox.setSpacing(10);
         checkHBox.setPadding(new Insets(10,10,10,10));
 
-        tab.setContent(new VBox(barChart));
+        tab.setContent(new VBox(barChart,checkHBox));
     }
 
 
     private Collection createStructureChart() {
+
+        ObservableList<XYChart.Series> chartData = FXCollections.observableArrayList();
+
 
         final String austria = "Austria";
         final String brazil = "Brazil";
@@ -94,7 +101,8 @@ public class StructureTab extends Timestamp implements Graph{
         series3.getData().add(new XYChart.Data(18722.18, france));
         series3.getData().add(new XYChart.Data(17557.31, italy));
         series3.getData().add(new XYChart.Data(92633.68, usa));
-        return null; //TODO collections
+        chartData.addAll(series1,series2,series3);
+        return chartData; //TODO collections
     }
 
 

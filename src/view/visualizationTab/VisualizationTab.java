@@ -15,9 +15,7 @@ import view.Window;
 
 import java.util.*;
 
-import static model.Sorter.sortHashMapByKey;
-import static model.Sorter.sortHashMapByValue;
-import static model.Sorter.sortMapToListByKey;
+import static model.Sorter.*;
 import static model.config.Config.*;
 import static model.config.DVB.isPSI;
 import static model.config.DVB.nil;
@@ -39,7 +37,7 @@ public class VisualizationTab extends Window{
     private PacketPane packetPane;
     private BarPane barPane;
     LegendPane legendPane;
-    private EventHandler<ActionEvent> groupByCheckBoxEvent, programComboBoxEvent, zoomerEvent;
+    private EventHandler<ActionEvent> groupByCheckBoxEvent, filterComboBoxEvent, zoomerEvent;
 
     public VisualizationTab() {
         super();
@@ -83,13 +81,13 @@ public class VisualizationTab extends Window{
 
         HBox labelsLegendScrollPaneBox = new HBox(legendPane.labelScrollPane, legendPane.scrollPane);
 
-        HBox comboCheckboxBar = createComboCheckBoxBar(stream);
+        HBox comboCheckboxBar = createFilterControls(stream);
 
         VBox mainVBox = new VBox(comboCheckboxBar, packetPane.scrollPane, barPane.scrollPane, labelsLegendScrollPaneBox);
 
-        VBox.setMargin(packetPane.scrollPane, new Insets(inset, inset, 0, inset));
-        VBox.setMargin(barPane.scrollPane, new Insets(0, inset, 0, inset));
-        VBox.setMargin(labelsLegendScrollPaneBox, new Insets(0, inset, inset, inset));
+        VBox.setMargin(packetPane.scrollPane, new Insets(visualizationTabInsets, visualizationTabInsets, 0, visualizationTabInsets));
+        VBox.setMargin(barPane.scrollPane, new Insets(0, visualizationTabInsets, 0, visualizationTabInsets));
+        VBox.setMargin(labelsLegendScrollPaneBox, new Insets(0, visualizationTabInsets, visualizationTabInsets, visualizationTabInsets));
 
         addListenersAndHandlers();
 
@@ -97,40 +95,28 @@ public class VisualizationTab extends Window{
     }
 
 
-    private HBox createComboCheckBoxBar(Stream stream) {
+    private HBox createFilterControls(Stream stream) {
 
         filterComboBox = createFilterComboBox(stream);
-        filterComboBox.setOnAction(programComboBoxEvent);
+        filterComboBox.setOnAction(filterComboBoxEvent);
 
         groupByCheckBox = new CheckBox("Group by programmes");
         groupByCheckBox.setOnAction(groupByCheckBoxEvent);
 
-        Label filterLabel = new Label("Filter:");
+        Label filterLabel = new Label("Program filter:");
         Label zoomerLabel = new Label("Zoom:");
 
         zoomer = new Slider(0,100,50);
+        zoomer.setDisable(true);
 
         HBox comboCheckboxBar = new HBox(filterLabel, filterComboBox, groupByCheckBox, zoomerLabel, zoomer);
-        HBox.setMargin(filterComboBox, new Insets(inset, inset, inset, inset));
-        HBox.setMargin(groupByCheckBox, new Insets(2*inset, 7*inset, inset, 7*inset));
-        HBox.setMargin(filterLabel, new Insets(2*inset, inset, inset, inset));
-        HBox.setMargin(zoomerLabel, new Insets(2*inset, inset, inset, 10*inset));
-        HBox.setMargin(zoomer, new Insets(2*inset, inset, inset, inset));
+        HBox.setMargin(filterComboBox, new Insets(visualizationTabInsets, visualizationTabInsets, visualizationTabInsets, visualizationTabInsets));
+        HBox.setMargin(groupByCheckBox, new Insets(2* visualizationTabInsets, 7* visualizationTabInsets, visualizationTabInsets, 7* visualizationTabInsets));
+        HBox.setMargin(filterLabel, new Insets(2* visualizationTabInsets, visualizationTabInsets, 2* visualizationTabInsets, visualizationTabInsets));
+        HBox.setMargin(zoomerLabel, new Insets(2* visualizationTabInsets, visualizationTabInsets, visualizationTabInsets, 10* visualizationTabInsets));
+        HBox.setMargin(zoomer, new Insets(2* visualizationTabInsets, visualizationTabInsets, visualizationTabInsets, visualizationTabInsets));
 
         return comboCheckboxBar;
-    }
-
-
-    private ComboBox<String> createFilterComboBox(Stream stream) {
-
-        ComboBox<String> comboBox = new ComboBox<String>();
-        comboBox.getItems().add("All");
-        comboBox.getSelectionModel().selectFirst();
-
-        for (Object entry : stream.getTables().getProgramMap().values()) {
-            comboBox.getItems().add(entry.toString());
-        }
-        return comboBox;
     }
 
 
@@ -146,63 +132,38 @@ public class VisualizationTab extends Window{
             groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap());
         };
 
-        programComboBoxEvent = (ActionEvent event) -> {
-            filteredPIDs = filterProgram(stream.getTables().getPMTmap());
+        filterComboBoxEvent = (ActionEvent event) -> {
+            filteredPIDs = filterProgram(filterComboBox.getValue(), stream.getTables().getPMTmap(), stream.getTables().getPMTmap());
             groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap());
         };
 
-        zoomer.valueProperty().addListener((ov, old_val, new_val) -> {
-            //TODO implement zoomer
-            packetPane.scrollPane.setScaleX( 1 + ((new_val.doubleValue()-50) / 50));
-            packetPane.scrollPane.setScaleY( 1 + ((new_val.doubleValue()-50) / 50));
-        });
+        zoomerEvent = event -> {
+            zoomer.valueProperty().addListener((ov, old_val, new_val) -> {
+                //TODO implement zoomer
+                packetPane.scrollPane.setScaleX(1 + ((new_val.doubleValue() - 50) / 50));
+                packetPane.scrollPane.setScaleY(1 + ((new_val.doubleValue() - 50) / 50));
+            });
+        };
 
         groupByCheckBox.setOnAction(groupByCheckBoxEvent);
-        filterComboBox.setOnAction(programComboBoxEvent);
+        filterComboBox.setOnAction(filterComboBoxEvent);
     }
 
 
-    private <K, V> Map filterProgram(Map<K, V> PMTmap) {
+    protected void groupProgrammes(Map filteredPIDs, Map PMTmap, Map programs, Map PATmap) {
 
-        String selectedProgram = filterComboBox.getValue();
-        if (selectedProgram.equals("All")){
-            return null;
-        }
-        Integer programPID = (Integer)getByValue(stream.getTables().getProgramMap(), selectedProgram);
-
-        Map filteredMap = new HashMap();
-        for (Map.Entry<K, V> entry : PMTmap.entrySet()) {
-            if(entry.getValue().equals(programPID)) {
-                filteredMap.put(entry.getKey(), entry.getValue());
-            }
-        }
-        return filteredMap;
-    }
-
-
-    public <K, V> K getByValue(Map<K,V> map, V value) {
-        return map.entrySet().stream()
-                .filter(entry -> entry.getValue().equals(value))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(null);
-    }
-
-
-    private void groupProgrammes(Map filteredPIDs, Map PMTmap, Map programs, Map PATmap) {
-
+        Map labeledPIDs = null;
         if (groupByCheckBox.isSelected()) {
             sortedPIDs = groupByProgrammes(filteredPIDs, originalPIDmap, PMTmap);
-            Map labeledPIDs = createLabeledPIDs(null, PMTmap, sortedPIDs, programs, PATmap);
-            updatePanes(sortedPIDs,labeledPIDs);
+            labeledPIDs = createLabeledPIDs(null, PMTmap, sortedPIDs, programs, PATmap);
         }
         else {
             Map PIDs = (filteredPIDs != null) ? filteredPIDs : originalPIDmap;
             sortedPIDs = ungroup(PIDs);
             Map<Integer, Integer> sortedMapPIDs = new LinkedHashMap<>(sortHashMapByKey(sortedPIDs));
-            Map labeledPIDs = createLabeledPIDs(sortedMapPIDs,null,null, null, null);
-            updatePanes(sortedPIDs,labeledPIDs);
+            labeledPIDs = createLabeledPIDs(sortedMapPIDs,null,null, null, null);
         }
+        updatePanes(sortedPIDs,labeledPIDs);
     }
 
 

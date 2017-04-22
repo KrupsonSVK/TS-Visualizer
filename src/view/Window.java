@@ -18,9 +18,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Stream;
+import model.Timestamp;
 import view.graphTabs.BitrateTab;
 import view.graphTabs.CompositionTab;
 import view.graphTabs.StructureTab;
+import view.graphTabs.TimestampsTab;
 import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
@@ -30,7 +32,7 @@ import static model.config.Config.*;
 import static model.config.DVB.DVBicon;
 
 
-public class Window {
+public class Window extends Timestamp{
 
     public Stage primaryStage;
     Stage aboutStage;
@@ -41,6 +43,7 @@ public class Window {
     private StructureTab structureTab;
     private CompositionTab compositionTab;
     private VisualizationTab visualizationTab;
+    private TimestampsTab timestampsTab;
     GridPane gridPane;
     public FileChooser fileChooser;
     public Button selectFileButton;
@@ -115,22 +118,24 @@ public class Window {
         alertBox = new Alert(Alert.AlertType.ERROR);
         progressWindow = new ProgressForm(progressStage);
 
-        detailTab = new DetailTab();
-        visualizationTab = new VisualizationTab();
-        bitrateTab = new BitrateTab();
-        structureTab = new StructureTab();
-        compositionTab = new CompositionTab();
-
         scene = new Scene(rootPane, windowWidth, windowHeigth);
         primaryStage.setTitle("TS Visualizer");
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        visualizationTab.init(scene);
+        detailTab = new DetailTab();
+        visualizationTab = new VisualizationTab();
+        bitrateTab = new BitrateTab();
+        structureTab = new StructureTab();
+        compositionTab = new CompositionTab();
+        timestampsTab = new TimestampsTab();
+
         detailTab.setScene(scene);
+        visualizationTab.init(scene);
         bitrateTab.setScene(scene);
         structureTab.setScene(scene);
         compositionTab.setScene(scene);
+        timestampsTab.setScene(scene);
 
         mainMenu.toFront();
     }
@@ -196,6 +201,7 @@ public class Window {
         bitrateTab.drawGraph(streamDescriptor);
         structureTab.drawGraph(streamDescriptor);
         compositionTab.drawGraph(streamDescriptor);
+        timestampsTab.drawGraph(streamDescriptor);
     }
 
 
@@ -208,7 +214,7 @@ public class Window {
 
 
     public void createTabPane() {
-        tabPane.getTabs().addAll(detailTab.tab, visualizationTab.tab, bitrateTab.tab, structureTab.tab, compositionTab.tab);
+        tabPane.getTabs().addAll(detailTab.tab, visualizationTab.tab, bitrateTab.tab, structureTab.tab, compositionTab.tab, timestampsTab.tab);
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         borderPane.setCenter(tabPane);
@@ -261,4 +267,15 @@ public class Window {
         userGuideStage.show();
     }
 
+    protected ComboBox<String> createFilterComboBox(Stream stream) {
+
+        ComboBox<String> comboBox = new ComboBox<String>();
+        comboBox.getItems().add("All");
+        comboBox.getSelectionModel().selectFirst();
+
+        for (Object entry : stream.getTables().getProgramMap().values()) {
+            comboBox.getItems().add(entry.toString());
+        }
+        return comboBox;
+    }
 }

@@ -60,7 +60,7 @@ public class CompositionTab extends Timestamp implements Graph{
         radioButtonHBox = new HBox(PIDradioButton,programRadioButton,streamRadioButton);
         radioButtonHBox.setAlignment(Pos.CENTER);
         radioButtonHBox.setSpacing(10);
-        radioButtonHBox.setPadding(new Insets(10,10,10,10));
+        radioButtonHBox.setPadding(new Insets(0,10,10,10));
 
         captionLabel.setTextFill(Color.DARKORANGE);
         captionLabel.setStyle("-fx-font: 24 arial;");
@@ -86,7 +86,7 @@ public class CompositionTab extends Timestamp implements Graph{
         pieChart.setLabelLineLength(10);
         pieChart.setLegendSide(Side.LEFT);
         pieChart.toBack();
-        pieChart.setPadding(new Insets(10,40,10,40));
+        pieChart.setPadding(new Insets(0,40,10,40));
         pieChart.setPrefHeight(scene.getHeight());
 
         return pieChart;
@@ -100,6 +100,7 @@ public class CompositionTab extends Timestamp implements Graph{
 
         PIDradioButton.setOnAction( event -> {
             programRadioButton.setSelected(false);
+            PIDradioButton.setSelected(true);
             streamRadioButton.setSelected(false);
 
             Map PIDmap = stream.getTables().getPIDmap();
@@ -111,6 +112,7 @@ public class CompositionTab extends Timestamp implements Graph{
 
         programRadioButton.setOnAction( event -> {
             PIDradioButton.setSelected(false);
+            programRadioButton.setSelected(true);
             streamRadioButton.setSelected(false);
 
             Map programMap = stream.getTables().getPIDmap();
@@ -122,6 +124,7 @@ public class CompositionTab extends Timestamp implements Graph{
 
         streamRadioButton.setOnAction( event -> {
             PIDradioButton.setSelected(false);
+            streamRadioButton.setSelected(true);
             programRadioButton.setSelected(false);
 
             Map streamMap = stream.getTables().getPIDmap();

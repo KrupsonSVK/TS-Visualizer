@@ -101,4 +101,13 @@ public abstract class Sorter {
         }
         return null;
     }
+
+
+    public static <K, V> K getByValue(Map<K, V> map, V value) {
+        return map.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(value))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
 }

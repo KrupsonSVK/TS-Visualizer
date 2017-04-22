@@ -28,7 +28,7 @@ public class Config {
     public final static double legendScrollPaneHeight = windowHeigth * legendScrollPaneHeightRatio;;
     public final static double barHeight = windowHeigth * barScrollPaneHeigthRatio;
 
-    public final static double inset = 5;
+    public final static double visualizationTabInsets = 5;
     public final static double mouseSensitivityVertical = 1.; // 2.5;
     public final static double labelWidth = 150;
     public final static double fontSize = 8.5;

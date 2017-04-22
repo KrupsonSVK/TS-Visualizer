@@ -1,5 +1,7 @@
 package view.graphTabs;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -83,13 +85,15 @@ public class BitrateTab extends Timestamp implements Graph{
         tab.setContent(new VBox(stackedAreaChart,checkHBox));
     }
 
+
     private Collection createBitrateChart(Map map, Map bitrateMap) {
 
-        Collection chartData = null;// = new Collection(); // = new ArrayList<XYChart.Series>();
+        ObservableList<XYChart.Series> chartData = FXCollections.observableArrayList();
+
         for (Map.Entry<Integer,Integer> pid : ((HashMap<Integer,Integer>)map).entrySet()) {
 
             Integer PID = pid.getKey();
-            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            final XYChart.Series series = new XYChart.Series<>();
             series.setName("PID: " + String.format("0x%04X", PID & 0xFFFF)  + " (" + PID + ")");
 
             for (Map.Entry<Integer,Map> bitrate : ((HashMap<Integer,Map>)bitrateMap).entrySet()) {
@@ -98,7 +102,7 @@ public class BitrateTab extends Timestamp implements Graph{
                 series.getData().add(new XYChart.Data(bitrate.getKey(), value));
 
             }
-            //chartData.add(series);
+            chartData.add(series);
         }
 
         return chartData;
