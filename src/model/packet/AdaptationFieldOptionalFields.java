@@ -1,10 +1,10 @@
 package model.packet;
 
-import model.Timestamp;
+import app.streamAnalyzer.TimestampParser;
 
-import static model.config.DVB.nil;
+import static model.config.MPEG.nil;
 
-public class AdaptationFieldOptionalFields extends Timestamp {
+public class AdaptationFieldOptionalFields extends TimestampParser {
 
     private final long PCR;
     private final long OPCR;
@@ -30,8 +30,8 @@ public class AdaptationFieldOptionalFields extends Timestamp {
         this.piecewise_rate = piecewise_rate;
         this.seamless_splice = seamless_splice;
 
-        PCRtimestamp = PCR==nil ? nil : parsePCRopcr(PCR);
-        OPCRtimestamp = OPCR==nil ? nil :parsePCRopcr(OPCR);
+        PCRtimestamp = PCR;
+        OPCRtimestamp = OPCR;
     }
 
 

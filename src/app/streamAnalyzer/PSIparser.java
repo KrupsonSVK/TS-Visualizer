@@ -139,6 +139,7 @@ public class PSIparser extends Parser {
 
         tables.updateESmap(ESmap,versionNum);
         tables.updatePMT(PMTmap,versionNum);
+        tables.updatePCRpmtMap(analyzedHeader.getPID(),PCR_PID);
 
         return new PMT(
                 psiCommonFields.getTableID(),

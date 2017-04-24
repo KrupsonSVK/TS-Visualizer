@@ -17,8 +17,8 @@ import java.util.*;
 
 import static model.Sorter.*;
 import static model.config.Config.*;
-import static model.config.DVB.isPSI;
-import static model.config.DVB.nil;
+import static model.config.MPEG.isPSI;
+import static model.config.MPEG.nil;
 
 
 public class VisualizationTab extends Window{

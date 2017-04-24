@@ -1,13 +1,9 @@
 package view;
 
 
-import model.config.DVB;
+import model.config.MPEG;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-public class Other extends DVB{
+public class Other extends MPEG {
 
 
 }

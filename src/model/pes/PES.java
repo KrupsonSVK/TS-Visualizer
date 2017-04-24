@@ -3,7 +3,7 @@ package model.pes;
 
 import model.packet.Payload;
 
-import static model.config.DVB.nil;
+import static model.config.MPEG.nil;
 
 public class PES extends Payload {
 
@@ -62,12 +62,12 @@ public class PES extends Payload {
         this.DTS = DTS;
 
         if(DTS == nil){
-            PTStimestamp = parsePTSdts(PTS,nil);
+            PTStimestamp = PTS;
             DTStimestamp = nil;
         }
         else {
-            PTStimestamp = parsePTSdts(nil,PTS);
-            DTStimestamp = parsePTSdts(nil,DTS);
+            PTStimestamp = PTS;
+            DTStimestamp = DTS;
         }
 
         this.ESCR = ESCR;

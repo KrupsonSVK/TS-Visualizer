@@ -1,44 +1,48 @@
 package view.graphTabs;
 
 
+import com.sun.javafx.charts.Legend;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.Chart;
 import javafx.scene.chart.PieChart;
-import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tab;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import java.util.Map;
+
+import java.util.*;
 
 import model.Stream;
-import model.Timestamp;
+import app.streamAnalyzer.TimestampParser;
 
-import static model.Sorter.sortHashMapByKey;
+import static java.lang.Thread.sleep;
+import static model.config.MPEG.getElementaryStreamDescriptor;
 
 
-public class CompositionTab extends Timestamp implements Graph{
+public class CompositionTab extends TimestampParser implements Graph{
 
     private Scene scene;
     public Tab tab;
     private Stream stream;
 
-    private Label captionLabel;
+    private Tooltip tooltip;
     private RadioButton PIDradioButton;
     private RadioButton programRadioButton;
     private RadioButton streamRadioButton;
     private PieChart pieChart;
     private HBox radioButtonHBox;
 
+    private Map tooltips;
+
 
     public static final int tickUnit = 10;
+    private VBox vbox;
 
 
     public CompositionTab(){
@@ -47,101 +51,197 @@ public class CompositionTab extends Timestamp implements Graph{
         PIDradioButton = new RadioButton("PID composition");
         programRadioButton = new RadioButton("Program composition");
         streamRadioButton = new RadioButton("Stream type composition");
-        captionLabel = new Label("");
+        tooltip = new Tooltip("");
+        tooltips = new HashMap();
     }
 
 
     public void drawGraph(Stream streamDescriptor) {
 
         this.stream = streamDescriptor;
-        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getBitrateMap());
-        Map deltaBitrateMap = createDeltaBitrateMap(sortedBitrateMap);
+//        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getIndexSnapshotMap());
+//        Map deltaBitrateMap = createDeltaBitrateMap(sortedBitrateMap);
 
         radioButtonHBox = new HBox(PIDradioButton,programRadioButton,streamRadioButton);
         radioButtonHBox.setAlignment(Pos.CENTER);
         radioButtonHBox.setSpacing(10);
         radioButtonHBox.setPadding(new Insets(0,10,10,10));
 
-        captionLabel.setTextFill(Color.DARKORANGE);
-        captionLabel.setStyle("-fx-font: 24 arial;");
-        captionLabel.toFront();
+        tooltip.hide();
+        //tooltipA.hide();
 
         addListenersAndHandlers(pieChart);
-
-        tab.setContent(new VBox(captionLabel,pieChart,radioButtonHBox));
 
         PIDradioButton.fire();
     }
 
 
-    private<K,V>PieChart createPieChart(Map<K,V> map) {
+    private PieChart createPieChart(Map<String, Integer> map, int totalSize, Double heigth) {
 
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
+//        Iterator it = tooltips.entrySet().iterator();
+//        while(it.hasNext()){
+//            ((Tooltip)it.next()).hide();
+//        }
+        tooltips.clear();
 
-        for(Map.Entry<K,V> PIDentry : map.entrySet()){
-            pieChartData.add(new PieChart.Data(String.format("0x%04X", (Integer)PIDentry.getKey() & 0xFFFFF)  + " (" + PIDentry.getKey().toString()  + ")", (Integer)PIDentry.getValue()));
+        for(Map.Entry<String,Integer> PIDentry : map.entrySet()){
+            PieChart.Data data = new PieChart.Data(PIDentry.getKey(), PIDentry.getValue());
+            pieChartData.add(data);
+
+            float size = PIDentry.getValue()*188f/1024f/1024f;
+            int percentage = (int) (((PIDentry.getValue()).doubleValue() / totalSize)*100f);
+            tooltips.put( data.hashCode() , new Tooltip(String.format("%.2f MB (%d", size, percentage) + "%)") );
         }
 
         PieChart pieChart = new PieChart(pieChartData);
         pieChart.setLabelLineLength(10);
-        pieChart.setLegendSide(Side.LEFT);
+        pieChart.setLegendSide(Side.BOTTOM);
         pieChart.toBack();
-        pieChart.setPadding(new Insets(0,40,10,40));
+        pieChart.setPadding(new Insets(10,40,10,40));
         pieChart.setPrefHeight(scene.getHeight());
+        pieChart.setAnimated(true);
 
+        if(heigth != null) {
+            ((Legend) pieChart.lookup(".chart-legend")).setPrefHeight(heigth.doubleValue());
+        }
+        pieChart.setLabelsVisible(true);
         return pieChart;
     }
 
 
     public void addListenersAndHandlers(Chart chart) {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-            chart.setPrefHeight(scene.getHeight());
+            pieChart.setPrefHeight(scene.getHeight());
+            addListenersAndHandlers(pieChart);
         });
 
         PIDradioButton.setOnAction( event -> {
             programRadioButton.setSelected(false);
             PIDradioButton.setSelected(true);
             streamRadioButton.setSelected(false);
-
-            Map PIDmap = stream.getTables().getPIDmap();
-            pieChart = createPieChart(PIDmap);
-            pieChart.setTitle("PID composition");
-            addListenersAndHandlers(pieChart);
-            tab.setContent(new VBox(captionLabel,pieChart,radioButtonHBox));
+            drawPIDpieChart();
         });
 
         programRadioButton.setOnAction( event -> {
             PIDradioButton.setSelected(false);
             programRadioButton.setSelected(true);
             streamRadioButton.setSelected(false);
-
-            Map programMap = stream.getTables().getPIDmap();
-            pieChart = createPieChart(programMap);
-            pieChart.setTitle("Program compostion");
-            addListenersAndHandlers(pieChart);
-            tab.setContent(new VBox(captionLabel,pieChart,radioButtonHBox));
+            drawProgramPieChart();
         });
 
         streamRadioButton.setOnAction( event -> {
             PIDradioButton.setSelected(false);
             streamRadioButton.setSelected(true);
             programRadioButton.setSelected(false);
-
-            Map streamMap = stream.getTables().getPIDmap();
-            pieChart = createPieChart(streamMap);
-            pieChart.setTitle("Stream types composition");
-            addListenersAndHandlers(pieChart);
-            tab.setContent(new VBox(captionLabel,pieChart,radioButtonHBox));
+            drawStreamPieChart();
         });
 
         for (final PieChart.Data data : ((PieChart)chart).getData()) {
             data.getNode().setOnMouseMoved( event -> {
-                captionLabel.setTranslateX(event.getSceneX());
-                captionLabel.setTranslateY(event.getSceneY());
-                captionLabel.setText(String.valueOf(data.getPieValue()) + "% of stream");
+                Tooltip tooltip = ((Tooltip)tooltips.get(data.hashCode()));
+                if( ! tooltip.isActivated() ) {
+//                    new Thread(){
+//                        tooltip.show(vbox, event.getScreenX(), event.getScreenY());
+//                        sleep(1000);
+//                        tooltip.hide;
+//                    };
+                    for(Object currentTooltip : tooltips.values()){
+                        if(!currentTooltip.equals(tooltip)) {
+                            ((Tooltip) currentTooltip).hide();
+                        }
+                    }
+                }
+            });
+            data.getNode().setOnMouseReleased( event -> {
+                    ((Tooltip) tooltips.get(data.hashCode())).hide();
             });
         }
     }
+
+
+    private void drawProgramPieChart() {
+        Map programMap = new HashMap<String,Integer>();
+
+        int totalStreamSize = 0;
+        for (Map.Entry<Integer, String> programEntry : ((Map<Integer, String>)stream.getTables().getProgramMap()).entrySet()) {
+            int programSize = 0;
+            for (Map.Entry<Integer, Integer> PMTentry : ((Map<Integer, Integer>) stream.getTables().getPMTmap()).entrySet()) {
+                if (programEntry.getKey().equals(PMTentry.getValue())) {
+                    for (Map.Entry<Integer, Integer> PIDentry : ((Map<Integer, Integer>) stream.getTables().getPIDmap()).entrySet()) {
+                        if (PMTentry.getKey().equals(PIDentry.getKey())) {
+                            programSize += PIDentry.getValue();
+                        }
+                    }
+                }
+            }
+            totalStreamSize += programSize;
+            String programName = programEntry.getValue() + " (" + programEntry.getKey() + ")";
+            programMap.put(programName,programSize);
+        }
+        programMap.put("other data", stream.getNumOfPackets() - totalStreamSize);
+
+        double heigth = ((Legend)pieChart.lookup(".chart-legend")).getHeight();
+        pieChart = createPieChart(programMap,stream.getNumOfPackets(),heigth);
+        pieChart.setTitle("Program composition");
+        addListenersAndHandlers(pieChart);
+        vbox = new VBox(pieChart,radioButtonHBox);
+        tab.setContent(vbox);
+    }
+
+
+    private void drawStreamPieChart() {
+        Map streamMap = new HashMap<String,Integer>();
+
+        Set ESlist = new LinkedHashSet<Integer>();
+        for(Integer key : ((Map<Integer,Integer>)stream.getTables().getESmap()).values()){
+            ESlist.add(key);
+        }
+        int totalStreamSize = 0;
+        for(Object EStype : ESlist) {
+            int streamSize = 0;
+            for (Map.Entry<Integer, Integer> ESentry : ((Map<Integer, Integer>) stream.getTables().getESmap()).entrySet()) {
+                if (ESentry.getValue().equals(EStype)) {
+                    for (Map.Entry<Integer, Integer> PIDentry : ((Map<Integer, Integer>) stream.getTables().getPIDmap()).entrySet()) {
+                        if (ESentry.getKey().equals(PIDentry.getKey())) {
+                            streamSize += PIDentry.getValue();
+                        }
+                    }
+                }
+            }
+            totalStreamSize += streamSize;
+            String streamName = getElementaryStreamDescriptor((Integer) EStype) + " (" + ((Integer) EStype).intValue() + ")";
+            streamMap.put(streamName, streamSize);
+        }
+        streamMap.put("other data", stream.getNumOfPackets() - totalStreamSize);
+
+        double heigth = ((Legend)pieChart.lookup(".chart-legend")).getHeight();
+        pieChart = createPieChart(streamMap, stream.getNumOfPackets(),heigth);
+        pieChart.setTitle("Stream types composition");
+        addListenersAndHandlers(pieChart);
+        vbox = new VBox(pieChart,radioButtonHBox);
+        tab.setContent(vbox);
+    }
+
+
+    private String cutString(String string, int length) {
+        return string.substring(0, Math.min(string.length(), length));
+    }
+
+
+    private void drawPIDpieChart() {
+        Map PIDmap = new HashMap<String,Integer>();
+        for(Map.Entry<Integer,Integer> PIDentry : ((Map<Integer,Integer>)stream.getTables().getPIDmap()).entrySet()) {
+            PIDmap.put(String.format("0x%04X", PIDentry.getKey() & 0xFFFFF) + " (" + PIDentry.getKey().toString() + ")", PIDentry.getValue());
+        }
+        pieChart = createPieChart(PIDmap, stream.getNumOfPackets(),null);
+
+        pieChart.setTitle("PID composition");
+        addListenersAndHandlers(pieChart);
+        vbox = new VBox(pieChart,radioButtonHBox);
+        tab.setContent(vbox);
+    }
+
 
     public void setScene(Scene scene) {
         this.scene = scene;

@@ -21,8 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static model.config.Config.*;
-import static model.config.DVB.getPacketName;
-import static model.config.DVB.isPSI;
+import static model.config.MPEG.getPacketName;
+import static model.config.MPEG.isPSI;
 
 
 public class BarPane extends VisualizationTab implements Drawer{

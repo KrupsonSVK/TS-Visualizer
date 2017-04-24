@@ -12,9 +12,12 @@ import java.util.Map;
 
 import static model.config.Config.windowHeigth;
 import static model.config.Config.windowWidth;
+import static model.config.MPEG.getElementaryStreamDescriptor;
+import static model.config.MPEG.getPacketName;
+import static model.config.MPEG.tsPacketSize;
 
 
-public class DetailTab extends Other {
+public class DetailTab extends Window {
 
     TreeItem<String> nodes;
     Tab tab;
@@ -89,9 +92,8 @@ public class DetailTab extends Other {
                 new TreeItem<>("TS Packets: " + streamDescriptor.getNumOfPackets() + "x"),
                 new TreeItem<>("TS packet size: " + streamDescriptor.getPacketSize() + " B"),
                 new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x"),
-                new TreeItem<>("Stream length: " + "TODO"),
-                new TreeItem<>("Bitrate: " + "TODO" + " Mbit/s")
-                //TODO get bitrate and length
+                new TreeItem<>("Duration: " + parseTimestamp(streamDescriptor.getDuration())),
+                new TreeItem<>("Bitrate: " + String.format("%.3f",(streamDescriptor.getBitrate())/1024f/1024f) + " Mbit/s")
         );
         return rootNode;
     }

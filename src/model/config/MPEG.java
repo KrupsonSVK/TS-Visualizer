@@ -4,7 +4,8 @@ import model.Stream;
 
 import java.util.Map;
 
-public class DVB {
+
+public class MPEG {
 
     public final static int nil = -1 ;
 
@@ -24,6 +25,9 @@ public class DVB {
 
     public final static int adaptationFieldOnly = 2;
     public final static int adaptationFieldAndPayload = 3;
+
+    public final static int fieldPresent = 0x01;
+    public final static int fieldNotPresent = 0x00;
 
     public final static int PSImaxPID = 0x001F;
 
@@ -159,7 +163,7 @@ public class DVB {
     public static final int	STD_descriptor = 0x11;
     public static final int	BP_descriptor =	0x12;
 
-    //DVB SI descriptors
+    //MPEG SI descriptors
     public static final int network_name_descriptor = 0x40;	//	NIT
     public static final int service_list_descriptor = 0x41;	//	NIT, BAT
     public static final int stuffing_descriptor = 0x42;	//	NIT, BAT, SDT, EIT, SIT
@@ -209,6 +213,9 @@ public class DVB {
     public static final int announcement_support_descriptor = 0x6E;	//	NIT
     public static final int user_defined_descriptor = 0x80-0xFE;	//
 
+    public enum TimestampType {
+        PCR, OPCR, PTS, DTS
+    }
 
     public static String getElementaryStreamDescriptor(Integer descriptor) {
         if (descriptor == null){
@@ -235,7 +242,7 @@ public class DVB {
                 case 0x05:
                     return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 tabled data) privately defined	";
                 case 0x06:
-                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 packetized data) privately defined (i.e., DVB subtitles/VBI and AC-3)";
+                    return "ITU-T Rec. H.222 and ISO/IEC 13818-1 (MPEG-2 packetized data) privately defined (i.e., MPEG subtitles/VBI and AC-3)";
                 case 0x07:
                     return "ISO/IEC 13522 (MHEG)";
                 case 0x08:

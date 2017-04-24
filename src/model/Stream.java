@@ -1,11 +1,7 @@
 package model;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import static model.config.DVB.videoType;
+import static model.config.MPEG.videoType;
 
 
 public class Stream {
@@ -23,9 +19,11 @@ public class Stream {
     private final int numOfPackets;
     private final int numOfErrors;
     private final Tables tables;
+    private final long duration;
+    private final long bitrate;
 
 
-    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, int packetSize, int numOfPackets, int numOfErrors, Tables tables) {
+    public Stream(String name, String path, String size, String creationTime, String lastAccessTime, String lastModifiedTime, boolean isRegularFile, boolean readonly, String owner, long duration, long bitrate, int packetSize, int numOfPackets, int numOfErrors, Tables tables) {
         this.name = name;
         this.path = path;
         this.size = size;
@@ -35,6 +33,8 @@ public class Stream {
         this.isRegularFile = isRegularFile;
         this.readonly = readonly;
         this.owner = owner;
+        this.duration = duration;
+        this.bitrate = bitrate;
         this.packetSize = packetSize;
         this.numOfPackets = numOfPackets;
         this.numOfErrors = numOfErrors;
@@ -99,5 +99,13 @@ public class Stream {
             return videoType;
         }
         return (int)tables.getStreamCodes().get(pid);
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public long getBitrate() {
+        return bitrate;
     }
 }

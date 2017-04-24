@@ -1,16 +1,14 @@
 package app.streamAnalyzer;
 
 import javafx.concurrent.Task;
-import model.*;
+import model.Tables;
 import model.packet.AdaptationFieldHeader;
 import model.packet.Packet;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 
 public class StreamParser extends Parser {
@@ -77,7 +75,7 @@ public class StreamParser extends Parser {
                         if(isPATanalyzed) {
                             tables.updatePIDmap(analyzedHeader.getPID());
                             if(tick == tickInterval){
-                                tables.updateBitrateTable();
+                                tables.updateIndexSnapshotMap();
                                 tick=0;
                             }
                             tick++;
@@ -97,10 +95,11 @@ public class StreamParser extends Parser {
                                 byte[] binaryAdaptationFieldOptional = intToBinary(adaptationOptionalFields, adaptationFieldLength-1);
 
                                 analyzedHeader.getAdaptationFieldHeader().setAdaptationFieldOptionalFields(
-                                        adaptationFieldParser.analyzeAdaptationFieldOptionalFields(analyzedHeader.getAdaptationFieldHeader(), binaryAdaptationFieldOptional)
+                                        adaptationFieldParser.analyzeAdaptationFieldOptionalFields(analyzedHeader.getAdaptationFieldHeader(), binaryAdaptationFieldOptional, analyzedHeader.getIndex(), analyzedHeader.getPID())
                                 );
                                 if(isPATanalyzed) {
                                     tables.updatePCRmap(analyzedHeader.getAdaptationFieldHeader().getOptionalFields());
+                                    updateTables(adaptationFieldParser);
                                 }
                             }
                         }
@@ -131,7 +130,7 @@ public class StreamParser extends Parser {
                         updateProgress(i, buffer.length);
                     }
                 }
-                return createTables(packets);
+                return createPIDnErrorMaps(packets);
             }
 
 
@@ -170,12 +169,27 @@ public class StreamParser extends Parser {
         if(parser instanceof PESparser) {
             tables.setStreamCodes(parser.tables.getStreamCodes());
             tables.setPacketsSizeMap(parser.tables.getPacketsSizeMap());
-            tables.setTimeMap(parser.tables.getTimeMap());
+
+            tables.setPTSpidMap(parser.tables.getPTSpidMap());
+            tables.setDTSpidMap(parser.tables.getDTSpidMap());
+
+            tables.setPTSpacketMap(parser.tables.getPTSpacketMap());
+            tables.setDTSpacketMap(parser.tables.getDTSpacketMap());
         }
         else if(parser instanceof PSIparser) {
             tables.setPATmap(parser.tables.getPATmap());
             tables.setPMTmap(parser.tables.getPMTmap());
             tables.setESmap(parser.tables.getESmap());
+
+            tables.setServiceNamesMap(parser.tables.getServiceNamesMap());
+            tables.setPCRpmtMap(parser.tables.getPCRpmtMap());
+        }
+        else if(parser instanceof AdaptationFieldParser) {
+            tables.setPCRpidMap(parser.tables.getPCRpidMap());
+            tables.setPCRpacketMap(parser.tables.getPCRpacketMap());
+
+            tables.setOPCRpidMap(parser.tables.getOPCRpidMap());
+            tables.setOPCRpacketMap(parser.tables.getOPCRpacketMap());
         }
     }
 
@@ -191,7 +205,7 @@ public class StreamParser extends Parser {
     }
 
 
-    private Tables createTables(ArrayList<Packet> packets) {
+    private Tables createPIDnErrorMaps(ArrayList<Packet> packets) {
         HashMap<Integer, Integer> PIDmap = new HashMap<>();
         HashMap<Integer, Integer> ErrorMap = new HashMap<>();
 
@@ -207,61 +221,9 @@ public class StreamParser extends Parser {
                 ErrorMap.put(packet.getPID(), ErrorMap.get(packet.getPID()) + 1);
             }
         }
-        return new Tables(
-                ErrorMap,
-                packets,
-                tables.getStreamCodes(),
-                tables.getPATmap(),
-                tables.getTimeMap(),
-                tables.getESmap(),
-                tables.getPMTmap(),
-                tables.getServiceNamesMap(),
-                tables.getPIDmap(),
-                tables.getPCRmap(),
-                tables.getProgramMap(),
-                tables.getBitrateMap()
-        );
-    }
-
-
-    public Stream analyzeStream(File file, Tables tables) throws IOException {
-
-        Integer packets = 0, errors = 0;
-        BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getAbsolutePath()), BasicFileAttributes.class);
-
-        String size;
-        if (attr.size() > 1000000) {
-            size = String.format("%.2f MB", (double) attr.size() / (double) 1000000);
-        }
-        else if (attr.size() > 1000) {
-            size = String.format("%.2f kB", (double) attr.size() / (double) 1000);
-        }
-        else {
-            size = String.format("%.2f Bytes", (double) attr.size());
-        }
-        for (Object value : tables.getPIDmap().values()) {
-            packets += (Integer)value; //TODO remove redundant
-        }
-        for (Integer value : ((HashMap<Integer,Integer>)tables.getErrorMap()).values()) {
-            errors += value;
-        }
-     tables.setProgramMap(createPrograms(tables.getPMTmap()));
-
-        return new Stream(
-                file.getName(),
-                file.getAbsolutePath(),
-                size,
-                attr.creationTime().toString(),
-                attr.lastAccessTime().toString(),
-                attr.lastModifiedTime().toString(),
-                attr.isRegularFile(),
-                file.canWrite(),
-                Files.getOwner(file.toPath()).toString(),
-                StreamParser.getTsPacketSize(),
-                packets,
-                errors,
-                tables
-        );
+        tables.setErrorMap(ErrorMap);
+        tables.setPackets(packets);
+        return tables;
     }
 
 

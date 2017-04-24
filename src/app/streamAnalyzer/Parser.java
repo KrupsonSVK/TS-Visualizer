@@ -3,15 +3,15 @@ package app.streamAnalyzer;
 
 import model.packet.Packet;
 import model.Tables;
-import model.config.DVB;
+import model.config.MPEG;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Parser extends DVB {
+public class Parser extends MPEG {
 
-    public Tables tables;
+    Tables tables;
 
 
     Parser(){
@@ -62,18 +62,6 @@ public class Parser extends DVB {
         int adaptationFieldControl = header.getAdaptationFieldControl();
 
         return (adaptationFieldControl == adaptationFieldOnly || adaptationFieldControl == adaptationFieldAndPayload);
-    }
-
-
-    protected Map createPrograms(Map inputMap) {
-        HashMap<Integer, String> outputMap = new HashMap<>();
-        Set<Integer> keys = inputMap.keySet(); // The set of keys in the map.
-
-        for (Integer key : keys) {
-            Integer value = (Integer) inputMap.get(key);
-            outputMap.put(value, Integer.toString(value));
-        }
-        return outputMap;
     }
 
 

@@ -1,4 +1,4 @@
-package model;
+package app.streamAnalyzer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,9 +7,9 @@ import java.util.TreeMap;
 
 import static model.Sorter.getByValue;
 import static model.Sorter.sortHashMapByKey;
-import static model.config.DVB.nil;
+import static model.config.MPEG.nil;
 
-public abstract class Timestamp{
+public abstract class TimestampParser {
 
 
     public String parseTimestamp(long milliseconds){
@@ -22,7 +22,7 @@ public abstract class Timestamp{
     }
 
 
-    protected long midBits(long k, int m, int n){
+    protected static long midBits(long k, int m, int n){
         return (k >> m) & ((1 << (n-m))-1);
     }
 
@@ -32,7 +32,7 @@ public abstract class Timestamp{
     }
 
 
-    protected long parsePCRopcr(long PCRopcr){
+    public static long parsePCRopcr(long PCRopcr){
 
         final int extStart = 0;
         final int extEnd = 9;
@@ -46,10 +46,10 @@ public abstract class Timestamp{
         long timestamp = (timestampSecond << 9) | timestampFirst ;
 
         return timestamp / 90; //milliseconds
-    };
+    }
 
 
-    protected long parsePTSdts(long pts, long PTSdts){
+    public static long parsePTSdts(long pts, long PTSdts){ //TODO bad implementation
         long timestamp;
         if(pts != nil) {
             timestamp = (midBits(pts, 17, 35) << 15) | midBits(pts, 1, 16);
@@ -60,7 +60,7 @@ public abstract class Timestamp{
             return timestamp / 90;
         }
         return 0;
-    };
+    }
 
 
     protected <K,V extends Map<K, V>> Map createDeltaBitrateMap(Map<K, V> bitrateMap) {

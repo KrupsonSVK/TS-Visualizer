@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 import java.util.HashMap;
 import java.util.Map;
 
-import static model.config.DVB.*;
+import static model.config.MPEG.*;
 
 
 public class Config {

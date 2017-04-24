@@ -18,7 +18,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Stream;
-import model.Timestamp;
+import app.streamAnalyzer.TimestampParser;
 import view.graphTabs.BitrateTab;
 import view.graphTabs.CompositionTab;
 import view.graphTabs.StructureTab;
@@ -29,10 +29,10 @@ import java.io.IOException;
 
 import static app.Main.releaseDate;
 import static model.config.Config.*;
-import static model.config.DVB.DVBicon;
+import static model.config.MPEG.DVBicon;
 
 
-public class Window extends Timestamp{
+public class Window extends TimestampParser {
 
     public Stage primaryStage;
     Stage aboutStage;

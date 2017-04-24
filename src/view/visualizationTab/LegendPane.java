@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import static model.config.Config.*;
-import static model.config.DVB.PMTpid;
+import static model.config.MPEG.PMTpid;
 
 
 public class LegendPane extends VisualizationTab implements Drawer {

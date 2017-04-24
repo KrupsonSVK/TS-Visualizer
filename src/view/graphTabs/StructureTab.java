@@ -13,50 +13,63 @@ import javafx.scene.control.Tab;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import model.Stream;
-import model.Timestamp;
+import app.streamAnalyzer.TimestampParser;
+import model.config.MPEG;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
-import static model.Sorter.sortHashMapByKey;
+import static model.config.MPEG.TimestampType.*;
 
-public class StructureTab extends Timestamp implements Graph{
+public class StructureTab extends TimestampParser implements Graph{
 
     private Scene scene;
     public Tab tab;
 
     public static final int tickUnit = 10;
     private CheckBox groupByCheckBox;
+    private Stream stream;
+    private Map<String,Map<Integer,Long>> bitrateMaps;
 
 
     public StructureTab(){
         tab = new Tab("Structure");
         groupByCheckBox = new CheckBox("Group by programmes");
+        bitrateMaps = new LinkedHashMap<>();
     }
 
 
     public void drawGraph(Stream stream) {
+        this.stream = stream;
 
-        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getBitrateMap());
-        Map deltaBitrateMap = createDeltaBitrateMap(sortedBitrateMap);
+        bitrateMaps.put("Min",stream.getTables().getMinBitrateMap());
+        bitrateMaps.put("Avg",stream.getTables().getAvgBitrateMap());
+        bitrateMaps.put("Max",stream.getTables().getMaxBitrateMap());
 
-        final NumberAxis xAxis = new NumberAxis();
-        final CategoryAxis yAxis = new CategoryAxis();
-        final BarChart barChart = new BarChart<>(xAxis, yAxis);
+        NumberAxis xAxis = new NumberAxis();
+        CategoryAxis  yAxis = new CategoryAxis();
+        BarChart barChart = new BarChart<>(xAxis, yAxis);
 
-        xAxis.setTickLabelRotation(90);
-
-        barChart.setTitle("Bitrate structure");
         xAxis.setLabel("Bitrate");
         yAxis.setLabel("PID");
 
+        xAxis.setTickLabelRotation(0);
+        yAxis.setTickLabelRotation(0);
+
+        xAxis.setTickLabelFormatter(
+                new NumberAxis.DefaultFormatter(xAxis) {
+                    @Override
+                    public String toString(Number object) {
+                        return String.format("%1$,.2f MBit/s", (Double)(object.doubleValue()));
+                    }
+                });
+
+        barChart.setAnimated(true);
         barChart.setPadding(new Insets(10,40,10,40));
         barChart.setPrefHeight(scene.getHeight());
         barChart.setLegendSide(Side.LEFT);
-
-        barChart.getData().addAll(createStructureChart());
-
         addListenersAndHandlers(barChart);
+
+        groupByCheckBox.fire();
 
         HBox checkHBox = new HBox(groupByCheckBox);
         checkHBox.setAlignment(Pos.CENTER);
@@ -67,44 +80,76 @@ public class StructureTab extends Timestamp implements Graph{
     }
 
 
-    private Collection createStructureChart() {
+    private Collection createStructureChartData(Map<Integer,Integer> PIDmap, Map<String,Map<Integer, Long>> servicesMap ) {
 
         ObservableList<XYChart.Series> chartData = FXCollections.observableArrayList();
+        XYChart.Series seriesMin = new XYChart.Series();
+        XYChart.Series seriesAvg = new XYChart.Series();
+        XYChart.Series seriesMax = new XYChart.Series();
 
+        seriesMin.setName("Min");
+        seriesAvg.setName("Avg");
+        seriesMax.setName("Max");
 
-        final String austria = "Austria";
-        final String brazil = "Brazil";
-        final String france = "France";
-        final String italy = "Italy";
-        final String usa = "USA";
+        for (Map.Entry<Integer, Integer> PIDentry : PIDmap.entrySet()) {
 
-        XYChart.Series series1 = new XYChart.Series();
-        series1.setName("2003");
-        series1.getData().add(new XYChart.Data(25601.34, austria));
-        series1.getData().add(new XYChart.Data(20148.82, brazil));
-        series1.getData().add(new XYChart.Data(10000, france));
-        series1.getData().add(new XYChart.Data(35407.15, italy));
-        series1.getData().add(new XYChart.Data(12000, usa));
+            for(Map.Entry<String,Map<Integer, Long>> PIDbitrateMap : servicesMap.entrySet()) {
 
-        XYChart.Series series2 = new XYChart.Series();
-        series2.setName("2004");
-        series2.getData().add(new XYChart.Data(57401.85, austria));
-        series2.getData().add(new XYChart.Data(41941.19, brazil));
-        series2.getData().add(new XYChart.Data(45263.37, france));
-        series2.getData().add(new XYChart.Data(117320.16, italy));
-        series2.getData().add(new XYChart.Data(14845.27, usa));
-
-        XYChart.Series series3 = new XYChart.Series();
-        series3.setName("2005");
-        series3.getData().add(new XYChart.Data(45000.65, austria));
-        series3.getData().add(new XYChart.Data(44835.76, brazil));
-        series3.getData().add(new XYChart.Data(18722.18, france));
-        series3.getData().add(new XYChart.Data(17557.31, italy));
-        series3.getData().add(new XYChart.Data(92633.68, usa));
-        chartData.addAll(series1,series2,series3);
-        return chartData; //TODO collections
+                for (Map.Entry<Integer, Long> entry : PIDbitrateMap.getValue().entrySet()) {
+                    if (PIDentry.getKey().equals(entry.getKey())) {
+                        switch (PIDbitrateMap.getKey()) {
+                            case "Min":
+                                seriesMin.getData().add(new XYChart.Data(entry.getValue().intValue(), entry.getKey().toString()));
+                            case "Avg":
+                                seriesAvg.getData().add(new XYChart.Data(entry.getValue().intValue(), entry.getKey().toString()));
+                            case "Max":
+                                seriesMax.getData().add(new XYChart.Data(entry.getValue().intValue(), entry.getKey().toString()));
+                                // tooltip.setText(String.format("0x%04X", PIDentry.getKey() & 0xFFFFF) + " (" + PIDentry.getKey().toString() + ")", PIDentry.getValue());
+                        }
+                    }
+                }
+            }
+        }
+        chartData.addAll(seriesMin,seriesAvg,seriesMax);
+        return chartData;
     }
 
+
+    private Map updateMap(Map<Integer, Long> map, Integer key, Long value) {
+        Long currentValue = map.get(key);
+        if(currentValue != null){
+            value += currentValue;
+        }
+        map.put(key,value);
+        return map;
+    }
+
+
+    private Collection createServiceStructureChartData(Map<Integer,Integer> PIDmap, Map<Integer,Integer> PMTmap, Map<String,Map<Integer, Long>> PIDbitrateMaps) {
+//, Map<Integer,Integer> PMTmap, Map<Integer,Long> minPIDMap, Map<Integer,Long> avgPIDMap, Map<Integer,Long> maxPIDMap
+        Map<String,Map<Integer,Long>> serviceBitrateMaps = new LinkedHashMap<>();
+
+        for(Map.Entry<String,Map<Integer, Long>> PIDbitrateMap : PIDbitrateMaps.entrySet()) {
+            Map<Integer,Long> serviceMap = new HashMap<>();
+
+            for (Map.Entry<Integer, Integer> PIDentry : PIDmap.entrySet()) {
+                Integer PID = PIDentry.getKey();
+                Integer service = PMTmap.get(PID);
+
+                for (Map.Entry<Integer, Long> minEntry : PIDbitrateMap.getValue().entrySet()) {
+                    if (PID.equals(minEntry.getKey())) {
+                        if (service == null) {
+                            serviceMap = updateMap(serviceMap, PID, minEntry.getValue());
+                        }
+                        serviceMap = updateMap(serviceMap, service, minEntry.getValue());
+                        // tooltip.setText(String.format("0x%04X", PIDentry.getKey() & 0xFFFFF) + " (" + PIDentry.getKey().toString() + ")", PIDentry.getValue());
+                    }
+                    serviceBitrateMaps.put(PIDbitrateMap.getKey(), serviceMap);
+                }
+            }
+        }
+        return createStructureChartData(PIDmap,serviceBitrateMaps);
+    }
 
     public void addListenersAndHandlers(Chart chart) {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
@@ -112,7 +157,15 @@ public class StructureTab extends Timestamp implements Graph{
         });
 
         groupByCheckBox.setOnAction(event -> {
-            System.out.println("Group by programmes");
+            ((BarChart)chart).getData().clear();
+            if(groupByCheckBox.isSelected()) {
+                chart.setTitle("Bitrate structure by programmes");
+                ((BarChart)chart).getData().addAll(createServiceStructureChartData(stream.getTables().getPIDmap(),stream.getTables().getPMTmap(),bitrateMaps));
+            }
+            else {
+                chart.setTitle("Bitrate structure by PID");
+                ((BarChart)chart).getData().addAll(createStructureChartData(stream.getTables().getPIDmap(), bitrateMaps));
+            }
         });
     }
 

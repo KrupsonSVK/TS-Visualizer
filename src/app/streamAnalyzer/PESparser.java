@@ -5,6 +5,8 @@ import model.pes.PES;
 
 import java.math.BigInteger;
 
+import static app.streamAnalyzer.TimestampParser.parsePTSdts;
+
 
 public class PESparser extends Parser {
 
@@ -46,7 +48,7 @@ public class PESparser extends Parser {
                                 DataAlignmentIndicator,
                                 copyright,
                                 OriginalOrCopy
-                        ) , binaryPESFields, position, analyzedHeader.getPID()
+                        ) , binaryPESFields, position, analyzedHeader.getPID(), analyzedHeader.getIndex()
                 );
 
 
@@ -56,7 +58,7 @@ public class PESparser extends Parser {
     }
 
 
-    private PES analyzePESoptionalHeader(PES header, byte[] binaryPESFields, int position, int pid) {
+    private PES analyzePESoptionalHeader(PES header, byte[] binaryPESFields, int position, int pid, long packetIndex) {
 
         byte PTSdtsFlags = (byte) binToInt(binaryPESFields, position, position += PTSdtsFlagsLength);
         byte ESCRflag = (byte) binToInt(binaryPESFields, position, position += PESCRflagLength);
@@ -78,15 +80,21 @@ public class PESparser extends Parser {
 
         if(PTSdtsFlags > 1) {
             if(PTSdtsFlags == 3) {
-                PTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
-                DTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
-                //tables.updateTimeMap(pid, BigInteger.valueOf(DTS)); //TODO
+                long rawPTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                long rawDTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                
+                PTS = parsePTSdts(nil,rawPTS);
+                DTS = parsePTSdts(nil,rawDTS);
+
+                tables.updateDTSpacketMap(DTS,packetIndex);
+                tables.updateDTSpidMap(pid,DTS);
             }
             else {
-                PTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                long rawPTS = binToInt(binaryPESFields, position, position += PTSdtsLength);
+                PTS = parsePTSdts(rawPTS,nil);
             }
-            tables.updateTimeMap(pid, BigInteger.valueOf(PTS));
-
+            tables.updatePTSpacketMap(PTS,packetIndex);
+            tables.updatePTSpidMap(pid,PTS);
         }
         if (ESCRflag == 1) {
             ESCR = binToInt(binaryPESFields, position, position += ESCRlength);

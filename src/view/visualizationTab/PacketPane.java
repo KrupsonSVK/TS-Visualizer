@@ -2,7 +2,7 @@ package view.visualizationTab;
 
 import javafx.scene.paint.Paint;
 import javafx.stage.Screen;
-import model.config.DVB;
+import model.config.MPEG;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -17,11 +17,12 @@ import javafx.scene.text.Font;
 import model.*;
 import model.packet.Packet;
 import model.pes.PES;
+import model.psi.PMT;
 
 import java.util.ArrayList;
 import java.util.Map;
 
-import static model.config.DVB.*;
+import static model.config.MPEG.*;
 import static model.config.Config.*;
 
 
@@ -93,7 +94,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
                     boolean isPayloadStart = packet.getPayloadStartIndicator() == 1;
                     boolean isPMT = isPMT(stream.getTables().getPATmap(),packet.getPID());
                     boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
-                    drawPacketImg(graphicsContextPacketCanvas, yPos, newPos, getType(packet.getPID(), stream), pid, DVB.getProgramName(stream, pid), isAdaptationField, isPayloadStart, isPMT,hasPESheader,hasTimestamp(packet) );
+                    drawPacketImg(graphicsContextPacketCanvas, yPos, newPos, getType(packet.getPID(), stream), pid, MPEG.getProgramName(stream, pid), isAdaptationField, isPayloadStart, isPMT,hasPESheader,hasTimestamp(packet) );
                     pane.getChildren().add(createListenerRect(yPos, newPos, packet.hashCode()));
                 }
             }
@@ -109,8 +110,10 @@ public class PacketPane extends VisualizationTab implements Drawer {
             }
         }
         if(packet.getPayload()!=null) {
-            if (((PES) packet.getPayload()).getPTSdtsFlags() >= 1) {
-                return true;
+            if(packet.getPayload() instanceof PES) {
+                if (((PES) packet.getPayload()).getPTSdtsFlags() >= 1) {
+                    return true;
+                }
             }
         }
         return false;
@@ -180,7 +183,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
             }
         }
         graphicsContext.setFont(new Font(fontSize));
-        graphicsContext.strokeText("PID: " + pid + "\n" + DVB.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
+        graphicsContext.strokeText("PID: " + pid + "\n" + MPEG.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
     }
 
 

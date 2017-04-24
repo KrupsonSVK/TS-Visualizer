@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import static model.config.Config.*;
-import static model.config.DVB.*;
+import static model.config.MPEG.*;
 
 public class PacketInfo extends Tooltip {
 

@@ -1,7 +1,10 @@
 package app.streamAnalyzer;
 
+import app.FileHandler;
 import model.packet.AdaptationFieldHeader;
 import model.packet.AdaptationFieldOptionalFields;
+
+import static app.streamAnalyzer.TimestampParser.parsePCRopcr;
 
 
 public class AdaptationFieldParser extends Parser {
@@ -29,7 +32,7 @@ public class AdaptationFieldParser extends Parser {
     }
 
 
-    AdaptationFieldOptionalFields analyzeAdaptationFieldOptionalFields(AdaptationFieldHeader adaptationFieldHeader, byte[] binaryAdaptationFieldOptionalFields) {
+    AdaptationFieldOptionalFields analyzeAdaptationFieldOptionalFields(AdaptationFieldHeader adaptationFieldHeader, byte[] binaryAdaptationFieldOptionalFields, long packetIndex, int PID) {
 
         int i = 0;
         long PCR = nil;
@@ -43,10 +46,16 @@ public class AdaptationFieldParser extends Parser {
         byte SSF = 0;
 
         if (adaptationFieldHeader.getPCRF() == 0x1) {
-            PCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += PCRLegth);
+            long rawPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += PCRLegth);
+            PCR = parsePCRopcr(rawPCR);
+            tables.updatePCRpidMap(PCR,PID);
+            tables.updatePCRpacketMap(PCR,packetIndex);
         }
         if (adaptationFieldHeader.getOPCRF() == 0x1) {
-            OPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += PCRLegth);
+            long rawOPCR = binToInt(binaryAdaptationFieldOptionalFields, i, i += PCRLegth);
+            OPCR = parsePCRopcr(rawOPCR);
+            tables.updateOPCRpidMap(OPCR,PID);
+            tables.updateOPCRpacketMap(OPCR,packetIndex);
         }
         if (adaptationFieldHeader.getSplicingPointFlag() == 0x1){
             spliceCountdown = (byte) binToInt(binaryAdaptationFieldOptionalFields, i, i += 8);

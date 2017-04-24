@@ -6,93 +6,99 @@ import model.packet.Packet;
 import java.math.BigInteger;
 import java.util.*;
 
-import static model.Sorter.sortMapToListByValue;
-import static model.config.DVB.nil;
+import static model.config.MPEG.nil;
 
 public class Tables {
 
     private ArrayList<Packet> packets;
 
     private Map PIDmap;
-    private Map programMap;
     private Map errorMap;
+    private Map programMap;
+
     private Map ESmap;
     private Map PATmap;
     private Map PMTmap;
-    private Map timeMap;
+
     private Map streamCodes;
     private Map packetsSizeMap;
-    private Map PCRmap;
     private Map serviceNamesMap;
-    private Map bitrateMap;
 
-    private int PATmapVersion;
-    private int PMTmapVersion;
+    private Map PCRpmtMap;
+    private Map PCRpacketMap;
+    private Map OPCRpacketMap;
+    private Map PTSpacketMap;
+    private Map DTSpacketMap;
+
+    private Map PTSpidMap;
+    private Map DTSpidMap;
+
+    private Map PCRpidMap;
+    private Map OPCRpidMap;
+    private Map PCRpidDurationMap;
+    private Map PCRdurationMap;
+    private Map PCRsizeMap;
+
+    private Map indexSnapshotMap;
+    private Map PCRsnapshotMap;
+    private Map bitrateMap;
+    private Map minBitrateMap;
+    private Map avgBitrateMap;
+    private Map maxBitrateMap;
+
+    private Map serviceTimestampMap;
 
 
     public Tables() {
         this.PIDmap = new HashMap<>();
-        this.streamCodes = new HashMap();
-        this.timeMap = new HashMap();
-        this.packetsSizeMap = new HashMap();
-        this.ESmap = new HashMap();
-        this.PMTmap = new HashMap();
-        this.PCRmap = new HashMap();
+        this.errorMap = new HashMap<>();
         this.programMap = new HashMap();
+
+        this.ESmap = new HashMap();
+        this.PATmap = new HashMap();
+        this.PMTmap = new HashMap();
+
+        this.PCRpmtMap = new HashMap();
+        this.PCRpacketMap = new HashMap();
+        this.OPCRpacketMap = new HashMap();
+        this.PTSpacketMap = new HashMap();
+        this.DTSpacketMap = new HashMap();
+
+        this.DTSpidMap = new LinkedHashMap();
+        this.PTSpidMap = new LinkedHashMap();
+        this.OPCRpidMap = new LinkedHashMap();
+        this.PCRpidMap = new LinkedHashMap();
+
+        this.PCRsnapshotMap = new HashMap();
+        this.PCRpidDurationMap = new HashMap();
+        this.PCRdurationMap = new HashMap();
+        this.PCRsizeMap = new HashMap();
+
+        this.streamCodes = new HashMap();
+        this.packetsSizeMap = new HashMap();
+        this.serviceNamesMap = new HashMap();
+
+        this.indexSnapshotMap = new HashMap();
         this.bitrateMap = new HashMap();
-
-        PATmapVersion = nil;
-        PMTmapVersion = nil;
-    }
-
-    public Tables(Map errorMap, ArrayList<Packet> packets, Map streamCodes, Map PATmap, Map timeMap, Map ESmap, Map PMTmap, Map serviceNamesMap, Map PIDmap, Map PCRmap, Map programMap, Map bitrateMap) {
-        this.PIDmap = PIDmap;
-        this.errorMap = errorMap;
-        this.packets = packets;
-        this.streamCodes = streamCodes;
-        this.PATmap = PATmap;
-        this.timeMap = timeMap;
-        this.packetsSizeMap = timeMap;
-        this.ESmap = ESmap;
-        this.PMTmap = PMTmap;
-        this.serviceNamesMap = serviceNamesMap;
-        this.PCRmap = PCRmap;
-        this.programMap = programMap;
-        this.bitrateMap = bitrateMap;
-    }
-
-
-    public void updatePAT(Map PATmap, short versionNum) {
-        if(versionNum > PATmapVersion) {
-            this.PATmap = PATmap;
-            PATmapVersion = versionNum;
-        }
+        this.minBitrateMap = new HashMap();
+        this.avgBitrateMap = new HashMap();
+        this.maxBitrateMap = new HashMap();
     }
 
 
     public void updateESmap(HashMap ESmap, byte versionNum) {
-//        if (versionNum > PMTmapVersion) {
         Map newMap = new HashMap();
         newMap.putAll(this.ESmap);
         newMap.putAll(ESmap);
         this.ESmap = newMap;
-//            PMTmapVersion = versionNum;
-//        }
     }
 
+
     public void updatePMT(HashMap PMTmap, byte versionNum) {
-//        if (versionNum > PMTmapVersion) {
         HashMap newMap = new HashMap();
         newMap.putAll(this.PMTmap);
         newMap.putAll(PMTmap);
         this.PMTmap = newMap;
-//            PMTmapVersion = versionNum;
-//        }
-    }
-
-
-    public void updateServiceName(int PID, String serviceName) {
-        this.serviceNamesMap.put(PID,serviceName);
     }
 
 
@@ -103,7 +109,7 @@ public class Tables {
 
         for (Integer key : keys) {
             Integer value = inputMap.get(key);
-            outputMap.put(value, Integer.toString(value));
+            outputMap.put(value, "Service: " + Integer.toString(value));
         }
         return outputMap;
     }
@@ -112,10 +118,8 @@ public class Tables {
     public void updatePCRmap(AdaptationFieldOptionalFields optionalFields) {
         if(optionalFields != null){
             if(optionalFields.getPCR() != nil){
-                //TODO create map(index,optionalFields.getPCRtimestamp())
-                PCRmap.put(PCRmap.size()+1L, new HashMap(PIDmap));
+                PCRsnapshotMap.put(optionalFields.getPCR(), new HashMap(PIDmap));
             }
-
         }
     }
 
@@ -127,10 +131,101 @@ public class Tables {
     }
 
 
-    public void updateBitrateTable() {
-        bitrateMap.put(bitrateMap.size(), new HashMap(PIDmap));
+    public void updateBitrateMap(int PID, long bitrate) {
+        if(bitrateMap.get(PID) == null){
+            List<Long> bitrates = new ArrayList();
+            bitrates.add(bitrate);
+            bitrateMap.put(PID,bitrates);
+        }
+        List bitrates = (ArrayList<Long>) bitrateMap.get(PID);
+        bitrates.add(bitrate);
+        bitrateMap.put(PID,bitrates);
     }
 
+
+    public void updateMinBitrateMap(int PID, long bitrate) {
+        if(minBitrateMap.get(PID) == null){
+            minBitrateMap.put(PID,bitrate);
+        }
+        Long minBitrate = (Long) minBitrateMap.get(PID);
+        if(bitrate < minBitrate) {
+            minBitrateMap.put(PID, bitrate);
+        }
+    }
+
+
+    public void updateMaxBitrateMap(int PID, long bitrate) {
+        if(maxBitrateMap.get(PID) == null){
+            maxBitrateMap.put(PID,bitrate);
+        }
+        Long maxBitrate = (Long) maxBitrateMap.get(PID);
+        if(bitrate > maxBitrate) {
+            maxBitrateMap.put(PID, bitrate);
+        }
+    }
+
+
+    public void updatePCRsizeMap(Integer PID, long size) {
+        if (PCRsizeMap.get(PID) != null) {
+            Long totalSize = (Long) PCRsizeMap.get(PID);
+            size += totalSize;
+        }
+        PCRsizeMap.put(PID,size);
+    }
+
+
+    public void updatePCRdurationMap(Integer PID, long duration) {
+        if (PCRdurationMap.get(PID) != null) {
+            Long totalSize = (Long) PCRdurationMap.get(PID);
+            duration += totalSize;
+        }
+        PCRdurationMap.put(PID,duration);
+    }
+
+
+    public void updatePCRpmtMap(int PID, short PCRpid) {
+        PCRpmtMap.put(PID,PCRpid);
+    }
+
+    public void updatePTSpacketMap(long timeStamp, long index) {
+        PTSpacketMap.put(timeStamp,index);
+    }
+
+    public void updateDTSpacketMap(long timeStamp, long index) {
+        DTSpacketMap.put(timeStamp,index);
+    }
+
+    public void updatePCRpacketMap(long timeStamp, long index) {
+        PCRpacketMap.put(timeStamp,index);
+    }
+
+    public void updateOPCRpacketMap(long timeStamp, long index) {
+        OPCRpacketMap.put(timeStamp,index);
+    }
+
+    public void updateAvgBitrateMap(Integer PID, long avgBitrate) {
+        avgBitrateMap.put(PID, avgBitrate);
+    }
+
+    public void updatePAT(Map PATmap, short versionNum) {
+        this.PATmap = PATmap;
+    }
+
+    public void updateServiceName(int PID, String serviceName) {
+        this.serviceNamesMap.put(PID,serviceName);
+    }
+
+    public void updatePCRpidMap(long pcr, int pid) {
+        PCRpidMap.put(pcr, pid);
+    }
+
+    public void updateOPCRpidMap(long opcr, int pid) {
+        OPCRpidMap.put(opcr, pid);
+    }
+
+    public void updateIndexSnapshotMap() {
+        indexSnapshotMap.put(indexSnapshotMap.size(), new HashMap(PIDmap));
+    }
 
     public void updatePacketsSizeMap(Integer PID, Integer size) {
         packetsSizeMap.put(PID, size);
@@ -140,17 +235,41 @@ public class Tables {
         streamCodes.putIfAbsent(PID, streamID);
     }
 
-    public void updateTimeMap(Integer PID, BigInteger timestamp){
-        timeMap.put(PID, timestamp);
+    public void updatePTSpidMap(Integer PID, long timestamp){
+        PTSpidMap.put(timestamp,PID);
+    }
+
+    public void updateDTSpidMap(Integer PID, long timestamp){
+        DTSpidMap.put(timestamp,PID);
+    }
+
+    public void updatePCRpidDurationMap(Integer pid, long duration) {
+        PCRpidDurationMap.put(pid,duration);
     }
 
 
-    public Map getTimeMap() {
-        return timeMap;
+    public Map getBitrateMap() {
+        return bitrateMap;
     }
 
-    public List getTimeListSorted() {
-        return sortMapToListByValue(timeMap);
+    public Map getPCRdurationMap() {
+        return PCRdurationMap;
+    }
+
+    public Map getPCRpidMap() {
+        return PCRpidMap;
+    }
+
+    public Map getMinBitrateMap() {
+        return minBitrateMap;
+    }
+
+    public Map getAvgBitrateMap() {
+        return avgBitrateMap;
+    }
+
+    public Map getMaxBitrateMap() {
+        return maxBitrateMap;
     }
 
     public Map getPIDmap() {
@@ -189,14 +308,130 @@ public class Tables {
         return serviceNamesMap;
     }
 
-    public Map getPCRmap() {
-        return PCRmap;
+    public Map getPCRsnapshotMap() {
+        return PCRsnapshotMap;
     }
 
-    public Map getBitrateMap() {
-        return bitrateMap;
+    public Map getIndexSnapshotMap() {
+        return indexSnapshotMap;
     }
 
+    public Map getPCRpidDurationMap() {
+        return PCRpidDurationMap;
+    }
+
+    public Map getPCRsizeMap() {
+        return PCRsizeMap;
+    }
+
+    public Map getPCRpmtMap() {
+        return PCRpmtMap;
+    }
+
+    public Map getDTSpidMap() {
+        return DTSpidMap;
+    }
+
+    public Map getOPCRpidMap() {
+        return OPCRpidMap;
+    }
+
+    public Map getPCRpacketMap() {
+        return PCRpacketMap;
+    }
+
+    public Map getOPCRpacketMap() {
+        return OPCRpacketMap;
+    }
+
+    public Map getPTSpacketMap() {
+        return PTSpacketMap;
+    }
+
+    public Map getDTSpacketMap() {
+        return DTSpacketMap;
+    }
+
+    public Map getPTSpidMap() {
+        return PTSpidMap;
+    }
+
+
+    public void setPIDmap(Map PIDmap) {
+        this.PIDmap = PIDmap;
+    }
+
+    public void setErrorMap(Map errorMap) {
+        this.errorMap = errorMap;
+    }
+
+    public void setServiceNamesMap(Map serviceNamesMap) {
+        this.serviceNamesMap = serviceNamesMap;
+    }
+
+    public void setPCRpmtMap(Map PCRpmtMap) {
+        this.PCRpmtMap = PCRpmtMap;
+    }
+
+    public void setPCRpacketMap(Map PCRpacketMap) {
+        this.PCRpacketMap = PCRpacketMap;
+    }
+
+    public void setOPCRpacketMap(Map OPCRpacketMap) {
+        this.OPCRpacketMap = OPCRpacketMap;
+    }
+
+    public void setPTSpacketMap(Map PTSpacketMap) {
+        this.PTSpacketMap = PTSpacketMap;
+    }
+
+    public void setDTSpacketMap(Map DTSpacketMap) {
+        this.DTSpacketMap = DTSpacketMap;
+    }
+
+    public void setPCRpidMap(Map PCRpidMap) {
+        this.PCRpidMap = PCRpidMap;
+    }
+
+    public void setOPCRpidMap(Map OPCRpidMap) {
+        this.OPCRpidMap = OPCRpidMap;
+    }
+
+    public void setPCRpidDurationMap(Map PCRpidDurationMap) {
+        this.PCRpidDurationMap = PCRpidDurationMap;
+    }
+
+    public void setPCRdurationMap(Map PCRdurationMap) {
+        this.PCRdurationMap = PCRdurationMap;
+    }
+
+    public void setPCRsizeMap(Map PCRsizeMap) {
+        this.PCRsizeMap = PCRsizeMap;
+    }
+
+    public void setIndexSnapshotMap(Map indexSnapshotMap) {
+        this.indexSnapshotMap = indexSnapshotMap;
+    }
+
+    public void setPCRsnapshotMap(Map PCRsnapshotMap) {
+        this.PCRsnapshotMap = PCRsnapshotMap;
+    }
+
+    public void setBitrateMap(Map bitrateMap) {
+        this.bitrateMap = bitrateMap;
+    }
+
+    public void setMinBitrateMap(Map minBitrateMap) {
+        this.minBitrateMap = minBitrateMap;
+    }
+
+    public void setAvgBitrateMap(Map avgBitrateMap) {
+        this.avgBitrateMap = avgBitrateMap;
+    }
+
+    public void setMaxBitrateMap(Map maxBitrateMap) {
+        this.maxBitrateMap = maxBitrateMap;
+    }
 
     public void setPIDmap(HashMap<Integer, Integer> PIDmap) {
         this.PIDmap = PIDmap;
@@ -226,8 +461,12 @@ public class Tables {
         this.PMTmap = PMTmap;
     }
 
-    public void setTimeMap(Map timeMap) {
-        this.timeMap = timeMap;
+    public void setPTSpidMap(Map PTSpidMap) {
+        this.PTSpidMap = PTSpidMap;
+    }
+
+    public void setDTSpidMap(Map DTSpidMap) {
+        this.DTSpidMap = DTSpidMap;
     }
 
     public void setStreamCodes(Map streamCodes) {
@@ -238,16 +477,16 @@ public class Tables {
         this.packetsSizeMap = packetsSizeMap;
     }
 
-    public void setPATmapVersion(int PATmapVersion) {
-        this.PATmapVersion = PATmapVersion;
-    }
-
-    public void setPMTmapVersion(int PMTmapVersion) {
-        this.PMTmapVersion = PMTmapVersion;
-    }
-
     public void setProgramMap(Map programMap) {
         this.programMap = programMap;
+    }
+
+    public void setServiceTimestampMap(Map serviceTimestampMap) {
+        this.serviceTimestampMap = serviceTimestampMap;
+    }
+
+    public Map getServiceTimestampMap() {
+        return serviceTimestampMap;
     }
 }
 

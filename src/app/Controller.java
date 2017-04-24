@@ -1,5 +1,6 @@
 package app;
 
+import app.streamAnalyzer.StreamAnalyzer;
 import app.streamAnalyzer.StreamParser;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -16,11 +17,12 @@ public class Controller {
     private static final String errorTitle = "Error occured!";
     private XML XML;
 
-    private Thread streamParserThread, fileHandlerThread, visualizerThread;
+    private Thread streamParserThread, streamAnalyzerThread, fileHandlerThread, visualizerThread;
     private Stage primaryStage;
     private FileHandler fileHandler;
     private Window view;
     private StreamParser streamParser;
+    private StreamAnalyzer streamAnalyzer;
 
     private Stream stream;
 
@@ -30,6 +32,7 @@ public class Controller {
         this.primaryStage = primaryStage;
         this.view = view;
         this.streamParser = new StreamParser(null);
+        this.streamAnalyzer = new StreamAnalyzer(null);
         this.stream = null;
         this.XML = null;
 
@@ -116,26 +119,39 @@ public class Controller {
 
     void createTask(File file) {
 
-        fileHandler.getTask().setOnSucceeded(event -> {
+        fileHandler.getTask().setOnSucceeded(fileHanlerEvent -> {
 
             streamParser.parseStream(fileHandler.getTask().getValue());
 
             view.progressWindow.activateProgressBar(streamParser.getTask());
 
-            streamParser.getTask().setOnSucceeded(workerStateEvent -> {
-                        Stream streamDescriptor;
+            streamParser.getTask().setOnSucceeded(streamParserEvent -> {
                         try {
-                            streamDescriptor = streamParser.analyzeStream(file, streamParser.getTask().getValue());
-                            view.createTask(streamDescriptor);
+                            streamAnalyzer.analyzeStream(file, streamParser.getTask().getValue());
+                            streamAnalyzer.getTask().setOnSucceeded( streamAnalyzerEvent -> {
+
+                                        view.createTask(streamAnalyzer.getTask().getValue());
+
+                                        visualizerThread = new Thread(view.getTask());
+                                        visualizerThread.start(); //TODO refactor
+
+                                        view.progressWindow.getDialogStage().close();
+                                    }
+                            );
+                            streamAnalyzer.getTask().setOnFailed(streamAnalyzerEvent -> {
+                                        view.progressWindow.getDialogStage().close();
+                                        streamAnalyzer.getTask().getException().printStackTrace();
+                                        view.showAlertBox(errorTitle, String.valueOf(streamAnalyzer.getTask().getException().getStackTrace()) + streamAnalyzer.getTask().getException().getMessage());
+                                    }
+                            );
+                            streamAnalyzerThread = new Thread(streamAnalyzer.getTask());
+                            streamAnalyzerThread.start();
                         } catch (IOException e) {
                             e.printStackTrace();
                             view.showAlertBox(errorTitle, String.valueOf(e.getMessage()));
                         }
 
-                        visualizerThread = new Thread(view.getTask());
-                        visualizerThread.start();
 
-                        view.progressWindow.getDialogStage().close();
                     }
             );
 
@@ -204,9 +220,17 @@ public class Controller {
                 streamParser = null;
                 streamParserThread = null;
 
-                System.gc();
-                streamParser = new StreamParser(null);
-                fileHandler= new FileHandler();
+                if (streamAnalyzerThread != null) {
+                    streamAnalyzer.getTask().cancel();
+                    streamAnalyzerThread.interrupt();
+                    streamAnalyzer = null;
+                    streamAnalyzerThread = null;
+
+                    System.gc();
+                    streamParser = new StreamParser(null);
+                    fileHandler = new FileHandler();
+                    streamAnalyzer = new StreamAnalyzer(null);
+                }
             }
         }
     }

@@ -13,10 +13,10 @@ import javafx.scene.layout.VBox;
 import java.util.*;
 
 import model.Stream;
-import model.Timestamp;
+import app.streamAnalyzer.TimestampParser;
 import static model.Sorter.*;
 
-public class BitrateTab extends Timestamp implements Graph{
+public class BitrateTab extends TimestampParser implements Graph{
     private Scene scene;
     public Tab  tab;
 
@@ -30,16 +30,15 @@ public class BitrateTab extends Timestamp implements Graph{
 
     public void drawGraph(Stream stream) {
 
-        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getBitrateMap());
+        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getIndexSnapshotMap());
         Map deltaBitrateMap = createDeltaBitrateMap(sortedBitrateMap);
 
-       long startTimeStamp = (long) getFirstItem( stream.getTables().getPCRmap()).getKey();
-       long endTimeStamp = (long) getLastItem( stream.getTables().getPCRmap()).getKey();
+       long startTimeStamp = (long) getFirstItem( stream.getTables().getPCRsnapshotMap()).getKey(); //TODO repair
+       long endTimeStamp = (long) getLastItem( stream.getTables().getPCRsnapshotMap()).getKey();
        long intervalTime = endTimeStamp - startTimeStamp;
        long tickInterval = intervalTime / deltaBitrateMap.size();
 
 
-        long ticks = deltaBitrateMap.size();
         double interval = 0.4;
 
         final NumberAxis xAxis = new NumberAxis(0,deltaBitrateMap.size()-1,tickUnit);
@@ -70,6 +69,7 @@ public class BitrateTab extends Timestamp implements Graph{
         stackedAreaChart.setCreateSymbols(false);
         stackedAreaChart.setPadding(new Insets(10,40,10,40));
         stackedAreaChart.setPrefHeight(scene.getHeight());
+        stackedAreaChart.setAnimated(true);
 
         Map PIDmap = sortHashMapByKey(stream.getTables().getPIDmap());
         stackedAreaChart.getData().addAll(createBitrateChart(PIDmap,deltaBitrateMap));
