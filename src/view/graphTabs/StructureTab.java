@@ -17,6 +17,7 @@ import app.streamAnalyzer.TimestampParser;
 
 import java.util.*;
 
+import static model.MapHandler.getLastItem;
 import static model.MapHandler.updateMap;
 import static model.config.MPEG.byteBinaryLength;
 
@@ -84,7 +85,7 @@ public class StructureTab extends TimestampParser implements Graph{
     }
 
 
-    private Collection createStructureChartData(Map<Integer,Integer> PIDmap, Map<String,Map<Integer, Long>> servicesMap ) {
+    private Collection createStructureChartData(List<Integer> PIDlist, Map<String,Map<Integer, Long>> servicesMap ) {
 
         ObservableList<XYChart.Series> chartData = FXCollections.observableArrayList();
         XYChart.Series seriesMin = new XYChart.Series();
@@ -95,12 +96,12 @@ public class StructureTab extends TimestampParser implements Graph{
         seriesAvg.setName("Avg");
         seriesMax.setName("Max");
 
-        for (Map.Entry<Integer, Integer> PIDentry : PIDmap.entrySet()) {
+        for (Integer PIDentry : PIDlist) {
 
             for(Map.Entry<String,Map<Integer, Long>> PIDbitrateMap : servicesMap.entrySet()) {
 
                 for (Map.Entry<Integer, Long> entry : PIDbitrateMap.getValue().entrySet()) {
-                    if (PIDentry.getKey().equals(entry.getKey())) {
+                    if (PIDentry.equals(entry.getKey())) {
                         switch (PIDbitrateMap.getKey()) {
                             case "Min":
                                 seriesMin.getData().add(new XYChart.Data(entry.getKey().toString(), entry.getValue().intValue()));
@@ -122,15 +123,15 @@ public class StructureTab extends TimestampParser implements Graph{
 
 
 
-    private Collection createServiceStructureChartData(Map<Integer,Integer> PIDmap, Map<Integer,Integer> PMTmap, Map<String,Map<Integer, Long>> PIDbitrateMaps) {
+    private Collection createServiceStructureChartData(List<Integer> PIDlist, Map<Integer,Integer> PMTmap, Map<String,Map<Integer, Long>> PIDbitrateMaps) {
 
         Map<String,Map<Integer,Long>> serviceBitrateMaps = new LinkedHashMap<>();
 
         for(Map.Entry<String,Map<Integer, Long>> PIDbitrateMap : PIDbitrateMaps.entrySet()) {
             Map<Integer,Long> serviceMap = new HashMap<>();
 
-            for (Map.Entry<Integer, Integer> PIDentry : PIDmap.entrySet()) {
-                Integer PID = PIDentry.getKey();
+            for (Integer PIDentry : PIDlist) {
+                Integer PID = PIDentry;
                 Integer service = PMTmap.get(PID);
 
                 for (Map.Entry<Integer, Long> minEntry : PIDbitrateMap.getValue().entrySet()) {
@@ -147,7 +148,17 @@ public class StructureTab extends TimestampParser implements Graph{
                 }
             }
         }
-        return createStructureChartData(PIDmap,serviceBitrateMaps);
+        Map<Integer,Long> servicePIDmap = getLastItem(serviceBitrateMaps).getValue();
+        if(servicePIDmap!=null) {
+            List<Integer> servicePIDlist = new ArrayList();
+            for(Integer pid : servicePIDmap.keySet()){
+                servicePIDlist.add(pid);
+            }
+            return createStructureChartData(servicePIDlist, serviceBitrateMaps);
+        }
+        else {
+            return createStructureChartData(PIDlist, serviceBitrateMaps);
+        }
     }
 
     public void addListenersAndHandlers(Chart chart) {
@@ -157,13 +168,17 @@ public class StructureTab extends TimestampParser implements Graph{
 
         groupByCheckBox.setOnAction(event -> {
             this.barChart.getData().clear();
+            List<Integer> PIDlist = new ArrayList();
+            for(Object pid : stream.getTables().getPIDmap().keySet()){
+                PIDlist.add((Integer) pid);
+            }
             if(groupByCheckBox.isSelected()) {
                 this.barChart.setTitle("Bitrate structure by programmes");
-                this.barChart.getData().addAll(createServiceStructureChartData(stream.getTables().getPIDmap(),stream.getTables().getPMTmap(),bitrateMaps));
+                this.barChart.getData().addAll(createServiceStructureChartData(PIDlist,stream.getTables().getPMTmap(),bitrateMaps));
             }
             else {
                 chart.setTitle("Bitrate structure by PID");
-                this.barChart.getData().addAll(createStructureChartData(stream.getTables().getPIDmap(), bitrateMaps));
+                this.barChart.getData().addAll(createStructureChartData(PIDlist, bitrateMaps));
             }
         });
     }

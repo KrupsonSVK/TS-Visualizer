@@ -12,9 +12,11 @@ import static model.config.MPEG.*;
 public class Config {
 
     public final static int snapshotInterval = 100;
+    public final static int packetInfoMaxTextLength = 100;
 
     public final static double packetImageWidth = 100;
     public final static double packetImageHeight = 60;
+    public final static int packetDisplayOffset = (int) (packetImageWidth / 2);
     public final static double miniPacketImageSize = 10;
     public final static double typeIconSize = 19;
     public final static double specialIconSize = 16;

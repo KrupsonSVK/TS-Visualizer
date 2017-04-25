@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Thread.sleep;
 import static model.config.Config.*;
 import static model.config.MPEG.getPacketName;
 import static model.config.MPEG.isPSI;
@@ -200,8 +201,40 @@ public class BarPane extends VisualizationTab implements Drawer{
                 }
         );
 
+        scrollPane.setOnMousePressed((MouseEvent mouseEvent) -> {
+
+            if (mouseEvent.getButton().name() == "PRIMARY") {
+
+                if(!isInLookingGlass(lookingGlass.getX(),lookingGlass.getWidth(),mouseEvent.getX())) {
+                    //TODO automove thread
+//                    xPos = stayInRange(mouseEvent.getSceneX());
+//                    xPos -= 10.;
+//
+//                    lookingGlass.setX(xPos);
+//                    packetPane.setXpos(-xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+//                    packetPane.drawCanvas(stream, packets, -xPos * getLookingGlassMoveCoeff() * legendPaneMoveCoeff);
+//
+//                    legendPane.setXpos(-xPos * getLookingGlassMoveCoeff());
+//                    legendPane.drawCanvas(stream, packets, -xPos * getLookingGlassMoveCoeff());
+//                    try {
+//                        sleep(10);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+                }
+            }
+        });
+
+
         lookingGlass.setOnMousePressed(lookingGlassOnMousePressedEventHandler);
         lookingGlass.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
+    }
+
+
+    private boolean isInLookingGlass(double x, double width, double xPos) {
+        System.out.println(xPos + ":" + x + ":" + (x+width));
+        System.out.println((xPos >= x && xPos <= (x + width)) ? "is" : "not");
+        return xPos >= x && xPos <= (x + width);
     }
 
 

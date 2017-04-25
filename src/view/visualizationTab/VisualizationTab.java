@@ -123,7 +123,7 @@ public class VisualizationTab extends Window{
 
     public boolean isInViewport(Scene scene, double packetPosition, double start) {
         double end = start + scene.getWidth();
-        return packetPosition >= start && packetPosition <= end;
+        return packetPosition >= start - packetDisplayOffset && packetPosition <= end + packetDisplayOffset;
     }
 
 

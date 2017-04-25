@@ -46,31 +46,82 @@ public class DetailTab extends Window {
 
         TreeItem<String> PSInode = new TreeItem<>("PSI");
         {
+            PSInode.getChildren().addAll( new TreeItem<>("Program Specific Information Tables"));
+
             TreeItem PATnode = createPATnode((HashMap<Integer, Integer>) streamDescriptor.getTables().getPATmap());
-
-            TreeItem<String> CATnode = new TreeItem<>("CAT");
-            TreeItem<String> BATnode = new TreeItem<>("BAT");
-
+            TreeItem<String> CATnode = createCATnode(streamDescriptor.getTables().getPIDmap());
             TreeItem PMTnode = createPMTnode(
                     (HashMap<Integer, String>) streamDescriptor.getTables().getProgramMap(),
                     (HashMap<Integer, Integer>)streamDescriptor.getTables().getPMTmap(),
                     (HashMap<Integer, Integer>) streamDescriptor.getTables().getESmap()
             );
+            TreeItem<String> NITnode = createNITnode(streamDescriptor.getTables().getPIDmap());
+            TreeItem<String> SDTnode = createSDTnode(streamDescriptor.getTables().getPIDmap());
+            TreeItem<String> TOTnode = createTOTnode(streamDescriptor.getTables().getPIDmap());
+            TreeItem<String> SITnode = createSITnode(streamDescriptor.getTables().getPIDmap());
+            TreeItem<String> SynNode = createSynNode(streamDescriptor.getTables().getPIDmap());
 
-            TreeItem<String> NITnode = new TreeItem<>("NIT");
-            TreeItem<String> SDTnode = new TreeItem<>("SDT");
-            TreeItem<String> TDTnode = new TreeItem<>("TDT");
-            TreeItem<String> TOTnode = new TreeItem<>("TOT");
-            TreeItem<String> SITnode = new TreeItem<>("SIT");
-            TreeItem<String> SynNode = new TreeItem<>("Sync");
-
-            PSInode.getChildren().addAll(PATnode, CATnode, BATnode, PMTnode, NITnode, SDTnode, TDTnode, TOTnode, SITnode, SynNode);
+            PSInode.getChildren().addAll(PATnode, CATnode, PMTnode, NITnode, SDTnode, TOTnode, SITnode, SynNode);
         }
         TreeItem PIDnode = createPIDnode(streamDescriptor.getTables().getPIDmap(), streamDescriptor.getTables().getESmap());
 
         rootNode.getChildren().addAll(PSInode, PIDnode);
 
         return this.nodes = rootNode;
+    }
+
+
+    private TreeItem<String> createSynNode(Map PIDmap) {
+        TreeItem<String> node = new TreeItem<>("NetSync");
+        node.getChildren().add(new TreeItem<>("Network Synchronization Table"));
+        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(netSyncPid)==null?0:PIDmap.get(netSyncPid))  + "x "));
+        //node.getChildren().add(new TreeItem<>("Tables"));
+        return node;
+    }
+
+
+    private TreeItem<String> createSITnode(Map PIDmap) {
+        TreeItem<String> node = new TreeItem<>("SIT");
+        node.getChildren().add(new TreeItem<>("Service Information Table"));
+        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(SITpid)==null?0:PIDmap.get(SITpid)) + "x "));
+        return node;
+    }
+
+
+    private TreeItem<String> createTOTnode(Map PIDmap) {
+        TreeItem<String> node = new TreeItem<>("TDT, TOT or ST");
+        node.getChildren().add( new TreeItem<>("Time Offset Table"));
+        node.getChildren().add( new TreeItem<>("Time and Date Table"));
+        node.getChildren().add( new TreeItem<>("Service Table"));
+        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(TDT_TOT_STpid)==null?0:PIDmap.get(TDT_TOT_STpid))  + "x "));
+        return node;
+    }
+
+
+    private TreeItem<String> createSDTnode(Map PIDmap) {
+        TreeItem<String> node = new TreeItem<>("SDT, BAT or ST");
+        node.getChildren().add( new TreeItem<>("Service Description Table"));
+        node.getChildren().add( new TreeItem<>("Bouquet Association Table"));
+        node.getChildren().add( new TreeItem<>("Service Table"));
+        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(SDT_BAT_STpid)==null?0:PIDmap.get(SDT_BAT_STpid)) + "x "));
+        return node;
+    }
+
+
+    private TreeItem<String> createNITnode(Map PIDmap) {
+        TreeItem<String> node = new TreeItem<>("NIT or ST");
+        node.getChildren().add(new TreeItem<>("Network Information Table"));
+        node.getChildren().add(new TreeItem<>("Service Table"));
+        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(NIT_STpid)==null?0:PIDmap.get(NIT_STpid)) + "x "));
+        return node;
+    }
+
+
+    private TreeItem<String> createCATnode(Map PIDmap) {
+        TreeItem<String> node = new TreeItem<>("CAT");
+        node.getChildren().addAll( new TreeItem<>("Conditional Access Table"));
+        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(CATpid)==null?0:PIDmap.get(CATpid)) + "x "));
+        return node;
     }
 
 
@@ -99,6 +150,7 @@ public class DetailTab extends Window {
 
     private TreeItem createPMTnode(HashMap<Integer, String> programMap,  HashMap<Integer, Integer> PMTmap, HashMap<Integer, Integer> ESmap) {
         TreeItem<String> PMTnode = new TreeItem<>("PMT");
+        PMTnode.getChildren().add(new TreeItem<>("Program Map Table"));
 
         for (Map.Entry<Integer, String> programEntry : programMap.entrySet()) {
             TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()) + " (" + programEntry.getKey() + ")");
@@ -127,6 +179,7 @@ public class DetailTab extends Window {
 
     private TreeItem createPATnode(HashMap<Integer, Integer> PATmap) {
         TreeItem<String> PATnode = new TreeItem<>("PAT");
+        PATnode.getChildren().add(new TreeItem<>("Program Association Table"));
 
         for (Map.Entry<Integer, Integer> pid : PATmap.entrySet()) {
             TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")");

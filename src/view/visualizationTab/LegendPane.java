@@ -114,7 +114,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
 
 
     private double getLegendScopeHeigth() {
-        return ( scene.getHeight() / packetImageHeight * miniPacketImageSize );
+        return ( (scene.getHeight() - legendScrollPaneHeight - barScrollPaneHeight) / packetImageHeight * miniPacketImageSize );
     }
 
 

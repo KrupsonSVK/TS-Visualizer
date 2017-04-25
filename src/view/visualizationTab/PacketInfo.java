@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Map;
 
+import static java.lang.Math.min;
 import static model.config.Config.*;
 import static model.config.MPEG.*;
 
@@ -81,7 +82,8 @@ public class PacketInfo extends Tooltip {
 
                         if (ESentry.getKey().equals(programEntry.getKey())) {
                             componentBuilder.append("Component PID: " + toHex((Integer) ESentry.getKey()) + " (" + ESentry.getKey().toString() + ")" + "\n");
-                            componentBuilder.append("-stream type: " + getElementaryStreamDescriptor((Integer) ESentry.getValue()) + "\n");
+                            String streamType = getElementaryStreamDescriptor((Integer) ESentry.getValue());
+                            componentBuilder.append("-stream type: " + streamType.substring(0,min(packetInfoMaxTextLength,streamType.length())) + "\n");
                         }
                     }
                 }
@@ -138,8 +140,10 @@ public class PacketInfo extends Tooltip {
         if (payload != null) {
             if (payload.hasPESheader()) {
                 PES pesPacket = (PES) payload;
+                String streamDescriptor = getStreamDescription(pesPacket.getStreamID());
                 return ("PES header: \n\n" +
-                        "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + getStreamDescription(pesPacket.getStreamID()) + "\n" +
+
+                        "Stream ID: " + toHex(pesPacket.getStreamID()) +  " (" + pesPacket.getStreamID() + ") = " + streamDescriptor.substring(0,min(packetInfoMaxTextLength,streamDescriptor.length()))  + "\n" +
                         "PES packet length: " + pesPacket.getPESpacketLength() + " Bytes \n" +
                         "PES scrambling control: " + pesPacket.getPESscramblingControl() + (pesPacket.getPESscramblingControl()==0x0 ? " (Not scrambled)" : " (Scrambled)") + "\n" +
                         "PES priority: " + pesPacket.getPESpriority() + (pesPacket.getPESpriority()== 0x0 ? " (Normal priority)" : " (High priority)") + "\n" +
@@ -211,7 +215,7 @@ public class PacketInfo extends Tooltip {
             return ( timestampBuilder.toString() +
                     (adaptationField.getSplicingPointFlag() == 0x1 ? "Splicing point: " + String.format("0x%06X", optionalFields.getSpliceCoutdown() & 0xFFFFF) + "\n" : "") +
                     (adaptationField.getTPDflag() == 0x1 ? "TPD length: " + (optionalFields.getTPDlength() & 0xFFFFF) + " Bytes\n" : "") +
-                    (adaptationField.getTPDflag() == 0x1 ? "Transport private data:\n" + createHexOutput(getHexSequence(optionalFields.getTPD())) + "\n" : "")
+                    (adaptationField.getTPDflag() == 0x1 ? "Transport private data:\n" + createHexOutput(byteToHexString(optionalFields.getTPD(),0,optionalFields.getTPD().length-1)) + "\n" : "")
                     //TODO correct transport private hex output
                     //  (adaptationField.getAFEflag() == 0x1 ? "Additional copy info: " + String.format("0x%01X", optionalFields.getAFEFlength() & 0xFFFFF) + "\n" : "")
                     //  (adaptationField.getLTWF() == 0x1 ? "PES CRC: " + String.format("0x%02X", optionalFields.getLTW() & 0xFFFFF) + "\n" : "") +
@@ -220,6 +224,32 @@ public class PacketInfo extends Tooltip {
             );
         }
         return "";
+    }
+
+
+    String byteToHexString(byte[] packet, int pos, int length) {
+
+//        int[] intFields = new int[length];
+//        long result = 0;
+//        int i = 0
+//        for (;;) {
+//            for (; i < 31; i++) {
+//                result = (result << 1) | (binaryHeader[i] == 1 ? 1 : 0);
+//            }
+//            re
+//        }
+//        return result;
+
+        int position = pos;
+        int[] intFields = new int[length];
+        for (int index = 0; index < length; index++) {
+            intFields[index] = ((packet[position++]) & 0x000000ff);
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        for(int i=0; i < intFields.length; i++){
+            stringBuilder.append(Integer.toHexString(intFields[i]));
+        }
+        return stringBuilder.toString();
     }
 
 
@@ -256,7 +286,6 @@ public class PacketInfo extends Tooltip {
 
 
     private static String createHexOutput(String hexSequence) {
-
         StringBuilder hexBuilder = new StringBuilder();
 
         int index = 0;
