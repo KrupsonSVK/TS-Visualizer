@@ -11,6 +11,8 @@ import static model.config.MPEG.*;
 
 public class Config {
 
+    public final static int snapshotInterval = 100;
+
     public final static double packetImageWidth = 100;
     public final static double packetImageHeight = 60;
     public final static double miniPacketImageSize = 10;
@@ -45,6 +47,8 @@ public class Config {
     public final static String resourcesPath = "/resources/";
     public final static Color adaptationFieldColor = Color.BLACK;
     public final static Color hasPESheaderColor = Color.RED;
+
+    public static final String errorTitle = "Error occured!";
 
     public static Map  packetImages = new ImageHashMap<Integer,Image>(new Image(resourcesPath + "grey.png")){
             {

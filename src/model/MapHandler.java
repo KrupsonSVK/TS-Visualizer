@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public abstract class Sorter {
+public abstract class MapHandler {
 
 
     public <K, V> HashMap<V, K> reverse(Map<K, V> map) {
@@ -109,5 +109,23 @@ public abstract class Sorter {
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public static Map updateMap(Map<Integer, Long> map, Integer key, Long value) {
+        Long currentValue = map.get(key);
+        if(currentValue != null){
+            value += currentValue;
+        }
+        map.put(key,value);
+        return map;
+    }
+
+    public static Map updateMap(Map<Integer, Integer> map, Integer key, Integer value) {
+        Integer currentValue = map.get(key);
+        if(currentValue != null){
+            value += currentValue;
+        }
+        map.put(key,value);
+        return map;
     }
 }

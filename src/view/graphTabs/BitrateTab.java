@@ -14,7 +14,10 @@ import java.util.*;
 
 import model.Stream;
 import app.streamAnalyzer.TimestampParser;
-import static model.Sorter.*;
+
+import static model.MapHandler.*;
+import static model.config.MPEG.byteBinaryLength;
+import static model.config.MPEG.tsPacketSize;
 
 public class BitrateTab extends TimestampParser implements Graph{
     private Scene scene;
@@ -22,7 +25,9 @@ public class BitrateTab extends TimestampParser implements Graph{
 
     public static final int tickUnit = 10;
     private CheckBox groupByCheckBox;
-
+    private Map PIDmap;
+    private Map deltaServiceBitrateMap;
+    private Map deltaPIDBitrateMap;
     public BitrateTab(){
         tab = new Tab("Bitrate");
     }
@@ -30,25 +35,30 @@ public class BitrateTab extends TimestampParser implements Graph{
 
     public void drawGraph(Stream stream) {
 
-        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getIndexSnapshotMap());
-        Map deltaBitrateMap = createDeltaBitrateMap(sortedBitrateMap);
+        Map sortedPIDBitrateMap = sortHashMapByKey(stream.getTables().getIndexSnapshotMap());
+        Map sortedServiceBitrateMap = groupByService(stream.getTables().getPMTmap(),sortedPIDBitrateMap);
 
-       long startTimeStamp = (long) getFirstItem( stream.getTables().getPCRsnapshotMap()).getKey(); //TODO repair
-       long endTimeStamp = (long) getLastItem( stream.getTables().getPCRsnapshotMap()).getKey();
-       long intervalTime = endTimeStamp - startTimeStamp;
-       long tickInterval = intervalTime / deltaBitrateMap.size();
+        deltaPIDBitrateMap = createDeltaBitrateMap(sortedPIDBitrateMap);
+        deltaServiceBitrateMap = createDeltaBitrateMap(sortedServiceBitrateMap);
+
+        PIDmap = sortHashMapByKey(stream.getTables().getPIDmap());
+
+        long startTimeStamp = 0; // (long) getFirstItem( stream.getTables().getPCRsnapshotMap()).getKey(); //TODO start and end time of broadcast
+        long endTimeStamp = stream.getDuration(); //(long) getLastItem( stream.getTables().getPCRsnapshotMap()).getKey();
+        long duration = endTimeStamp - startTimeStamp;
+        long tickInterval = duration / deltaPIDBitrateMap.size();
 
 
         double interval = 0.4;
 
-        final NumberAxis xAxis = new NumberAxis(0,deltaBitrateMap.size()-1,tickUnit);
+        final NumberAxis xAxis = new NumberAxis(0,deltaPIDBitrateMap.size()-1,tickUnit);
         final NumberAxis yAxis = new NumberAxis();
 
         xAxis.setTickLabelFormatter(
                 new NumberAxis.DefaultFormatter(yAxis) {
                     @Override
                     public String toString(Number object) {
-                        long timestamp = startTimeStamp + (tickInterval * object.intValue());
+                        long timestamp = startTimeStamp + (tickInterval * object.longValue());
                         String out = parseTimestamp(timestamp);
                         return String.format("%s",out);
                     }
@@ -57,7 +67,8 @@ public class BitrateTab extends TimestampParser implements Graph{
                 new NumberAxis.DefaultFormatter(yAxis) {
                     @Override
                     public String toString(Number object) {
-                        return String.format("%1$,.2f MBit/s", (Double)(object.doubleValue() * interval));
+                        Double bitrate = (object.doubleValue() * deltaPIDBitrateMap.size() * tsPacketSize * byteBinaryLength / 1024. ) / duration;
+                        return String.format("%1$,.2f MBit/s",bitrate);
                     }
                 });
 
@@ -69,10 +80,7 @@ public class BitrateTab extends TimestampParser implements Graph{
         stackedAreaChart.setCreateSymbols(false);
         stackedAreaChart.setPadding(new Insets(10,40,10,40));
         stackedAreaChart.setPrefHeight(scene.getHeight());
-        stackedAreaChart.setAnimated(true);
-
-        Map PIDmap = sortHashMapByKey(stream.getTables().getPIDmap());
-        stackedAreaChart.getData().addAll(createBitrateChart(PIDmap,deltaBitrateMap));
+        stackedAreaChart.setAnimated(false);
 
         groupByCheckBox = new CheckBox("Group by programmes");
         HBox checkHBox = new HBox(groupByCheckBox);
@@ -81,30 +89,51 @@ public class BitrateTab extends TimestampParser implements Graph{
         checkHBox.setPadding(new Insets(10,10,10,10));
 
         addListenersAndHandlers(stackedAreaChart);
+        groupByCheckBox.fire();
 
         tab.setContent(new VBox(stackedAreaChart,checkHBox));
     }
 
 
-    private Collection createBitrateChart(Map map, Map bitrateMap) {
+    private Map groupByService(Map<Integer,Integer> PMTmap, Map<Integer,Map<Integer,Integer>> sortedPIDdeltaBitrateMaps) {
+
+        Map<Integer, Map<Integer, Integer>> sortedServiceDeltaBitrateMaps = new LinkedHashMap();
+        for (Map.Entry<Integer, Map<Integer, Integer>> PIDdeltaBitrateMap : sortedPIDdeltaBitrateMaps.entrySet()) {
+
+            Map<Integer, Integer> serviceDeltaBitrateMap = new LinkedHashMap();
+            for (Map.Entry<Integer, Integer> PIDentry : PIDdeltaBitrateMap.getValue().entrySet()) {
+
+                Integer deltaBitrate = PIDentry.getValue();
+                Integer PID = PIDentry.getKey();
+                Integer serviceNumber = PMTmap.get(PID);
+                if (serviceNumber != null) {
+                    serviceDeltaBitrateMap = updateMap(serviceDeltaBitrateMap, serviceNumber, deltaBitrate);
+                }
+                else {
+                    serviceDeltaBitrateMap = updateMap(serviceDeltaBitrateMap, PID, deltaBitrate);
+                }
+            }
+            sortedServiceDeltaBitrateMaps.put(PIDdeltaBitrateMap.getKey(), serviceDeltaBitrateMap);
+        }
+        return sortedServiceDeltaBitrateMaps;
+    }
+
+
+    private Collection createBitrateChart(Map<Integer,Integer> map, Map<Integer,Map> bitrateMap) {
 
         ObservableList<XYChart.Series> chartData = FXCollections.observableArrayList();
 
-        for (Map.Entry<Integer,Integer> pid : ((HashMap<Integer,Integer>)map).entrySet()) {
-
-            Integer PID = pid.getKey();
+        for (Integer PID : map.keySet()) {
             final XYChart.Series series = new XYChart.Series<>();
             series.setName("PID: " + String.format("0x%04X", PID & 0xFFFF)  + " (" + PID + ")");
 
-            for (Map.Entry<Integer,Map> bitrate : ((HashMap<Integer,Map>)bitrateMap).entrySet()) {
+            for (Map.Entry<Integer,Map> bitrate : bitrateMap.entrySet()) {
                 Integer value = (Integer) bitrate.getValue().get(PID);
                 value = (value==null) ? 0: value;
                 series.getData().add(new XYChart.Data(bitrate.getKey(), value));
-
             }
             chartData.add(series);
         }
-
         return chartData;
     }
 
@@ -115,7 +144,15 @@ public class BitrateTab extends TimestampParser implements Graph{
         });
 
         groupByCheckBox.setOnAction(event -> {
-            System.out.println("Group by programmes");
+            ((StackedAreaChart)chart).getData().clear();
+            if(groupByCheckBox.isSelected()) {
+                chart.setTitle("Multiplex program bitrate");
+                ((StackedAreaChart)chart).getData().addAll(createBitrateChart((Map)getLastItem(deltaServiceBitrateMap).getValue(),deltaServiceBitrateMap));
+            }
+            else {
+                chart.setTitle("Multiplex bitrate");
+                ((StackedAreaChart)chart).getData().addAll(createBitrateChart((Map)getLastItem(deltaPIDBitrateMap).getValue(),deltaPIDBitrateMap));
+            }
         });
     }
 

@@ -1,9 +1,6 @@
 package view.graphTabs;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,9 +23,6 @@ import model.Tables;
 import model.config.MPEG;
 import view.visualizationTab.VisualizationTab;
 
-import static model.Sorter.sortHashMapByKey;
-import static model.config.MPEG.TimestampType.DTS;
-import static model.config.MPEG.TimestampType.PTS;
 import static model.config.MPEG.nil;
 
 
@@ -104,13 +98,9 @@ public class TimestampsTab extends VisualizationTab implements Graph{
                             for (Map.Entry<Long, Long> packetEntry : timestampMap.getValue().entrySet()) {
                                 XYChart.Data data = new XYChart.Data(packetEntry.getValue(), packetEntry.getKey());
                                 series.getData().add(data);
-                                String type = "PCR";
-                                int PID = 2102;
-                                int position = 1832;
-                                String time = parseTimestamp(8137976234L);
-//                                Tooltip tooltip =  new Tooltip("Type: " + type + "\nPID: " + PID + "\nTime: " + time + "\nPacket position: " + position);
-//                                Tooltip.install(data.getNode(), tooltip);
-                                tooltips.put( data.hashCode() , new Tooltip("Type: " + type + "\nPID: " + PID + "\nTime: " + time + "\nPacket position: " + position) );
+
+                                tooltips.put( data.hashCode() , new Tooltip("Type: " + timestampMap.getKey().toString() + "\nService: " + program.getKey() + " (" +
+                                        String.format("0x%04X", program.getKey() & 0xFFFF)  +")\nTime: " + parseTimestamp(packetEntry.getKey()) + "\nPacket position: " + packetEntry.getValue()) );
                             }
                             scatterChart.getData().add(series);
                         }
@@ -120,6 +110,7 @@ public class TimestampsTab extends VisualizationTab implements Graph{
         }
         scatterChart.setTitle("Timestamps layout");
         scatterChart.setLegendSide(Side.LEFT);
+        scatterChart.setAnimated(false);
         scatterChart.toBack();
         scatterChart.setPadding(new Insets(10,40,10,40));
         scatterChart.setPrefHeight(scene.getHeight());
@@ -150,6 +141,17 @@ public class TimestampsTab extends VisualizationTab implements Graph{
         }
         final NumberAxis xAxis = new NumberAxis(0, Double.valueOf(maxX*1.05f).longValue(), Double.valueOf(maxX*0.08f).longValue());
         final NumberAxis yAxis = new NumberAxis(0, Double.valueOf(maxY*1.05f).longValue(), Double.valueOf(maxY*0.08f).longValue());
+
+        yAxis.setTickLabelFormatter(
+                new NumberAxis.DefaultFormatter(yAxis) {
+                    @Override
+                    public String toString(Number object) {
+                        //long timestamp = startTimeStamp + (tickInterval * object.intValue());
+                       // String out = parseTimestamp(timestamp);
+                        return String.format("%s",parseTimestamp(object.longValue()));
+                    }
+                });
+
         xAxis.setLabel("Packet order");
         yAxis.setLabel("Time");
 
@@ -174,17 +176,17 @@ public class TimestampsTab extends VisualizationTab implements Graph{
                     Tooltip tooltip = ((Tooltip) tooltips.get(data.hashCode()));
                     if (!tooltip.isActivated()) {
                         tooltip.show(vbox, event.getScreenX(), event.getScreenY());
-                        for (Object currentTooltip : tooltips.values()) {
-                            if (!currentTooltip.equals(tooltip)) {
-                                ((Tooltip) currentTooltip).hide();
-                            }
-                        }
+//                        for (Object currentTooltip : tooltips.values()) {
+//                            if (!currentTooltip.equals(tooltip)) {
+//                                ((Tooltip) currentTooltip).hide();
+//                            }
+//                        }
                     }
                 });
                 data.getNode().setOnMouseReleased(event -> {
-                    if (((Tooltip) tooltips.get(data.hashCode())).isActivated()) {
+//                    if (((Tooltip) tooltips.get(data.hashCode())).isActivated()) {
                         ((Tooltip) tooltips.get(data.hashCode())).hide();
-                    }
+//                    }
                 });
             }
         }

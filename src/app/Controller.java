@@ -11,10 +11,11 @@ import java.io.IOException;
 import model.Stream;
 import view.Window;
 
+import static model.config.Config.errorTitle;
+
 
 public class Controller {
 
-    private static final String errorTitle = "Error occured!";
     private XML XML;
 
     private Thread streamParserThread, streamAnalyzerThread, fileHandlerThread, visualizerThread;

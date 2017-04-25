@@ -51,13 +51,21 @@ public class StreamAnalyzer {
                 for (Integer value : ((HashMap<Integer, Integer>) tables.getErrorMap()).values()) {
                     errors += value;
                 }
+//                tables.createProgramMap();
                 tables.setProgramMap(createPrograms(tables.getPMTmap()));
 
                 //createPCRmap(tables);
                 tables.setServiceTimestampMap(createServiceTimestampMap(tables, tables.getPATmap(), tables.getPMTmap(), tables.getPCRpidMap(),tables.getPCRpmtMap()));
-                analyzeBitrate(tables, tables.getPIDmap(), tables.getPCRsnapshotMap(), tables.getPCRpidMap());
-                long duration = calculateDuration(tables.getPCRpidDurationMap());
-                long bitrate = calculateBitrate(tables.getAvgBitrateMap());
+                analyzeBitrate(tables, tables.getPIDmap(), tables.getPCRsnapshotMap(),  tables.getPTSsnapshotMap(),tables.getPCRpidMap(), tables.getPTSpidMap());
+
+                long PCRduration = calculateDuration(tables.getPCRpidDurationMap());
+                long PTSduration = calculateDuration(tables.getPTSpidDurationMap());
+                long duration =  PCRduration > 0L ? PCRduration : PTSduration;
+
+                long PCRbitrate = calculateBitrate(tables.getAvgPCRBitrateMap());
+                long PTSbitrate = calculateBitrate(tables.getAvgPTSBitrateMap());
+                long bitrate =  PCRbitrate > 0L ? PCRbitrate : PTSbitrate;
+
                 return new Stream(
                         file.getName(),
                         file.getAbsolutePath(),
@@ -187,7 +195,7 @@ public class StreamAnalyzer {
     }
 
 
-    private void analyzeBitrate(Tables tables, Map<Integer, Integer> PIDmap, Map<Long, Map> PCRsnapshotMap, Map<Long, Integer> PCRpidMap) {
+    private void analyzeBitrate(Tables tables, Map<Integer, Integer> PIDmap, Map<Long, Map> PCRsnapshotMap, Map<Long, Map> PTSsnapshotMap, Map<Long, Integer> PCRpidMap, Map<Long, Integer> PTSpidMap) {
 
         for (Integer PID : PIDmap.keySet()) {
             long firstPCR = nil;
@@ -233,33 +241,94 @@ public class StreamAnalyzer {
                                     }
                                 }
                             }
-                            totalDuration = lastPCR - firstPCR;
                         }
+                        totalDuration = lastPCR - firstPCR;
                     }
                     if (lastPCR != nil) {
                         prevPCR = lastPCR;
                     }
                 }
-                if(tables.getPCRpidDurationMap().get(PID) == null) {
-                    if (totalDuration > 0) {
-                        tables.updatePCRpidDurationMap(PID, totalDuration);
+                tables.updatePCRpidDurationMap(PID, totalDuration);
+            }
+
+            long firstPTS = nil;
+            long prevPTS = nil;
+            long lastPTS = nil;
+
+            for (Map.Entry<Long, Integer> PTSpidEntry : PTSpidMap.entrySet()) {
+                long totalDuration = 0;
+                if (PTSpidEntry.getValue().equals(PID)) {
+                    if (firstPTS == nil) {
+                        firstPTS = PTSpidEntry.getKey().longValue();
+                        prevPTS = firstPTS;
+                    } else {
+                        lastPTS = PTSpidEntry.getKey().longValue();
+                    }
+                    if (prevPTS != nil && lastPTS != nil) {
+                        long duration = lastPTS - prevPTS;
+                        for (Integer currentPID : PIDmap.keySet()) {
+                            long beginningSize = 0;
+                            Map<Integer, Integer> prevMap = PTSsnapshotMap.get(prevPTS);
+                            if (prevMap != null) {
+                                for (Map.Entry<Integer, Integer> PIDentry : prevMap.entrySet()) {
+                                    if (currentPID.equals(PIDentry.getKey())) {
+                                        beginningSize += PIDentry.getValue();
+                                    }
+                                }
+                                long endSize = 0;
+                                Map<Integer, Integer> lastMap = PTSsnapshotMap.get(lastPTS);
+                                if (lastMap != null) {
+                                    for (Map.Entry<Integer, Integer> PIDentry : lastMap.entrySet()) {
+                                        if (currentPID.equals(PIDentry.getKey())) {
+                                            endSize += PIDentry.getValue();
+                                        }
+                                    }
+                                    long size = endSize - beginningSize;
+                                    long bitrate = (long) ((double) size * tsPacketSize / ((double) duration / 1000f));
+                                    if (bitrate > 0) {
+                                        tables.updatePTSsizeMap(currentPID, size);
+                                        tables.updatePTSdurationMap(currentPID, duration);
+
+//                                        tables.updateBitrateMap(currentPID, bitrate);
+//                                        tables.updateMinBitrateMap(currentPID, bitrate);
+//                                        tables.updateMaxBitrateMap(currentPID, bitrate);
+                                    }
+                                }
+                            }
+                        }
+                        totalDuration = lastPTS - firstPTS;
+                    }
+                    if (lastPTS != nil) {
+                        prevPTS = lastPTS;
                     }
                 }
-                else if(totalDuration > (Long)tables.getPCRpidDurationMap().get(PID)) {
-                    tables.updatePCRpidDurationMap(PID, totalDuration);
-                }
+                tables.updatePTSpidDurationMap(PID, totalDuration);
             }
         }
-        analyzeAvgBitrate(tables, tables.getPCRsizeMap(), tables.getPCRdurationMap());
+        analyzeAvgPCRBitrate(tables, tables.getPCRsizeMap(), tables.getPCRdurationMap());
+        analyzeAvgPTSBitrate(tables, tables.getPTSsizeMap(), tables.getPTSdurationMap());
     }
 
-    private void analyzeAvgBitrate(Tables tables, Map<Integer, Long> PCRsizeMap, Map<Integer, Long> PCRdurationMap) {
+    private void analyzeAvgPCRBitrate(Tables tables, Map<Integer, Long> PCRsizeMap, Map<Integer, Long> PCRdurationMap) {
 
         for (Map.Entry<Integer, Long> PCRsizeEntry : PCRsizeMap.entrySet()) {
             for (Map.Entry<Integer, Long> PCRdurationEntry : PCRdurationMap.entrySet()) {
                 if (PCRsizeEntry.getKey().equals(PCRdurationEntry.getKey())) {
                     long avgBitrate = (long) (PCRsizeEntry.getValue() * tsPacketSize / (PCRdurationEntry.getValue() / 1000f));
-                    tables.updateAvgBitrateMap(PCRsizeEntry.getKey(), avgBitrate);
+                    tables.updateAvgPCRBitrateMap(PCRsizeEntry.getKey(), avgBitrate);
+                }
+            }
+        }
+    }
+
+
+    private void analyzeAvgPTSBitrate(Tables tables, Map<Integer, Long> PCRsizeMap, Map<Integer, Long> PCRdurationMap) {
+
+        for (Map.Entry<Integer, Long> PCRsizeEntry : PCRsizeMap.entrySet()) {
+            for (Map.Entry<Integer, Long> PCRdurationEntry : PCRdurationMap.entrySet()) {
+                if (PCRsizeEntry.getKey().equals(PCRdurationEntry.getKey())) {
+                    long avgBitrate = (long) (PCRsizeEntry.getValue() * tsPacketSize / (PCRdurationEntry.getValue() / 1000f));
+                    tables.updateAvgPTSBitrateMap(PCRsizeEntry.getKey(), avgBitrate);
                 }
             }
         }
@@ -272,7 +341,7 @@ public class StreamAnalyzer {
 
         for (Integer key : keys) {
             Integer value = (Integer) inputMap.get(key);
-            outputMap.put(value, Integer.toString(value));
+            outputMap.put(value, "Service: " + Integer.toString(value));
         }
         return outputMap;
     }

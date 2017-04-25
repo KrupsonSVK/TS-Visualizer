@@ -2,8 +2,8 @@ package model;
 
 import model.packet.AdaptationFieldOptionalFields;
 import model.packet.Packet;
+import model.pes.PES;
 
-import java.math.BigInteger;
 import java.util.*;
 
 import static model.config.MPEG.nil;
@@ -32,6 +32,9 @@ public class Tables {
 
     private Map PTSpidMap;
     private Map DTSpidMap;
+    private Map PTSpidDurationMap;
+    private Map PTSsizeMap;
+    private Map PTSdurationMap;
 
     private Map PCRpidMap;
     private Map OPCRpidMap;
@@ -41,9 +44,11 @@ public class Tables {
 
     private Map indexSnapshotMap;
     private Map PCRsnapshotMap;
+    private Map PTSsnapshotMap;
     private Map bitrateMap;
     private Map minBitrateMap;
-    private Map avgBitrateMap;
+    private Map avgPCRBitrateMap;
+    private Map avgPTSBitrateMap;
     private Map maxBitrateMap;
 
     private Map serviceTimestampMap;
@@ -70,9 +75,13 @@ public class Tables {
         this.PCRpidMap = new LinkedHashMap();
 
         this.PCRsnapshotMap = new HashMap();
+        this.PTSsnapshotMap = new HashMap();
         this.PCRpidDurationMap = new HashMap();
+        this.PTSpidDurationMap = new HashMap();
         this.PCRdurationMap = new HashMap();
         this.PCRsizeMap = new HashMap();
+        this.PTSdurationMap = new HashMap();
+        this.PTSsizeMap = new HashMap();
 
         this.streamCodes = new HashMap();
         this.packetsSizeMap = new HashMap();
@@ -81,7 +90,8 @@ public class Tables {
         this.indexSnapshotMap = new HashMap();
         this.bitrateMap = new HashMap();
         this.minBitrateMap = new HashMap();
-        this.avgBitrateMap = new HashMap();
+        this.avgPCRBitrateMap = new HashMap();
+        this.avgPTSBitrateMap = new HashMap();
         this.maxBitrateMap = new HashMap();
     }
 
@@ -101,24 +111,32 @@ public class Tables {
         this.PMTmap = newMap;
     }
 
-
-    public Map getProgramMap() {
-        HashMap<Integer, String> outputMap = new HashMap<>();
-        HashMap<Integer, Integer> inputMap = (HashMap<Integer, Integer>) PMTmap;
-        Set<Integer> keys = inputMap.keySet(); // The set of keys in the map.
-
-        for (Integer key : keys) {
-            Integer value = inputMap.get(key);
-            outputMap.put(value, "Service: " + Integer.toString(value));
-        }
-        return outputMap;
-    }
-
+//
+//    public Map createProgramMap() {
+//        HashMap<Integer, String> outputMap = new HashMap<>();
+//        HashMap<Integer, Integer> inputMap = (HashMap<Integer, Integer>) PMTmap;
+//        Set<Integer> keys = inputMap.keySet(); // The set of keys in the map.
+//
+//        for (Integer key : keys) {
+//            Integer value = inputMap.get(key);
+//            outputMap.put(value, "Service: " + Integer.toString(value));
+//        }
+//        return outputMap;
+//    }
+//
 
     public void updatePCRmap(AdaptationFieldOptionalFields optionalFields) {
         if(optionalFields != null){
             if(optionalFields.getPCR() != nil){
                 PCRsnapshotMap.put(optionalFields.getPCR(), new HashMap(PIDmap));
+            }
+        }
+    }
+
+    public void updatePTSmap( PES header) {
+        if(header != null){
+            if(header.getPTSdtsFlags() > 0){
+                PTSsnapshotMap.put(header.getPTS(), new HashMap(PIDmap));
             }
         }
     }
@@ -183,6 +201,47 @@ public class Tables {
     }
 
 
+    public void updatePTSsizeMap(Integer PID, long size) {
+        if (PTSsizeMap.get(PID) != null) {
+            Long totalSize = (Long) PTSsizeMap.get(PID);
+            size += totalSize;
+        }
+        PTSsizeMap.put(PID,size);
+    }
+
+
+    public void updatePTSdurationMap(Integer PID, long duration) {
+        if (PTSdurationMap.get(PID) != null) {
+            Long totalSize = (Long) PTSdurationMap.get(PID);
+            duration += totalSize;
+        }
+        PTSdurationMap.put(PID,duration);
+    }
+
+
+    public void updatePCRpidDurationMap(Integer PID, long duration) {
+        if(PCRpidDurationMap.get(PID) == null) {
+            if (duration > 0) {
+                PCRpidDurationMap.put(PID,duration);
+            }
+        }
+        else if(duration > (Long)PCRpidDurationMap.get(PID)) {
+            PCRpidDurationMap.put(PID,duration);
+        }
+    }
+
+    public void updatePTSpidDurationMap(Integer PID, long duration) {
+        if(PTSpidDurationMap.get(PID) == null) {
+            if (duration > 0) {
+                PTSpidDurationMap.put(PID,duration);
+            }
+        }
+        else if(duration > (Long)PTSpidDurationMap.get(PID)) {
+            PTSpidDurationMap.put(PID,duration);
+        }
+    }
+
+
     public void updatePCRpmtMap(int PID, short PCRpid) {
         PCRpmtMap.put(PID,PCRpid);
     }
@@ -203,9 +262,14 @@ public class Tables {
         OPCRpacketMap.put(timeStamp,index);
     }
 
-    public void updateAvgBitrateMap(Integer PID, long avgBitrate) {
-        avgBitrateMap.put(PID, avgBitrate);
+    public void updateAvgPCRBitrateMap(Integer PID, long avgBitrate) {
+        avgPCRBitrateMap.put(PID, avgBitrate);
     }
+
+    public void updateAvgPTSBitrateMap(Integer PID, long avgBitrate) {
+        avgPTSBitrateMap.put(PID, avgBitrate);
+    }
+
 
     public void updatePAT(Map PATmap, short versionNum) {
         this.PATmap = PATmap;
@@ -243,10 +307,11 @@ public class Tables {
         DTSpidMap.put(timestamp,PID);
     }
 
-    public void updatePCRpidDurationMap(Integer pid, long duration) {
-        PCRpidDurationMap.put(pid,duration);
-    }
 
+
+    public Map getProgramMap() {
+        return programMap;
+    }
 
     public Map getBitrateMap() {
         return bitrateMap;
@@ -264,8 +329,8 @@ public class Tables {
         return minBitrateMap;
     }
 
-    public Map getAvgBitrateMap() {
-        return avgBitrateMap;
+    public Map getAvgPCRBitrateMap() {
+        return avgPCRBitrateMap;
     }
 
     public Map getMaxBitrateMap() {
@@ -318,6 +383,10 @@ public class Tables {
 
     public Map getPCRpidDurationMap() {
         return PCRpidDurationMap;
+    }
+
+    public Map getPTSpidDurationMap() {
+        return PTSpidDurationMap;
     }
 
     public Map getPCRsizeMap() {
@@ -425,8 +494,8 @@ public class Tables {
         this.minBitrateMap = minBitrateMap;
     }
 
-    public void setAvgBitrateMap(Map avgBitrateMap) {
-        this.avgBitrateMap = avgBitrateMap;
+    public void setAvgPCRBitrateMap(Map avgPCRBitrateMap) {
+        this.avgPCRBitrateMap = avgPCRBitrateMap;
     }
 
     public void setMaxBitrateMap(Map maxBitrateMap) {
@@ -487,6 +556,26 @@ public class Tables {
 
     public Map getServiceTimestampMap() {
         return serviceTimestampMap;
+    }
+
+    public Map getPTSsizeMap() {
+        return PTSsizeMap;
+    }
+
+    public Map getPTSdurationMap() {
+        return PTSdurationMap;
+    }
+
+    public Map getAvgPTSBitrateMap() {
+        return avgPTSBitrateMap;
+    }
+
+    public Map getPTSsnapshotMap() {
+        return PTSsnapshotMap;
+    }
+
+    public void setPTSsnapshotMap(Map PTSsnapshotMap) {
+        this.PTSsnapshotMap = PTSsnapshotMap;
     }
 }
 

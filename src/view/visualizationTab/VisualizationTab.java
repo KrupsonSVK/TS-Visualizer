@@ -2,7 +2,7 @@ package view.visualizationTab;
 
 import model.Stream;
 import model.packet.Packet;
-import model.Sorter;
+import model.MapHandler;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -15,7 +15,7 @@ import view.Window;
 
 import java.util.*;
 
-import static model.Sorter.*;
+import static model.MapHandler.*;
 import static model.config.Config.*;
 import static model.config.MPEG.isPSI;
 import static model.config.MPEG.nil;
@@ -25,7 +25,7 @@ public class VisualizationTab extends Window{
 
     public Tab tab;
     Stream stream;
-    private Sorter sorter;
+    private MapHandler mapHandler;
     private Scene scene;
     private CheckBox groupByCheckBox;
     private ComboBox<String> filterComboBox;
@@ -105,6 +105,7 @@ public class VisualizationTab extends Window{
 
         Label filterLabel = new Label("Program filter:");
         Label zoomerLabel = new Label("Zoom:");
+        zoomerLabel.setDisable(true);
 
         zoomer = new Slider(0,100,50);
         zoomer.setDisable(true);
@@ -133,7 +134,7 @@ public class VisualizationTab extends Window{
         };
 
         filterComboBoxEvent = (ActionEvent event) -> {
-            filteredPIDs = filterProgram(filterComboBox.getValue(), stream.getTables().getPMTmap(), stream.getTables().getPMTmap());
+            filteredPIDs = filterProgram(filterComboBox.getValue(), stream.getTables().getPMTmap(), stream.getTables().getProgramMap());
             groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap());
         };
 

@@ -185,12 +185,12 @@ public class Window extends TimestampParser {
             @Override
             public Object call() throws InterruptedException, IOException {
                 Platform.runLater(() -> {
-                    rootPane.setStyle("-fx-background-color: transparent");
                     detailTab.createTreeTab(streamDescriptor);
                     visualizationTab.visualizePackets(streamDescriptor);
                     drawGraphs(streamDescriptor);
                     createTabPane();
                 });
+                rootPane.setStyle("-fx-background-color: transparent");
                 return null;
             }
         };

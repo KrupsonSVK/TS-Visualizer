@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import static model.Sorter.getByValue;
-import static model.Sorter.sortHashMapByKey;
+import static model.MapHandler.getByValue;
+import static model.MapHandler.sortHashMapByKey;
 import static model.config.MPEG.nil;
 
 public abstract class TimestampParser {

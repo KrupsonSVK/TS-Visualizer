@@ -4,11 +4,14 @@ import javafx.concurrent.Task;
 import model.Tables;
 import model.packet.AdaptationFieldHeader;
 import model.packet.Packet;
+import model.pes.PES;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import static model.config.Config.snapshotInterval;
 
 
 public class StreamParser extends Parser {
@@ -62,7 +65,7 @@ public class StreamParser extends Parser {
                         }
                         firstPosition = i;
                         totalPackets = sumPackets(buffer,i);
-                        tickInterval = totalPackets/100;
+                        tickInterval = totalPackets/snapshotInterval;
                     }
                     if (buffer[i] == syncByte) {
 
@@ -123,6 +126,7 @@ public class StreamParser extends Parser {
                             }
                             else {
                                 analyzedHeader.setPayload(PESparser.analyzePES(analyzedHeader, packet));
+                                tables.updatePTSmap(((PES)analyzedHeader.getPayload()));
                                 updateTables(PESparser);
                             }
                             packets.add(analyzedHeader);
@@ -170,6 +174,7 @@ public class StreamParser extends Parser {
             tables.setStreamCodes(parser.tables.getStreamCodes());
             tables.setPacketsSizeMap(parser.tables.getPacketsSizeMap());
 
+            tables.setPTSsnapshotMap(parser.tables.getPTSsnapshotMap());
             tables.setPTSpidMap(parser.tables.getPTSpidMap());
             tables.setDTSpidMap(parser.tables.getDTSpidMap());
 

@@ -4,7 +4,9 @@ package view.graphTabs;
 import com.sun.javafx.charts.Legend;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -13,6 +15,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tab;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -21,8 +24,8 @@ import java.util.*;
 import model.Stream;
 import app.streamAnalyzer.TimestampParser;
 
-import static java.lang.Thread.sleep;
 import static model.config.MPEG.getElementaryStreamDescriptor;
+import static model.config.MPEG.tsPacketSize;
 
 
 public class CompositionTab extends TimestampParser implements Graph{
@@ -89,7 +92,7 @@ public class CompositionTab extends TimestampParser implements Graph{
             PieChart.Data data = new PieChart.Data(PIDentry.getKey(), PIDentry.getValue());
             pieChartData.add(data);
 
-            float size = PIDentry.getValue()*188f/1024f/1024f;
+            float size = PIDentry.getValue()*tsPacketSize/1024f/1024f;
             int percentage = (int) (((PIDentry.getValue()).doubleValue() / totalSize)*100f);
             tooltips.put( data.hashCode() , new Tooltip(String.format("%.2f MB (%d", size, percentage) + "%)") );
         }
@@ -138,14 +141,28 @@ public class CompositionTab extends TimestampParser implements Graph{
         });
 
         for (final PieChart.Data data : ((PieChart)chart).getData()) {
-            data.getNode().setOnMouseMoved( event -> {
+
+//            final Tooltip t = new Tooltip("some text");
+//            data.getNode().setOnMouseEntered(new EventHandler<MouseEvent>() {
+//
+//                @Override
+//                public void handle(MouseEvent event) {
+//                    Point2D p = data.getNode().localToScreen(event.getScreenX(), event.getScreenY()); //I position the tooltip at bottom right of the node (see below for explanation)
+//                    t.show(chart, p.getX(), p.getY());
+//                }
+//            });
+//            data.getNode().setOnMouseExited(new EventHandler<MouseEvent>() {
+//
+//                @Override
+//                public void handle(MouseEvent event) {
+//                    t.hide();
+//                }
+//            });
+
+            data.getNode().setOnMousePressed( event -> {
                 Tooltip tooltip = ((Tooltip)tooltips.get(data.hashCode()));
                 if( ! tooltip.isActivated() ) {
-//                    new Thread(){
-//                        tooltip.show(vbox, event.getScreenX(), event.getScreenY());
-//                        sleep(1000);
-//                        tooltip.hide;
-//                    };
+                        tooltip.show(vbox, event.getScreenX(), event.getScreenY());
                     for(Object currentTooltip : tooltips.values()){
                         if(!currentTooltip.equals(tooltip)) {
                             ((Tooltip) currentTooltip).hide();
