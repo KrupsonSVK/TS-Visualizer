@@ -8,11 +8,12 @@ import java.util.TreeMap;
 import static app.Main.localization;
 import static model.MapHandler.getByValue;
 import static model.MapHandler.sortHashMapByKey;
+import static model.config.MPEG.*;
 
 /**
  * Abstraktná trieda obsahujúca metódy na prácu s časovými značkami
  */
-public abstract class TimestampParser extends Parser {
+public abstract class TimestampParser{
 
     /**
      * Metóda vyparsuje z poľa časovej značky adaptačného poľa čas v milisekundách

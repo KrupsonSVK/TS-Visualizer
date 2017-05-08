@@ -13,6 +13,7 @@ import java.util.Map;
 import static app.Main.localization;
 import static model.config.Config.windowHeight;
 import static model.config.Config.windowWidth;
+import static model.config.MPEG.*;
 
 
 public class DetailTab extends Window {

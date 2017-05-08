@@ -18,6 +18,7 @@ import model.Stream;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import static model.config.MPEG.*;
 
 import static app.Main.localization;
 import static model.MapHandler.*;

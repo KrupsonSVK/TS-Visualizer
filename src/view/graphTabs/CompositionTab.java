@@ -24,6 +24,7 @@ import java.util.Set;
 
 import static app.Main.localization;
 import static model.config.Config.*;
+import static model.config.MPEG.*;
 
 public class CompositionTab extends TimestampParser implements Graph{
 

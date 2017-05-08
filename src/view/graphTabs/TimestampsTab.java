@@ -28,6 +28,7 @@ import java.util.Map;
 import static app.Main.localization;
 import static model.config.Config.chartHBoxInsets;
 import static model.config.Config.chartInsets;
+import static model.config.MPEG.*;
 
 
 public class TimestampsTab extends VisualizationTab implements Graph{
@@ -61,7 +62,7 @@ public class TimestampsTab extends VisualizationTab implements Graph{
         this.stream = streamDescriptor;
 
         filterComboBox = createFilterComboBox(stream);
-        filterComboBox.setValue(filterComboBox.getItems().get(2));
+        filterComboBox.setValue(filterComboBox.getItems().get(filterComboBox.getItems().size() > 1 ? 1 : 0));
 
         filterHBox = new HBox(new Label(localization.getProgramFilterText()), filterComboBox);
         filterHBox.setAlignment(Pos.CENTER);

@@ -84,6 +84,7 @@ public class StreamParser extends Parser {
                             if (isPayload(analyzedHeader.getAdaptationFieldControl())) { //ak paket obsahuje užitočné dáta
                                 if (analyzedHeader.getPID() == PATpid) {    //ak obsahuje PAT tabuľku
                                     PSIparser.analyzePAT(analyzedHeader, packet); //analyzuje PAT tabuľku
+                                    updateTables(PSIparser);
                                     i = firstPosition;
                                     packetIndex = 0;
                                     isPATanalyzed = true;

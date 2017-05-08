@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import static app.Main.localization;
 import static model.config.Config.*;
+import static model.config.MPEG.DVBicon;
 
 public class Window extends TimestampParser {
 

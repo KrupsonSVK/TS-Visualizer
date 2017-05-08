@@ -1,9 +1,5 @@
 package view.visualizationTab;
 
-import model.Stream;
-import model.packet.Packet;
-import model.MapHandler;
-
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -11,13 +7,18 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import model.MapHandler;
+import model.Stream;
+import model.packet.Packet;
 import view.Window;
 
 import java.util.*;
 
 import static app.Main.localization;
 import static model.MapHandler.*;
-import static model.config.Config.*;
+import static model.config.Config.packetDisplayOffset;
+import static model.config.Config.visualizationTabInsets;
+import static model.config.MPEG.*;
 
 
 public class VisualizationTab extends Window{

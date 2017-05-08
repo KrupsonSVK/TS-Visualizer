@@ -1,6 +1,7 @@
 package view.graphTabs;
 
 
+import static model.config.MPEG.*;
 import app.streamAnalyzer.TimestampParser;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
