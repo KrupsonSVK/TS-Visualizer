@@ -68,7 +68,7 @@
             <string>Export TXT</string>
         </void>
         <void property="exportXMLMenuText">
-            <string>Export Exporter</string>
+            <string>Export XML</string>
         </void>
         <void property="fileMenuText">
             <string>File</string>
@@ -83,7 +83,7 @@
             <string>Help</string>
         </void>
         <void property="importXMLMenuText">
-            <string>Import Exporter</string>
+            <string>Import XML</string>
         </void>
         <void property="jumpMenuText">
             <string>Jump to packet...</string>

@@ -104,7 +104,7 @@ class PSIparser extends Parser {
         position+=1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
 
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
-        position += PSIcommonFieldsBinaryLength / byteBinaryLength;
+        position += PSIcommonFieldsLength;
 
         final int reserved = 2;
         int sectionLength = psiCommonFields.getSectionLength();
