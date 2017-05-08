@@ -1,9 +1,10 @@
 package model.packet;
 
 import app.streamAnalyzer.TimestampParser;
+import model.descriptors.Descriptor;
 
 
-public class Payload extends TimestampParser {
+public abstract class Payload extends TimestampParser {
     protected byte[] data;
     private boolean isPSI;
     private  boolean hasPESheader;

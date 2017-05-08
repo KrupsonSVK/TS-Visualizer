@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Parser extends MPEG {
+abstract class Parser extends MPEG {
 
     Tables tables;
 

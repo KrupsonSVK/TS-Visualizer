@@ -5,51 +5,64 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import static app.Main.localization;
 import static model.MapHandler.getByValue;
 import static model.MapHandler.sortHashMapByKey;
-import static model.config.MPEG.nil;
 
-public abstract class TimestampParser {
+/**
+ * Abstraktná trieda obsahujúca metódy na prácu s časovými značkami
+ */
+public abstract class TimestampParser extends Parser {
 
+    /**
+     * Metóda vyparsuje z poľa časovej značky adaptačného poľa čas v milisekundách
+     *
+     * @param PCRopcr synchronizačná časová PCR alebo OPCR značka
+     * @return čas v milisekundách
+     */
+    static long parsePCRopcr(long PCRopcr){
 
+        final int PCRextStart = 0;
+        final int PCRextEnd = PCRextStart + PCRextLength; // PCR rozšírenie dĺžky 9 bitov
+        long PCRextension = midBits(PCRopcr, PCRextStart, PCRextEnd); //získanie PCR rozšírenia
+
+        long timestampFirst = midBits(PCRopcr, PCRstartBit, PCRendBit /2); //prvých 9 bitov PCR
+        long timestampSecond = midBits(PCRopcr, PCRendBit /2, PCRendBit); //zvyšných 24 bitov PCR
+        long timestamp = (timestampSecond << PCRextLength) | timestampFirst ; //spojenie 33 bitov dokopy
+
+        return timestamp / PCRsampleRate; //vracia milisekundy
+    }
+
+    /**
+     * Metóda extrahuje zo vstupného čísla n-bitov zo žiadanej pozície
+     *
+     * @param source pôvodná hodnota
+     * @param startPos začiatočná pozícia v pôvodnej hodnote
+     * @param length počet žiadaných bitov
+     * @return
+     */
+    private static long midBits(long source, int startPos, int length){
+        //posun pôvodnej hodnoty doprava o začiatočnú pozíciu a logický súčin s maskou z length-startPo jednotiek
+        return (source >> startPos) & ((1 << (length-startPos))-1);
+    }
+
+    /**
+     * Metóda prevedie čas v milisekundách na reťazec vo formáte HH:mm:ss:SSS
+     *
+     * @param milliseconds vstupný čas v milisekundách
+     * @return formátovaný časový reťazec
+     */
     public String parseTimestamp(long milliseconds){
 
-        final double seconds = (milliseconds / 1000.) % 60.;
-        final long minutes = (milliseconds / (1000 * 60)) % 60;
-        final long hours = (milliseconds / (1000 * 60 * 60)) % 24;
-
+        final double seconds = (milliseconds / 1000.) % 60.; //získanie sekundovej zložky času
+        final long minutes = (milliseconds / (1000 * 60)) % 60; //získanie minútovej zložky
+        final long hours = (milliseconds / (1000 * 60 * 60)) % 24; //získanie hodinovej zložky
+        //vytvorenie výstupného časového reťazca
         return String.format("%02d:%02d:%06.3f", hours, minutes, seconds, milliseconds);
     }
 
 
-    protected static long midBits(long k, int m, int n){
-        return (k >> m) & ((1 << (n-m))-1);
-    }
-
-
-    protected long midBits(long k, long m, long n){
-        return (k >> m) & ((1 << (n-m))-1);
-    }
-
-
-    public static long parsePCRopcr(long PCRopcr){
-
-        final int extStart = 0;
-        final int extEnd = 9;
-        long PCRextension = midBits(PCRopcr, extStart, extEnd);
-
-        final int PCRstart = 15;
-        final int PCRend = 48;
-
-        long timestampFirst = midBits(PCRopcr, PCRstart, PCRend/2);
-        long timestampSecond = midBits(PCRopcr, PCRend/2, PCRend);
-        long timestamp = (timestampSecond << 9) | timestampFirst ;
-
-        return timestamp / 90; //milliseconds
-    }
-
-
-    public static long parsePTSdts(long pts, long PTSdts){ //TODO bad implementation
+    static long parsePTSdts(long pts, long PTSdts){ //TODO bad implementation
         long timestamp;
         if(pts != nil) {
             timestamp = (midBits(pts, 17, 35) << 15) | midBits(pts, 1, 16);
@@ -100,7 +113,7 @@ public abstract class TimestampParser {
 
     protected <K, V> Map filterProgram(String selectedProgram, Map<K, V> PMTmap, Map<K, V> programMap) {
 
-        if (selectedProgram.equals("All")){
+        if (selectedProgram.equals(localization.getAllText())){
             return null;
         }
         Integer programPID = (Integer)getByValue(programMap, (V) selectedProgram);

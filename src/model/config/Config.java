@@ -1,5 +1,8 @@
 package model.config;
 
+import app.Main;
+import app.XML;
+import javafx.geometry.Insets;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
@@ -11,82 +14,139 @@ import static model.config.MPEG.*;
 
 public class Config {
 
+    public static final String version = " v.2017.5";
+    public static final String releaseDate = "08.05.2017";
+    public static final String email = "xkrupat@stuba.sk";
+
+    public final static double fontSize = 8.5;
+    public final static double labelFontSize = 12.;
+
+    public final static int kiloBit = 1024;
+    public final static int MegaBit = kiloBit*1024;
+    public final static int GigaBit = MegaBit*1024;
+
+    public final static int kiloByte = byteBinaryLength*kiloBit;
+    public final static int MegaByte = byteBinaryLength*MegaBit;
+    public final static int GigaByte = byteBinaryLength*GigaBit;
+
+    public final static int tickUnit = 10;
     public final static int snapshotInterval = 100;
     public final static int packetInfoMaxTextLength = 100;
 
     public final static double packetImageWidth = 100;
     public final static double packetImageHeight = 60;
-    public final static int packetDisplayOffset = (int) (packetImageWidth / 2);
     public final static double miniPacketImageSize = 10;
     public final static double typeIconSize = 19;
     public final static double specialIconSize = 16;
+
+    public final static int packetDisplayOffset = (int) (packetImageWidth / 2);
     public final static double legendPaneMoveCoeff = packetImageWidth / miniPacketImageSize;
+
     public final static double packetScrollPaneHeightRatio = 0.54;
     public final static double barScrollPaneHeigthRatio = 0.06;
     public final static double legendScrollPaneHeightRatio = 0.30;
-    public final static double windowWidth = 960;
-    public final static double windowHeigth = 720;
 
-    public final static double packetScrollPaneHeight = windowHeigth * packetScrollPaneHeightRatio;
-    public final static double barScrollPaneHeight = windowHeigth * barScrollPaneHeigthRatio;
-    public final static double legendScrollPaneHeight = windowHeigth * legendScrollPaneHeightRatio;;
-    public final static double barHeight = windowHeigth * barScrollPaneHeigthRatio;
+    public final static double windowWidth = 960;
+    public final static double windowHeight = 720;
+    public final static double aboutWidth = 400;
+    public final static double aboutHeight = 300;
+    public final static double userGuideWidth = 600;
+    public final static double userGuideHeight = 450;
+    public final static double dialogStageWidth = 250;
+    public final static double dialogStageHeight = 100;
+
+    private final static String rootPath = "src";
+    private final static String resourcesPath = "/resources";
+    private final static String imagesPath = resourcesPath + "/images/";
+    private final static String localePath = resourcesPath + "/locale/";
+
+    public final static String localeEN = localePath + "EN.xml";
+    public final static String localeDE = localePath + "DE.xml";
+    public final static String localeSK = localePath + "SK.xml";
+    public final static String localeRU = localePath + "RU.xml";
+
+    public static Localization localizationEN = readLocale(localeEN);
+    public static Localization localizationDE = readLocale(localeDE);
+    public static Localization localizationSK = readLocale(localeSK);
+    public static Localization localizationRU = readLocale(localeRU);
+
+    public final static String errorTitle = "Error occured!"; //TODO move to localization
+    private final static String dragNdrop = "dragndrop.png";
+    public final static String windowStyle = "-fx-background-image: url('" + Main.class.getResource(imagesPath + dragNdrop ).toExternalForm() + "'); " + "-fx-background-position: center center; " + "-fx-background-repeat: stretch;";
+    public final static String afterWindowStyle ="-fx-background-color: transparent";
+
+    public final static Insets windowInsets =new Insets(25, 25, 25, 25);
+    public final static Insets chartHBoxInsets = new Insets(10,10,10,10);
+    public final static Insets chartInsets = new Insets(10,40,10,40);
+    public final static Insets textInsets = new Insets(10,10,10,10);
+    public final static Insets labelInsets = new Insets(20,10,10,10);
+    public final static Insets vBoxInsets = new Insets(5);
+    public final static Insets hBoxInsets = new Insets(5,5,5,5);
+    public final static Insets dialogInsets = new Insets(10);
+
+    public final static int chartHBoxSpacing = 10;
+    public final static int tickLabelRotation = 0;
+    public final static int windowGripGap = 0;
+
+    public final static double packetScrollPaneHeight = windowHeight * packetScrollPaneHeightRatio;
+    public final static double barScrollPaneHeight = windowHeight * barScrollPaneHeigthRatio;
+    public final static double legendScrollPaneHeight = windowHeight * legendScrollPaneHeightRatio;;
+    public final static double barHeight = windowHeight * barScrollPaneHeigthRatio;
 
     public final static double visualizationTabInsets = 5;
     public final static double mouseSensitivityVertical = 1.; // 2.5;
     public final static double labelWidth = 150;
-    public final static double fontSize = 8.5;
+    public final static double textAreaMinHeigth = 370;
+
     public final static int offsetMiniPacket = 2;
     public final static int asciiLineSize = 50;
-    public static final int bytePair = 4;
-    public static final int hexLine = 32;
+    public final static int bytePair = 4;
+    public final static int hexLine = 32;
 
     public final static double secondaryFrameSize = 1.25;
     public final static double primaryFrameSize = 2.50;
     public final static double ovalSize = 2.50;
 
     public final static Color defaultColor = Color.rgb(240,240,240);
-    public final static String resourcesPath = "/resources/";
     public final static Color adaptationFieldColor = Color.BLACK;
     public final static Color hasPESheaderColor = Color.RED;
 
-    public static final String errorTitle = "Error occured!";
 
-    public static Map  packetImages = new ImageHashMap<Integer,Image>(new Image(resourcesPath + "grey.png")){
+    public static Map  packetImages = new ImageHashMap<Integer,Image>(new Image(imagesPath + "grey.png")){
             {
-                put(PATpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(PATpid))));
-                put(CATpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(CATpid))));
-                put(TDSTpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(TDSTpid))));
-                put(NIT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(NIT_STpid))));
-                put(SDT_BAT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(SDT_BAT_STpid))));
-                put(EIT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(EIT_STpid))));
-                put(RST_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(RST_STpid))));
-                put(TDT_TOT_STpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(TDT_TOT_STpid))));
-                put(netSyncPid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(netSyncPid))));
-                put(DITpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(DITpid))));
-                put(SITpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(SITpid))));
-                put(PMTpid , new Image(getClass().getResourceAsStream(resourcesPath + getPacketImageName(PMTpid))));
+                put(PATpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(PATpid))));
+                put(CATpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(CATpid))));
+                put(TDSTpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(TDSTpid))));
+                put(NIT_STpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(NIT_STpid))));
+                put(SDT_BAT_STpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(SDT_BAT_STpid))));
+                put(EIT_STpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(EIT_STpid))));
+                put(RST_STpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(RST_STpid))));
+                put(TDT_TOT_STpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(TDT_TOT_STpid))));
+                put(netSyncPid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(netSyncPid))));
+                put(DITpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(DITpid))));
+                put(SITpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(SITpid))));
+                put(PMTpid , new Image(getClass().getResourceAsStream(imagesPath + getPacketImageName(PMTpid))));
             }
         };
 
-    public static Map typeIcons = new ImageHashMap<Integer,Image>(new Image(resourcesPath + "dvb.png")){
+    public static Map typeIcons = new ImageHashMap<Integer,Image>(new Image(imagesPath + "dvb.png")){
             {
-                put(PSItype, new Image(getClass().getResourceAsStream(resourcesPath + "psi.png")));
-                put(videoType, new Image(getClass().getResourceAsStream(resourcesPath + "video.png")));
-                put(audioType, new Image(getClass().getResourceAsStream(resourcesPath + "audio.png")));
-                put(CAStype, new Image(getClass().getResourceAsStream(resourcesPath + "cas.png")));
-                put(PSMtype, new Image(getClass().getResourceAsStream(resourcesPath + "map.png")));
-                put(PSMtype, new Image(getClass().getResourceAsStream(resourcesPath + "mheg.png")));
-                put(MHEGtype, new Image(getClass().getResourceAsStream(resourcesPath + "map.png")));
-                put(adaptationFieldIcon, new Image(getClass().getResourceAsStream(resourcesPath + "adaptation.png")));
-                put(PESheaderIcon, new Image(getClass().getResourceAsStream(resourcesPath + "pesheader.png")));
-                put(payloadStartIcon, new Image(getClass().getResourceAsStream(resourcesPath + "payloadStart.png")));
-                put(timestampIcon, new Image(getClass().getResourceAsStream(resourcesPath + "timestamp.png")));
-                put(PMTicon, new Image(getClass().getResourceAsStream(resourcesPath + "pmt.png")));
-                put(DVBicon, new Image(getClass().getResourceAsStream(resourcesPath + "dvb.png")));
-                put(privateType, new Image(getClass().getResourceAsStream(resourcesPath + "private.png")));
-                put(nullPacketPID, new Image(getClass().getResourceAsStream(resourcesPath + "null.png")));
-                put(defaultType, new Image(getClass().getResourceAsStream(resourcesPath + "default.png")));
+                put(PSItype, new Image(getClass().getResourceAsStream(imagesPath + "psi.png")));
+                put(videoType, new Image(getClass().getResourceAsStream(imagesPath + "video.png")));
+                put(audioType, new Image(getClass().getResourceAsStream(imagesPath + "audio.png")));
+                put(CAStype, new Image(getClass().getResourceAsStream(imagesPath + "cas.png")));
+                put(PSMtype, new Image(getClass().getResourceAsStream(imagesPath + "map.png")));
+                put(PSMtype, new Image(getClass().getResourceAsStream(imagesPath + "mheg.png")));
+                put(MHEGtype, new Image(getClass().getResourceAsStream(imagesPath + "map.png")));
+                put(adaptationFieldIcon, new Image(getClass().getResourceAsStream(imagesPath + "adaptation.png")));
+                put(PESheaderIcon, new Image(getClass().getResourceAsStream(imagesPath + "pesheader.png")));
+                put(payloadStartIcon, new Image(getClass().getResourceAsStream(imagesPath + "payloadStart.png")));
+                put(timestampIcon, new Image(getClass().getResourceAsStream(imagesPath + "timestamp.png")));
+                put(PMTicon, new Image(getClass().getResourceAsStream(imagesPath + "pmt.png")));
+                put(DVBicon, new Image(getClass().getResourceAsStream(imagesPath + "dvb.png")));
+                put(privateType, new Image(getClass().getResourceAsStream(imagesPath + "private.png")));
+                put(nullPacketPID, new Image(getClass().getResourceAsStream(imagesPath + "null.png")));
+                put(defaultType, new Image(getClass().getResourceAsStream(imagesPath + "default.png")));
             }
         };
 
@@ -170,14 +230,14 @@ public class Config {
     }
 
 
-    public static final String userGuideText = "First choose a file to analyse by clicking \"Select file..\" button or drag'n'drop a file to the window." +
-            "An error can occure if the file you choose is invalid, unaccessible or does not contain valid TS packets. " +
-            "Choose from three tab to display: for detailed specifications of the stream click \"Details\" tab, for graphical " +
-            "visualization of the packet distribution in the stream click \"Visualization\" tab and for bitrate chart of " +
-            "programmes choose \"Graph\" tab.\n\nVisualization tab:\n To move the packet panes drag them with mouse. To display packet details click " +
-            "on it with left mouse. To zoom the packet pane use zoom bar. To apply program filter of packets choose available " +
-            "option in combobox. To move packet panes by packet bar drag the looking glass with mouse. To apply PSI filter of " +
-            "packet bar click on it and select available option.";
+    private static Localization readLocale(String name) {
+        try {
+            return (Localization) XML.read(name);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 
     public static class ImageHashMap<K,V> extends HashMap<K,V> {
@@ -192,5 +252,13 @@ public class Config {
             return containsKey(k) ? super.get(k) : defaultValue;
         }
     }
+
+    public static final String logoText = (     "████████╗███████╗    ██╗   ██╗██╗███████╗██╗   ██╗ █████╗ ██╗     ██╗███████╗███████╗██████╗ \n" +
+                                                "╚══██╔══╝██╔════╝    ██║   ██║██║██╔════╝██║   ██║██╔══██╗██║     ██║╚══███╔╝██╔════╝██╔══██╗\n" +
+                                                "   ██║   ███████╗    ██║   ██║██║███████╗██║   ██║███████║██║     ██║  ███╔╝ █████╗  ██████╔╝\n" +
+                                                "   ██║   ╚════██║    ╚██╗ ██╔╝██║╚════██║██║   ██║██╔══██║██║     ██║ ███╔╝  ██╔══╝  ██╔══██╗\n" +
+                                                "   ██║   ███████║     ╚████╔╝ ██║███████║╚██████╔╝██║  ██║███████╗██║███████╗███████╗██║  ██║\n" +
+                                                "   ╚═╝   ╚══════╝      ╚═══╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝╚══════╝╚══════╝╚═╝  ╚═╝\n" +
+                                                "                                                                                             \n");
 
 }

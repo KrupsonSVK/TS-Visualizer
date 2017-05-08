@@ -10,31 +10,33 @@ import model.Stream;
 import java.util.HashMap;
 import java.util.Map;
 
-import static model.config.Config.windowHeigth;
+import static app.Main.localization;
+import static model.config.Config.windowHeight;
 import static model.config.Config.windowWidth;
-import static model.config.MPEG.*;
 
 
 public class DetailTab extends Window {
 
     TreeItem<String> nodes;
     Tab tab;
+    private TreeView treeData;
 
 
     DetailTab(){
         this.nodes = nodes;
-        tab = new Tab("Stream details");
+        tab = new Tab(localization.getDetailTabText());
     }
 
 
     void createTreeTab(Stream streamDescriptor) {
 
-        ScrollPane scrollPane = new ScrollPane(new TreeView<>(createTree(streamDescriptor)));
+        treeData = new TreeView<>(createTree(streamDescriptor));
+        ScrollPane scrollPane = new ScrollPane(treeData);
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setPrefSize(windowWidth,windowHeigth);
+        scrollPane.setPrefSize(windowWidth, windowHeight);
 
         tab.setContent(scrollPane);
     }
@@ -48,12 +50,13 @@ public class DetailTab extends Window {
         {
             PSInode.getChildren().addAll( new TreeItem<>("Program Specific Information Tables"));
 
-            TreeItem PATnode = createPATnode((HashMap<Integer, Integer>) streamDescriptor.getTables().getPATmap());
+            TreeItem PATnode = createPATnode((HashMap<Integer, Integer>) streamDescriptor.getTables().getPATmap(), streamDescriptor.getTables().getPIDmap());
             TreeItem<String> CATnode = createCATnode(streamDescriptor.getTables().getPIDmap());
             TreeItem PMTnode = createPMTnode(
                     (HashMap<Integer, String>) streamDescriptor.getTables().getProgramMap(),
                     (HashMap<Integer, Integer>)streamDescriptor.getTables().getPMTmap(),
-                    (HashMap<Integer, Integer>) streamDescriptor.getTables().getESmap()
+                    (HashMap<Integer, Integer>) streamDescriptor.getTables().getESmap(),
+                    streamDescriptor.getTables().getPMTnumber()
             );
             TreeItem<String> NITnode = createNITnode(streamDescriptor.getTables().getPIDmap());
             TreeItem<String> SDTnode = createSDTnode(streamDescriptor.getTables().getPIDmap());
@@ -74,7 +77,7 @@ public class DetailTab extends Window {
     private TreeItem<String> createSynNode(Map PIDmap) {
         TreeItem<String> node = new TreeItem<>("NetSync");
         node.getChildren().add(new TreeItem<>("Network Synchronization Table"));
-        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(netSyncPid)==null?0:PIDmap.get(netSyncPid))  + "x "));
+        node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(netSyncPid)==null?0:PIDmap.get(netSyncPid))  + "x "));
         //node.getChildren().add(new TreeItem<>("Tables"));
         return node;
     }
@@ -83,7 +86,7 @@ public class DetailTab extends Window {
     private TreeItem<String> createSITnode(Map PIDmap) {
         TreeItem<String> node = new TreeItem<>("SIT");
         node.getChildren().add(new TreeItem<>("Service Information Table"));
-        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(SITpid)==null?0:PIDmap.get(SITpid)) + "x "));
+        node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(SITpid)==null?0:PIDmap.get(SITpid)) + "x "));
         return node;
     }
 
@@ -93,7 +96,7 @@ public class DetailTab extends Window {
         node.getChildren().add( new TreeItem<>("Time Offset Table"));
         node.getChildren().add( new TreeItem<>("Time and Date Table"));
         node.getChildren().add( new TreeItem<>("Service Table"));
-        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(TDT_TOT_STpid)==null?0:PIDmap.get(TDT_TOT_STpid))  + "x "));
+        node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(TDT_TOT_STpid)==null?0:PIDmap.get(TDT_TOT_STpid))  + "x "));
         return node;
     }
 
@@ -103,7 +106,7 @@ public class DetailTab extends Window {
         node.getChildren().add( new TreeItem<>("Service Description Table"));
         node.getChildren().add( new TreeItem<>("Bouquet Association Table"));
         node.getChildren().add( new TreeItem<>("Service Table"));
-        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(SDT_BAT_STpid)==null?0:PIDmap.get(SDT_BAT_STpid)) + "x "));
+        node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(SDT_BAT_STpid)==null?0:PIDmap.get(SDT_BAT_STpid)) + "x "));
         return node;
     }
 
@@ -112,7 +115,7 @@ public class DetailTab extends Window {
         TreeItem<String> node = new TreeItem<>("NIT or ST");
         node.getChildren().add(new TreeItem<>("Network Information Table"));
         node.getChildren().add(new TreeItem<>("Service Table"));
-        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(NIT_STpid)==null?0:PIDmap.get(NIT_STpid)) + "x "));
+        node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(NIT_STpid)==null?0:PIDmap.get(NIT_STpid)) + "x "));
         return node;
     }
 
@@ -120,7 +123,7 @@ public class DetailTab extends Window {
     private TreeItem<String> createCATnode(Map PIDmap) {
         TreeItem<String> node = new TreeItem<>("CAT");
         node.getChildren().addAll( new TreeItem<>("Conditional Access Table"));
-        node.getChildren().add(new TreeItem<>("Number of packets: " + (PIDmap.get(CATpid)==null?0:PIDmap.get(CATpid)) + "x "));
+        node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(CATpid)==null?0:PIDmap.get(CATpid)) + "x "));
         return node;
     }
 
@@ -130,27 +133,29 @@ public class DetailTab extends Window {
         rootNode.setExpanded(true);
 
         rootNode.getChildren().addAll(
-                new TreeItem<>("Path: " + streamDescriptor.getPath()),
-                new TreeItem<>("Size: " + streamDescriptor.getSize()),
-                new TreeItem<>("Created: " + streamDescriptor.getCreationTime()),
-                new TreeItem<>("Last access: " + streamDescriptor.getLastAccessTime()),
-                new TreeItem<>("Last modified: " + streamDescriptor.getLastModifiedTime()),
-                new TreeItem<>("Regular file: " + streamDescriptor.isRegularFile()),
-                new TreeItem<>("Read-only: " + streamDescriptor.isReadonly()),
-                new TreeItem<>("Owner: " + streamDescriptor.getOwner()),
-                new TreeItem<>("TS Packets: " + streamDescriptor.getNumOfPackets() + "x"),
-                new TreeItem<>("TS packet size: " + streamDescriptor.getPacketSize() + " B"),
-                new TreeItem<>("Error packets: " + streamDescriptor.getNumOfErrors() + "x"),
-                new TreeItem<>("Duration: " + parseTimestamp(streamDescriptor.getDuration())),
-                new TreeItem<>("Bitrate: " + String.format("%.3f",(streamDescriptor.getBitrate())/1024f/1024f*byteBinaryLength) + " Mbit/s")
+                new TreeItem<>(localization.getPathText() + streamDescriptor.getPath()),
+                new TreeItem<>(localization.getSizeText()+ streamDescriptor.getSize()),
+                new TreeItem<>(localization.getCreatedText() + streamDescriptor.getCreationTime()),
+                new TreeItem<>(localization.getAccessText() + streamDescriptor.getLastAccessTime()),
+                new TreeItem<>(localization.getModifiedText() + streamDescriptor.getLastModifiedTime()),
+                new TreeItem<>(localization.getRegularText() + streamDescriptor.isRegularFile()),
+                new TreeItem<>(localization.getReadonlyText() + streamDescriptor.isReadonly()),
+                new TreeItem<>(localization.getOwnerText() + streamDescriptor.getOwner()),
+                new TreeItem<>(localization.getTsPacketsText() + streamDescriptor.getNumOfPackets() + "x"),
+                new TreeItem<>(localization.getPacketSize() + streamDescriptor.getPacketSize() + " B"),
+                new TreeItem<>(localization.getErrorPackets() + streamDescriptor.getNumOfErrors() + "x"),
+                new TreeItem<>(localization.getStreamIntegrity() + (streamDescriptor.getTables().isSynchronizationLost() ? "Stream corrupted" : "OK")),
+                new TreeItem<>(localization.getDurationText() + parseTimestamp(streamDescriptor.getDuration())),
+                new TreeItem<>(localization.getBitrateText() + String.format("%.3f",(streamDescriptor.getBitrate())/1024f/1024f*byteBinaryLength) + " Mbit/s")
         );
         return rootNode;
     }
 
 
-    private TreeItem createPMTnode(HashMap<Integer, String> programMap,  HashMap<Integer, Integer> PMTmap, HashMap<Integer, Integer> ESmap) {
+    private TreeItem createPMTnode(HashMap<Integer, String> programMap,  HashMap<Integer, Integer> PMTmap, HashMap<Integer, Integer> ESmap, Integer packets) {
         TreeItem<String> PMTnode = new TreeItem<>("PMT");
         PMTnode.getChildren().add(new TreeItem<>("Program Map Table"));
+        PMTnode.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + packets  + "x "));
 
         for (Map.Entry<Integer, String> programEntry : programMap.entrySet()) {
             TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()) + " (" + programEntry.getKey() + ")");
@@ -177,9 +182,10 @@ public class DetailTab extends Window {
     }
 
 
-    private TreeItem createPATnode(HashMap<Integer, Integer> PATmap) {
+    private TreeItem createPATnode(HashMap<Integer, Integer> PATmap, Map PIDmap) {
         TreeItem<String> PATnode = new TreeItem<>("PAT");
         PATnode.getChildren().add(new TreeItem<>("Program Association Table"));
+        PATnode.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(PATpid)==null?0:PIDmap.get(PATpid))  + "x "));
 
         for (Map.Entry<Integer, Integer> pid : PATmap.entrySet()) {
             TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")");
@@ -206,7 +212,7 @@ public class DetailTab extends Window {
                 name = new StringBuilder("PSI (" + getPacketName((Integer) pid.getKey()) + ")");
             }
             node.getChildren().add(new TreeItem<>(name.toString()));
-            node.getChildren().add(new TreeItem<>("Number of packets: " + pid.getValue() + "x "));
+            node.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + pid.getValue() + "x "));
 
             PIDnode.getChildren().add(node);
         }
@@ -218,73 +224,12 @@ public class DetailTab extends Window {
         return String.format("0x%04X", pid & 0xFFFFF);
     }
 
+    public TreeItem getTreeData() {
+        return treeData.getRoot();
+    }
 
     public void setScene(Scene scene) {
 //        this.scene = scene;
     }
-
-
-    //        TreeItem<String> hundredThousandNode, tenThousandNode, thousandNode, hundredNode, node;
-//
-//        ArrayList<TreeItem<String>> hundredThousandNodes = new ArrayList<>();
-//        ArrayList<TreeItem<String>> tenThousandNodes = new ArrayList<>();
-//        ArrayList<TreeItem<String>> thousandNodes = new ArrayList<>();
-//        ArrayList<TreeItem<String>> hundredNodes = new ArrayList<>();
-//        ArrayList<TreeItem<String>> oneNodes = new ArrayList<>();
-//
-//        if (packetList.size() > 100000) {
-//            int index = 1;
-//            for (int i = 0; i < packetList.size() / 100000 + 1; i++) {
-//                hundredThousandNode = new TreeItem("(" + index + "..." + ((index + 99999 < packetList.size() ? index + 99999 : packetList.size())) + ")");
-//                hundredThousandNodes.add(hundredThousandNode);
-//                packetsRootNode.getChildren().add(hundredThousandNode);
-//                index += 100000;
-//            }
-//        } else if (packetList.size() > 10000) {
-//            int index = 0;
-//            for (int i = 1; i < packetList.size() / 10000; i++) {
-//                tenThousandNode = new TreeItem("(" + index + "..." + ((index + 9999 < packetList.size() ? index + 9999 : packetList.size())) + ")");
-//                tenThousandNodes.add(tenThousandNode);
-//                packetsRootNode.getChildren().add(tenThousandNode);
-//                index += 10000;
-//            }
-//        } else if (packetList.size() > 1000) {
-//            int index = 1;
-//            for (int i = 1; i < packetList.size() / 1000; i++) {
-//                thousandNode = new TreeItem("(" + index + "..." + ((index + 999 < packetList.size() ? index + 999 : packetList.size())) + ")");
-//                thousandNodes.add(thousandNode);
-//                packetsRootNode.getChildren().add(thousandNode);
-//                index += 1000;
-//            }
-//        } else if (packetList.size() > 100) {
-//            int index = 1;
-//            for (int i = 1; i < packetList.size() / 100; i++) {
-//                hundredNode = new TreeItem("(" + index + "..." + ((index + 99 < packetList.size() ? index + 99 : packetList.size())) + ")");
-//                hundredNodes.add(hundredNode);
-//                packetsRootNode.getChildren().add(hundredNode);
-//                index += 100;
-//            }
-//        } else {
-//            for (int i = 1; i < packetList.size(); i++) {
-//                node = new TreeItem("(" + i + ")");
-//                oneNodes.add(node);
-//                packetsRootNode.getChildren().add(node);
-//            }
-//        }
-
-        /*
-            TreeItem<String> packetNode = new TreeItem("Packet no. " + i++);
-            Packet paketik = packetList.get(i-2);
-            packetNode.getChildren().addAll(
-                    new TreeItem("PID: " + paketik.getPID())
-                    //new TreeItem("Transport Error Indicator: " + paketik.getTransportErrorIndicator()),
-                   // new TreeItem("Payload Start Indicator: " + paketik.getPayloadStartIndicator()),
-                   // new TreeItem("Transport Scrambling Control: " + paketik.getTransportScramblingControl()),
-                    //new TreeItem("Adaptaiton Field Control: " + paketik.getTransportPriority()),
-                    //new TreeItem("Continuity counter: " + paketik.getContinuityCounter())
-            );
-            hundredNode.getChildren().add(packetNode);
-
-*/
 }
 

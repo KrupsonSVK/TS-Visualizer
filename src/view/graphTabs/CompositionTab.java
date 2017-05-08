@@ -1,12 +1,10 @@
 package view.graphTabs;
 
 
+import app.streamAnalyzer.TimestampParser;
 import com.sun.javafx.charts.Legend;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -15,18 +13,17 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Tab;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-
-import java.util.*;
-
 import model.Stream;
-import app.streamAnalyzer.TimestampParser;
 
-import static model.config.MPEG.getElementaryStreamDescriptor;
-import static model.config.MPEG.tsPacketSize;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
+import static app.Main.localization;
+import static model.config.Config.*;
 
 public class CompositionTab extends TimestampParser implements Graph{
 
@@ -42,18 +39,15 @@ public class CompositionTab extends TimestampParser implements Graph{
     private HBox radioButtonHBox;
 
     private Map tooltips;
-
-
-    public static final int tickUnit = 10;
     private VBox vbox;
 
 
     public CompositionTab(){
-        tab = new Tab("Composition");
+        tab = new Tab(localization.getCompositionTabText());
         pieChart = new PieChart();
-        PIDradioButton = new RadioButton("PID composition");
-        programRadioButton = new RadioButton("Program composition");
-        streamRadioButton = new RadioButton("Stream type composition");
+        PIDradioButton = new RadioButton(localization.getPIDcompositionText());
+        programRadioButton = new RadioButton(localization.getProgramCompositionText());
+        streamRadioButton = new RadioButton(localization.getStreamCompositionText());
         tooltip = new Tooltip("");
         tooltips = new HashMap();
     }
@@ -62,16 +56,13 @@ public class CompositionTab extends TimestampParser implements Graph{
     public void drawGraph(Stream streamDescriptor) {
 
         this.stream = streamDescriptor;
-//        Map sortedBitrateMap = sortHashMapByKey(stream.getTables().getIndexSnapshotMap());
-//        Map deltaBitrateMap = createDeltaBitrateMap(sortedBitrateMap);
 
         radioButtonHBox = new HBox(PIDradioButton,programRadioButton,streamRadioButton);
         radioButtonHBox.setAlignment(Pos.CENTER);
-        radioButtonHBox.setSpacing(10);
-        radioButtonHBox.setPadding(new Insets(0,10,10,10));
+        radioButtonHBox.setSpacing(chartHBoxSpacing);
+        radioButtonHBox.setPadding(chartHBoxInsets);
 
         tooltip.hide();
-        //tooltipA.hide();
 
         addListenersAndHandlers(pieChart);
 
@@ -92,16 +83,16 @@ public class CompositionTab extends TimestampParser implements Graph{
             PieChart.Data data = new PieChart.Data(PIDentry.getKey(), PIDentry.getValue());
             pieChartData.add(data);
 
-            float size = PIDentry.getValue()*tsPacketSize/1024f/1024f;
+            float size = (PIDentry.getValue()*tsPacketSize)/MegaBit;
             int percentage = (int) (((PIDentry.getValue()).doubleValue() / totalSize)*100f);
             tooltips.put( data.hashCode() , new Tooltip(String.format("%.2f MB (%d", size, percentage) + "%)") );
         }
 
         PieChart pieChart = new PieChart(pieChartData);
-        pieChart.setLabelLineLength(10);
+        pieChart.setLabelLineLength(chartHBoxSpacing);
         pieChart.setLegendSide(Side.BOTTOM);
         pieChart.toBack();
-        pieChart.setPadding(new Insets(10,40,10,40));
+        pieChart.setPadding(chartInsets);
         pieChart.setPrefHeight(scene.getHeight());
         pieChart.setAnimated(true);
 
@@ -200,7 +191,7 @@ public class CompositionTab extends TimestampParser implements Graph{
 
         double heigth = ((Legend)pieChart.lookup(".chart-legend")).getHeight();
         pieChart = createPieChart(programMap,stream.getNumOfPackets(),heigth);
-        pieChart.setTitle("Program composition");
+        pieChart.setTitle(localization.getProgramCompositionText());
         addListenersAndHandlers(pieChart);
         vbox = new VBox(pieChart,radioButtonHBox);
         tab.setContent(vbox);
@@ -234,7 +225,7 @@ public class CompositionTab extends TimestampParser implements Graph{
 
         double heigth = ((Legend)pieChart.lookup(".chart-legend")).getHeight();
         pieChart = createPieChart(streamMap, stream.getNumOfPackets(),heigth);
-        pieChart.setTitle("Stream types composition");
+        pieChart.setTitle(localization.getStreamCompositionText());
         addListenersAndHandlers(pieChart);
         vbox = new VBox(pieChart,radioButtonHBox);
         tab.setContent(vbox);
@@ -253,7 +244,7 @@ public class CompositionTab extends TimestampParser implements Graph{
         }
         pieChart = createPieChart(PIDmap, stream.getNumOfPackets(),null);
 
-        pieChart.setTitle("PID composition");
+        pieChart.setTitle(localization.getPIDcompositionText());
         addListenersAndHandlers(pieChart);
         vbox = new VBox(pieChart,radioButtonHBox);
         tab.setContent(vbox);

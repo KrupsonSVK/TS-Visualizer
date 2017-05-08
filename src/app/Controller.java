@@ -5,18 +5,19 @@ import app.streamAnalyzer.StreamParser;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.stage.Stage;
-import java.io.File;
-import java.io.IOException;
-
 import model.Stream;
 import view.Window;
 
+import java.io.File;
+import java.io.IOException;
+
+import static app.Main.localization;
 import static model.config.Config.errorTitle;
 
 
 public class Controller {
 
-    private XML XML;
+    private app.XML XML;
 
     private Thread streamParserThread, streamAnalyzerThread, fileHandlerThread, visualizerThread;
     private Stage primaryStage;
@@ -28,7 +29,12 @@ public class Controller {
     private Stream stream;
 
 
-    Controller(Stage primaryStage, Window view) {
+    Controller(Stage primaryStage, Window view) throws Exception {
+        initialize(primaryStage, view);
+    }
+
+
+    private void initialize(Stage primaryStage, Window view) throws Exception {
 
         this.primaryStage = primaryStage;
         this.view = view;
@@ -55,7 +61,7 @@ public class Controller {
         });
 
         this.view.selectFileButton.setOnAction(actionEvent -> {
-            File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
+            File file = this.view.openFileChooser.showOpenDialog(this.view.primaryStage);
             if (file != null) {
                 openFile(file);
             }
@@ -76,25 +82,29 @@ public class Controller {
 
 
         this.view.openFile.setOnAction(actionEvent -> {
-            File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
+            File file = this.view.openFileChooser.showOpenDialog(this.view.primaryStage);
             if (file != null) {
                 openFile(file);
             }
         });
 
-        this.view.userGuide.setOnAction(actionEvent ->  {
+        this.view.userGuide.setOnAction(actionEvent -> {
             this.view.showUserGuide();
         });
 
-        this.view.about.setOnAction(actionEvent ->  {
+        this.view.about.setOnAction(actionEvent -> {
             this.view.showAbout();
         });
 
+        this.view.settings.setOnAction(actionEvent -> {
+            this.view.showSettings();
+        });
+
         this.view.importXML.setOnAction(actionEvent -> {
-                    File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
+                    File file = this.view.openFileChooser.showOpenDialog(this.view.primaryStage);
                     if (file != null) {
                         try {
-                            this.view.createTask(XML.read(file));
+                            this.view.createTask((Stream) XML.read(file));
                         } catch (Exception error) {
                             error.printStackTrace();
                             this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
@@ -104,7 +114,7 @@ public class Controller {
         );
 
         this.view.exportXML.setOnAction(actionEvent -> {
-                    File file = this.view.fileChooser.showOpenDialog(this.view.primaryStage);
+                    File file = this.view.saveFileChooser.showSaveDialog(this.view.primaryStage);
                     if (file != null) {
                         try {
                             this.XML.save(this.stream, file);
@@ -115,12 +125,35 @@ public class Controller {
                     }
                 }
         );
+
+        this.view.exportTXT.setOnAction(actionEvent -> {
+                    File file = this.view.saveFileChooser.showSaveDialog(this.view.primaryStage);
+                    if (file != null) {
+                        try {
+                            Exporter.export(this.view.getTreeData(), file);
+                        } catch (Exception error) {
+                            error.printStackTrace();
+                            this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
+                        }
+                    }
+                }
+        );
+
+        this.view.setButton.setOnAction(event -> {
+            this.view.miniStage.close();
+            this.view = new Window(this.primaryStage);
+            try {
+                initialize(this.primaryStage, this.view);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 
     void createTask(File file) {
 
-        fileHandler.getTask().setOnSucceeded(fileHanlerEvent -> {
+        fileHandler.getTask().setOnSucceeded(fileHandlerEvent -> {
 
             streamParser.parseStream(fileHandler.getTask().getValue());
 
@@ -128,6 +161,8 @@ public class Controller {
 
             streamParser.getTask().setOnSucceeded(streamParserEvent -> {
                         try {
+                            view.progressWindow.activatePinBar(this.fileHandler.getTask(),localization.getAnalyseText());
+
                             streamAnalyzer.analyzeStream(file, streamParser.getTask().getValue());
                             streamAnalyzer.getTask().setOnSucceeded( streamAnalyzerEvent -> {
 
@@ -189,7 +224,7 @@ public class Controller {
             view.showAlertBox(errorTitle, e.getMessage());
         }
 
-        view.progressWindow.activatePinBar(this.fileHandler.getTask());
+        view.progressWindow.activatePinBar(this.fileHandler.getTask(),localization.getPrepareText());
 
         createTask(file);
 
@@ -202,12 +237,14 @@ public class Controller {
             } catch (IOException error) {
                 error.printStackTrace();
                 this.view.showAlertBox(errorTitle, String.valueOf(error.getMessage()));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
 
 
-    private void restart () throws IOException { //TODO not working
+    private void restart () throws Exception { //TODO not working
 
         if (fileHandlerThread != null) {
             fileHandler.getTask().cancel();
@@ -234,5 +271,6 @@ public class Controller {
                 }
             }
         }
+        initialize(primaryStage,view);
     }
 }

@@ -17,11 +17,17 @@ public class MPEG {
     public final static int tsHeaderBinaryLength = tsHeaderSize * byteBinaryLength;
     public final static int tsAdaptationFieldHeaderSize = 2;
     public final static int tsAdaptationFieldHeaderBinaryLength = tsAdaptationFieldHeaderSize * byteBinaryLength;
+    public final static int tsAdaptationFieldHeaderPosition = tsHeaderSize + tsAdaptationFieldHeaderSize;
 
+    public final static int syncLost = 3;
     public final static int tsPayloadLength = tsPacketSize - tsHeaderSize;
     public final static int syncByte = 0x47;
     public final static int syncByteSize = 1;
     public final static int syncByteBinarySize = syncByteSize * byteBinaryLength;
+    public final static int PIDfieldLength = 13;
+    public final static int TSCfieldLength = 2;
+    public final static int adaptationFieldControlLength = 2;
+    public final static int continuityCounterLength = 4;
 
     public final static int adaptationFieldOnly = 2;
     public final static int adaptationFieldAndPayload = 3;
@@ -31,7 +37,8 @@ public class MPEG {
 
     public final static int PSImaxPID = 0x001F;
 
-    public final static int PSIcommonFieldsLength = 24;
+    public final static int PSIcommonFieldsBinaryLength = 24;
+    public final static int PSIcommonFieldsLength = PSIcommonFieldsBinaryLength / byteBinaryLength;
     public final static int tableIDlength = 8;
     public final static int programNumberLength = 16;
     public final static int sectionLengthLength = 12;
@@ -39,10 +46,17 @@ public class MPEG {
     public final static int sectionNumLength = 8;
     public final static int transportStreamIDlength = 16;
     public final static int CRClength = 32;
+    public final static int CRClengthByte = CRClength/byteBinaryLength;
     public final static int AFLlength = 1;
 
     public final static int mandatoryPATfields = 72;
     public final static int mandatoryPMTfields = 40;
+    public final static int PATloopLength = 32;
+
+    public final static int PCRsampleRate = 90;
+    public final static int PCRextLength = 9;
+    public final static int PCRstartBit = 15;
+    public final static int PCRendBit = 48;
 
     public final static int PCRLegth = 48;
     public final static int PCR_PIDlength = 13;

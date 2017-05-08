@@ -33,6 +33,8 @@ public class LegendPane extends VisualizationTab implements Drawer {
     private double oldSceneX;
     private double oldTranslateX;
     private double xPos;
+    private double scrollPaneHeight;
+    private double scrollPaneHeightCoeff;
 
 
     public LegendPane(Scene scene) {
@@ -52,7 +54,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
         labelPane = new Pane();
         labelPane.setMaxSize(scene.getWidth(), scene.getHeight());
 
-        double scrollPaneHeight = scene.getHeight() * legendScrollPaneHeightRatio;
+        scrollPaneHeight = scene.getHeight() * legendScrollPaneHeightRatio;
 
         scrollPane = new ScrollPane(pane);
         scrollPane.setMaxSize(scene.getWidth(), scrollPaneHeight);
@@ -80,12 +82,17 @@ public class LegendPane extends VisualizationTab implements Drawer {
         addListenersAndHandlers(stream, packets);
     }
 
+    /**
+     * @param stream
+     * @param packets
+     * @param xPos
+     */
     @Override
     public void drawPackets(Stream stream, ArrayList<Packet> packets, double xPos) {
-
+        //získanie inštanie GraphicsContext asociovanej s vykresľovacím plátnom
         GraphicsContext graphicsContextLegendCanvas = canvas.getGraphicsContext2D();
         {
-            graphicsContextLegendCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            graphicsContextLegendCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight()); //vyčistenie plátna
 
             graphicsContextLegendCanvas.setFill(defaultColor);
             graphicsContextLegendCanvas.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
@@ -96,7 +103,6 @@ public class LegendPane extends VisualizationTab implements Drawer {
         }
 
         int index = 0;
-
         for (Packet packet : packets) {
             int pid = packet.getPID();
             Integer yPos = (Integer) sortedPIDs.get(pid);
@@ -156,9 +162,11 @@ public class LegendPane extends VisualizationTab implements Drawer {
         }
     }
 
+
     private double sizeOffset(double i) {
         return i* offsetMiniPacket;
     }
+
 
     private double posOffset(double i) {
         return (sizeOffset(i) * 0.75);
@@ -182,6 +190,7 @@ public class LegendPane extends VisualizationTab implements Drawer {
             graphicsContextLabelCanvas.strokeText(   pid.getValue() + pid.getKey().toString(),x,y);
             y+=fontSize+gap;
         }
+        scrollPaneHeightCoeff = y;
         labelPane.getChildren().clear();
         labelPane.getChildren().add(labelCanvas);
     }
@@ -287,5 +296,13 @@ public class LegendPane extends VisualizationTab implements Drawer {
 
     public void setSortedPIDs(Map sortedPIDs) {
         this.sortedPIDs = sortedPIDs;
+    }
+
+    public void setScrollPaneHeight(double scrollPaneHeight) {
+        this.scrollPaneHeight = scrollPaneHeight;
+    }
+
+    public double getScrollPaneHeightCoeff() {
+        return scrollPaneHeightCoeff;
     }
 }

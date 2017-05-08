@@ -1,12 +1,15 @@
 package view.graphTabs;
 
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
-import javafx.scene.chart.*;
+import javafx.scene.chart.Chart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.ScatterChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
@@ -14,16 +17,17 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import model.Stream;
 import model.Tables;
 import model.config.MPEG;
 import view.visualizationTab.VisualizationTab;
 
-import static model.config.MPEG.nil;
+import java.util.HashMap;
+import java.util.Map;
+
+import static app.Main.localization;
+import static model.config.Config.chartHBoxInsets;
+import static model.config.Config.chartInsets;
 
 
 public class TimestampsTab extends VisualizationTab implements Graph{
@@ -38,8 +42,6 @@ public class TimestampsTab extends VisualizationTab implements Graph{
 
     private EventHandler<ActionEvent> filterComboBoxEvent;
 
-    private Map filteredPIDs;
-
     public static final int tickUnit = 10;
     private HBox filterHBox;
 
@@ -48,7 +50,7 @@ public class TimestampsTab extends VisualizationTab implements Graph{
 
 
     public TimestampsTab(){
-        tab = new Tab("Timestamps");
+        tab = new Tab(localization.getTimestampsTabText());
         captionLabel = new Label("");
         tooltips = new HashMap();
     }
@@ -61,10 +63,10 @@ public class TimestampsTab extends VisualizationTab implements Graph{
         filterComboBox = createFilterComboBox(stream);
         filterComboBox.setValue(filterComboBox.getItems().get(2));
 
-        filterHBox = new HBox(new Label("Program filter: "), filterComboBox);
+        filterHBox = new HBox(new Label(localization.getProgramFilterText()), filterComboBox);
         filterHBox.setAlignment(Pos.CENTER);
         filterHBox.setSpacing(10);
-        filterHBox.setPadding(new Insets(10,10,10,10));
+        filterHBox.setPadding(chartHBoxInsets);
 
         captionLabel.setTextFill(Color.DARKORANGE);
         captionLabel.setStyle("-fx-font: 24 arial;");
@@ -85,44 +87,65 @@ public class TimestampsTab extends VisualizationTab implements Graph{
 
         for (Map.Entry<Integer, String> program : ((Map<Integer, String>) tables.getProgramMap()).entrySet()) {
 
-            if (selectedService.equals("All") || program.getValue().equals(selectedService)) {
+            if (selectedService.equals(localization.getAllText()) || program.getValue().equals(selectedService)) {
                 for (Map.Entry<Integer, Map<MPEG.TimestampType, Map<Long, Long>>> serviceTimestamps : ((Map<Integer, Map<MPEG.TimestampType, Map<Long, Long>>>) tables.getServiceTimestampMap()).entrySet()) {
 
                     if (program.getKey().equals(serviceTimestamps.getKey())) {
                         for (Map.Entry<MPEG.TimestampType, Map<Long, Long>> timestampMap : serviceTimestamps.getValue().entrySet()) {
 
-                            XYChart.Series series = new XYChart.Series();
-                            series.setName(timestampMap.getKey().toString());
+                            XYChart.Series series = createSeries(scatterChart.getData(),timestampMap.getKey().toString());
                             series.getData().add(new XYChart.Data(nil, nil)); //default entry for legend displaying
 
                             for (Map.Entry<Long, Long> packetEntry : timestampMap.getValue().entrySet()) {
                                 XYChart.Data data = new XYChart.Data(packetEntry.getValue(), packetEntry.getKey());
                                 series.getData().add(data);
 
-                                tooltips.put( data.hashCode() , new Tooltip("Type: " + timestampMap.getKey().toString() + "\nService: " + program.getKey() + " (" +
-                                        String.format("0x%04X", program.getKey() & 0xFFFF)  +")\nTime: " + parseTimestamp(packetEntry.getKey()) + "\nPacket position: " + packetEntry.getValue()) );
+                                tooltips.put(data.hashCode(), new Tooltip(
+                                        localization.getTypeText() + timestampMap.getKey().toString() + "\nService: " + program.getKey() + " (" + localization.getPacketPositionText() + ": " + packetEntry.getValue())
+                                );
                             }
-                            scatterChart.getData().add(series);
+                            scatterChart.setData(updateSeries(scatterChart.getData(),series));
                         }
                     }
                 }
             }
         }
-        scatterChart.setTitle("Timestamps layout");
+        scatterChart.setTitle(localization.getTimestampsLayoutText());
         scatterChart.setLegendSide(Side.LEFT);
         scatterChart.setAnimated(false);
         scatterChart.toBack();
-        scatterChart.setPadding(new Insets(10,40,10,40));
+        scatterChart.setPadding(chartInsets);
         scatterChart.setPrefHeight(scene.getHeight());
 
         return scatterChart;
     }
 
+
+    private ObservableList<XYChart.Series> updateSeries(ObservableList<XYChart.Series> data, XYChart.Series series) {
+        if(!data.contains(series)){
+            data.add(series);
+        }
+        return data;
+    }
+
+
+    private XYChart.Series createSeries(ObservableList<XYChart.Series> series, String name) {
+        for (XYChart.Series serie : series) {
+            if (serie.getName().equals(name)) {
+                return serie;
+            }
+        }
+        XYChart.Series serie = new XYChart.Series();
+        serie.setName(name);
+        return serie;
+    }
+
+
     private ScatterChart createScaledScatterChart(Tables tables, String selectedService) {
         Long maxX = 0L;
         Long maxY = 0L;
         for (Map.Entry<Integer, String> program : ((Map<Integer, String>) tables.getProgramMap()).entrySet()) {
-            if (selectedService.equals("All") || program.getValue().equals(selectedService)) {
+            if (selectedService.equals(localization.getAllText()) || program.getValue().equals(selectedService)) {
                 for (Map.Entry<Integer, Map<MPEG.TimestampType, Map<Long, Long>>> serviceTimestamps : ((Map<Integer, Map<MPEG.TimestampType, Map<Long, Long>>>) tables.getServiceTimestampMap()).entrySet()) {
                     if (program.getKey().equals(serviceTimestamps.getKey())) {
                         for (Map.Entry<MPEG.TimestampType, Map<Long, Long>> timestampMap : serviceTimestamps.getValue().entrySet()) {
@@ -139,21 +162,21 @@ public class TimestampsTab extends VisualizationTab implements Graph{
                 }
             }
         }
-        final NumberAxis xAxis = new NumberAxis(0, Double.valueOf(maxX*1.05f).longValue(), Double.valueOf(maxX*0.08f).longValue());
-        final NumberAxis yAxis = new NumberAxis(0, Double.valueOf(maxY*1.05f).longValue(), Double.valueOf(maxY*0.08f).longValue());
+        final NumberAxis xAxis = new NumberAxis(0, Double.valueOf(maxX*1.005f).longValue(), Double.valueOf(maxX*0.08f).longValue());
+        final NumberAxis yAxis = new NumberAxis(0, Double.valueOf(maxY*1.005f).longValue(), Double.valueOf(maxY*0.08f).longValue());
 
         yAxis.setTickLabelFormatter(
                 new NumberAxis.DefaultFormatter(yAxis) {
                     @Override
                     public String toString(Number object) {
                         //long timestamp = startTimeStamp + (tickInterval * object.intValue());
-                       // String out = parseTimestamp(timestamp);
+                        // String out = parseTimestamp(timestamp);
                         return String.format("%s",parseTimestamp(object.longValue()));
                     }
                 });
 
-        xAxis.setLabel("Packet order");
-        yAxis.setLabel("Time");
+        xAxis.setLabel(localization.getPacketOrderText());
+        yAxis.setLabel(localization.getTimeText());
 
         return new ScatterChart<>(xAxis, yAxis);
     }
@@ -185,7 +208,7 @@ public class TimestampsTab extends VisualizationTab implements Graph{
                 });
                 data.getNode().setOnMouseReleased(event -> {
 //                    if (((Tooltip) tooltips.get(data.hashCode())).isActivated()) {
-                        ((Tooltip) tooltips.get(data.hashCode())).hide();
+                    ((Tooltip) tooltips.get(data.hashCode())).hide();
 //                    }
                 });
             }

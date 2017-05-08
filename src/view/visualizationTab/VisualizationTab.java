@@ -15,10 +15,9 @@ import view.Window;
 
 import java.util.*;
 
+import static app.Main.localization;
 import static model.MapHandler.*;
 import static model.config.Config.*;
-import static model.config.MPEG.isPSI;
-import static model.config.MPEG.nil;
 
 
 public class VisualizationTab extends Window{
@@ -30,18 +29,18 @@ public class VisualizationTab extends Window{
     private CheckBox groupByCheckBox;
     private ComboBox<String> filterComboBox;
     Map sortedPIDs;
-    HashMap originalPIDmap;
-    Map filteredPIDs;
+    private HashMap originalPIDmap;
+    private Map filteredPIDs;
     public ArrayList<Packet> packets;
     private Slider zoomer;
     private PacketPane packetPane;
     private BarPane barPane;
-    LegendPane legendPane;
+    private LegendPane legendPane;
     private EventHandler<ActionEvent> groupByCheckBoxEvent, filterComboBoxEvent, zoomerEvent;
 
     public VisualizationTab() {
         super();
-        tab = new Tab("Visualization");
+        tab = new Tab(localization.getVisualizationTabText());
     }
 
 
@@ -57,6 +56,8 @@ public class VisualizationTab extends Window{
 
         this.stream = stream;
 
+        originalPIDmap = new HashMap<>(stream.getTables().getPIDmap());
+
         packetPane.setLegendPane(legendPane);
         packetPane.setBarPane(barPane);
         legendPane.setPacketPane(packetPane);
@@ -65,7 +66,6 @@ public class VisualizationTab extends Window{
         barPane.setLegendPane(legendPane);
 
         packets = stream.getTables().getPackets();
-        originalPIDmap = new HashMap<>(stream.getTables().getPIDmap());
         sortedPIDs = ungroup(originalPIDmap);
 
         packetPane.createScrollPane(stream, packets, sortedPIDs, stream.getTables().getPIDmap().size());
@@ -100,10 +100,10 @@ public class VisualizationTab extends Window{
         filterComboBox = createFilterComboBox(stream);
         filterComboBox.setOnAction(filterComboBoxEvent);
 
-        groupByCheckBox = new CheckBox("Group by programmes");
+        groupByCheckBox = new CheckBox(localization.getGroupProgramsText());
         groupByCheckBox.setOnAction(groupByCheckBoxEvent);
 
-        Label filterLabel = new Label("Program filter:");
+        Label filterLabel = new Label(localization.getProgramFilterText());
         Label zoomerLabel = new Label("Zoom:");
         zoomerLabel.setDisable(true);
 
@@ -120,6 +120,18 @@ public class VisualizationTab extends Window{
         return comboCheckboxBar;
     }
 
+    protected ComboBox<String> createFilterComboBox(Stream stream) {
+
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.getItems().add(localization.getAllText());
+        comboBox.getSelectionModel().selectFirst();
+
+        for (Object entry : stream.getTables().getProgramMap().values()) {
+            comboBox.getItems().add(entry.toString());
+        }
+        return comboBox;
+    }
+
 
     public boolean isInViewport(Scene scene, double packetPosition, double start) {
         double end = start + scene.getWidth();
@@ -130,12 +142,12 @@ public class VisualizationTab extends Window{
     private void addListenersAndHandlers() {
 
         groupByCheckBoxEvent = event -> {
-            groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap());
+            groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap(),stream.getTables().getEnhancedPMTmap());
         };
 
         filterComboBoxEvent = (ActionEvent event) -> {
             filteredPIDs = filterProgram(filterComboBox.getValue(), stream.getTables().getPMTmap(), stream.getTables().getProgramMap());
-            groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap());
+            groupProgrammes(filteredPIDs,stream.getTables().getPMTmap(),stream.getTables().getProgramMap(),stream.getTables().getPATmap(),stream.getTables().getEnhancedPMTmap());
         };
 
         zoomerEvent = event -> {
@@ -151,11 +163,11 @@ public class VisualizationTab extends Window{
     }
 
 
-    protected void groupProgrammes(Map filteredPIDs, Map PMTmap, Map programs, Map PATmap) {
+    protected void groupProgrammes(Map filteredPIDs, Map PMTmap, Map programs, Map PATmap, Map enhancedPMTmap) {
 
-        Map labeledPIDs = null;
+        Map labeledPIDs;
         if (groupByCheckBox.isSelected()) {
-            sortedPIDs = groupByProgrammes(filteredPIDs, originalPIDmap, PMTmap);
+            sortedPIDs = groupByProgrammes(filteredPIDs, enhancedPMTmap);
             labeledPIDs = createLabeledPIDs(null, PMTmap, sortedPIDs, programs, PATmap);
         }
         else {
@@ -169,6 +181,10 @@ public class VisualizationTab extends Window{
 
 
     private void updatePanes(Map sortedPIDs, Map labeledPIDs) {
+
+        //legendPane.setScrollPaneHeight();
+        legendPane.scrollPane.setPrefHeight(legendPane.getScrollPaneHeightCoeff());
+        legendPane.labelScrollPane.setPrefHeight(legendPane.getScrollPaneHeightCoeff());
 
         packetPane.setSortedPIDs(sortedPIDs);
         legendPane.setSortedPIDs(sortedPIDs);
@@ -212,11 +228,11 @@ public class VisualizationTab extends Window{
     }
 
 
-    private <K,V> Map groupByProgrammes(Map<K,V> filteredPIDs, Map originalPIDmap, Map PMTmap) {
+    private <K,V> Map groupByProgrammes(Map<K,V> filteredPIDs, Map<Integer,Integer> enhancedPMTmap) {
+
         HashMap gruppedMap = new HashMap<Integer,Integer>();
 
         if( filteredPIDs == null ){
-            Map<Integer,Integer> enhancedPMTmap = enhancePMTmap(originalPIDmap, PMTmap);
             int index = nil;
             Integer previous = nil;
             for (Map.Entry<Integer,Integer> entry : enhancedPMTmap.entrySet()) {
@@ -233,15 +249,6 @@ public class VisualizationTab extends Window{
             }
         }
         return sortHashMapByValue(gruppedMap);
-    }
-
-
-    private <K,V> Map<Integer,Integer> enhancePMTmap(Map<K,V> originalPIDmaps, Map<K,V> PMT ) {
-
-        for (Map.Entry<K,V> entry : (originalPIDmaps).entrySet()) {
-            PMT.putIfAbsent(entry.getKey(),(V)entry.getKey());
-        }
-        return sortHashMapByValue((Map<Integer,Integer>)PMT);
     }
 
 

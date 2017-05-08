@@ -1,9 +1,9 @@
 package view.graphTabs;
 
 
+import app.streamAnalyzer.TimestampParser;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -13,20 +13,19 @@ import javafx.scene.control.Tab;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import model.Stream;
-import app.streamAnalyzer.TimestampParser;
 
 import java.util.*;
 
+import static app.Main.localization;
 import static model.MapHandler.getLastItem;
 import static model.MapHandler.updateMap;
-import static model.config.MPEG.byteBinaryLength;
+import static model.config.Config.*;
 
 public class StructureTab extends TimestampParser implements Graph{
 
     private Scene scene;
     public Tab tab;
 
-    public static final int tickUnit = 10;
     private CheckBox groupByCheckBox;
     private Stream stream;
     private Map<String,Map<Integer,Long>> bitrateMaps;
@@ -34,8 +33,8 @@ public class StructureTab extends TimestampParser implements Graph{
 
 
     public StructureTab(){
-        tab = new Tab("Structure");
-        groupByCheckBox = new CheckBox("Group by programmes");
+        tab = new Tab(localization.getStructureTabText());
+        groupByCheckBox = new CheckBox(localization.getGroupProgramsText());
         bitrateMaps = new LinkedHashMap<>();
     }
 
@@ -50,25 +49,23 @@ public class StructureTab extends TimestampParser implements Graph{
         NumberAxis yAxis = new NumberAxis();
         CategoryAxis xAxis = new CategoryAxis();
 
-        yAxis.setLabel("Bitrate");
+        yAxis.setLabel(localization.getBitrateText());
         xAxis.setLabel("PID");
-//        yAxis.setTickUnit(10000000);
-//        yAxis.setUpperBound(100000000);
-//        yAxis.setLowerBound(0);
-        yAxis.setTickLabelRotation(0);
-        xAxis.setTickLabelRotation(0);
+
+        yAxis.setTickLabelRotation(tickLabelRotation);
+        xAxis.setTickLabelRotation(tickLabelRotation);
 
         yAxis.setTickLabelFormatter(
                 new NumberAxis.DefaultFormatter(yAxis) {
                     @Override
                     public String toString(Number object) {
-                        return String.format("%1$,.2f MBit/s", (Double)(object.doubleValue()*byteBinaryLength/(1024.*1024.)));
+                        return String.format("%1$,.2f MBit/s", (Double)((object.doubleValue() * byteBinaryLength)/MegaBit));
                     }
                 });
 
         barChart = new BarChart<>(xAxis, yAxis);
         barChart.setAnimated(false);
-        barChart.setPadding(new Insets(10,40,10,40));
+        barChart.setPadding(chartInsets);
         barChart.setPrefHeight(scene.getHeight());
         barChart.setLegendSide(Side.LEFT);
 
@@ -78,8 +75,8 @@ public class StructureTab extends TimestampParser implements Graph{
 
         HBox checkHBox = new HBox(groupByCheckBox);
         checkHBox.setAlignment(Pos.CENTER);
-        checkHBox.setSpacing(10);
-        checkHBox.setPadding(new Insets(10,10,10,10));
+        checkHBox.setSpacing(chartHBoxSpacing);
+        checkHBox.setPadding(chartHBoxInsets);
 
         tab.setContent(new VBox(barChart,checkHBox));
     }
@@ -120,9 +117,6 @@ public class StructureTab extends TimestampParser implements Graph{
     }
 
 
-
-
-
     private Collection createServiceStructureChartData(List<Integer> PIDlist, Map<Integer,Integer> PMTmap, Map<String,Map<Integer, Long>> PIDbitrateMaps) {
 
         Map<String,Map<Integer,Long>> serviceBitrateMaps = new LinkedHashMap<>();
@@ -148,18 +142,19 @@ public class StructureTab extends TimestampParser implements Graph{
                 }
             }
         }
-        Map<Integer,Long> servicePIDmap = getLastItem(serviceBitrateMaps).getValue();
-        if(servicePIDmap!=null) {
-            List<Integer> servicePIDlist = new ArrayList();
-            for(Integer pid : servicePIDmap.keySet()){
-                servicePIDlist.add(pid);
-            }
-            return createStructureChartData(servicePIDlist, serviceBitrateMaps);
-        }
-        else {
-            return createStructureChartData(PIDlist, serviceBitrateMaps);
-        }
+        return createStructureChartData(createServicePIDlist(PIDlist, getLastItem(serviceBitrateMaps).getValue()), serviceBitrateMaps);
     }
+
+
+    private List<Integer> createServicePIDlist(List<Integer> PIDlist, Map<Integer, Long> servicePIDmap) {
+        if(servicePIDmap!=null) {
+            List<Integer> servicePIDlist = new ArrayList<>();
+            servicePIDlist.addAll(servicePIDmap.keySet());
+            return servicePIDlist;
+        }
+        return PIDlist;
+    }
+
 
     public void addListenersAndHandlers(Chart chart) {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
@@ -168,17 +163,13 @@ public class StructureTab extends TimestampParser implements Graph{
 
         groupByCheckBox.setOnAction(event -> {
             this.barChart.getData().clear();
-            List<Integer> PIDlist = new ArrayList();
-            for(Object pid : stream.getTables().getPIDmap().keySet()){
-                PIDlist.add((Integer) pid);
-            }
             if(groupByCheckBox.isSelected()) {
-                this.barChart.setTitle("Bitrate structure by programmes");
-                this.barChart.getData().addAll(createServiceStructureChartData(PIDlist,stream.getTables().getPMTmap(),bitrateMaps));
+                this.barChart.setTitle(localization.getBitrateStructureByProgramsText());
+                this.barChart.getData().addAll(createServiceStructureChartData(stream.getTables().getPIDlist(),stream.getTables().getPMTmap(),bitrateMaps));
             }
             else {
-                chart.setTitle("Bitrate structure by PID");
-                this.barChart.getData().addAll(createStructureChartData(PIDlist, bitrateMaps));
+                chart.setTitle(localization.getBitrateStructureByPIDs());
+                this.barChart.getData().addAll(createStructureChartData(stream.getTables().getPIDlist(), bitrateMaps));
             }
         });
     }

@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 
-public class PSIparser extends Parser {
+class PSIparser extends Parser {
 
 
     PSIparser(){
@@ -46,41 +46,45 @@ public class PSIparser extends Parser {
         }
     }
 
-
+    /**
+     * Metóda parsuje jednotlivé bity PAT tabuľky a aktualizuje tabuľku programových asociácií
+     *
+     * @param analyzedHeader objekt triedy Packet obsahujúci doteraz získané údaje paketu, t.j. hlavička a príp. adaptačné pole
+     * @param packet transportný paket v poli bajtov
+     * @return triedy PAT obsahujúci získané údaje z PAT tabuľky
+     */
     model.psi.PAT analyzePAT(Packet analyzedHeader, byte[] packet) {
 
-        int position = calculatePosition(analyzedHeader);
-        position += 1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
+        int position = calculatePosition(analyzedHeader) + 1; //zistenie začiatočnej pozície na základe dĺžky predchádzajúcich hlavičiek
+        PSI psiCommonFields = analyzePSICommonFields(packet,position); //analýza spoločných polí PSI tabuliek, t.j. tableID,SSI a sectionLength
 
-        PSI psiCommonFields = analyzePSICommonFields(packet,position);
+        position += PSIcommonFieldsLength; //aktualizácie pozície po získaní spoločných polí
 
-        position += PSIcommonFieldsLength/ byteBinaryLength;
+        final int reserved = 2; //MPEG konštanta
+        int sectionLength = psiCommonFields.getSectionLength(); //dĺžka PAT tabuľky
 
-        final int reserved = 2;
-        int sectionLength = psiCommonFields.getSectionLength();
+        int[] PATFields = parseNfields(packet,position,sectionLength); //získanie polí PAT tabuľky do celočíslného poľa
+        byte[] binaryPATFields = intToBinary(PATFields, sectionLength); //prevod PAT polí na binárne pole
 
-        int[] PATFields = parseNfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
-        byte[] binaryPATFields = intToBinary(PATFields, sectionLength);
-
-        int tsID = (int) binToInt(binaryPATFields, position=0, transportStreamIDlength);
-        short versionNum = (short) binToInt(binaryPATFields, position += transportStreamIDlength +reserved, position += versionNumLength);
+        int tsID = (int) binToInt(binaryPATFields, position=0, position += transportStreamIDlength); //získanie n-bitov dĺžky transportStreamIDlength ako tsID
+        short versionNum = (short) binToInt(binaryPATFields, position += reserved, position += versionNumLength);
         byte currentNextIndicator = binaryPATFields[position++];
         int sectionNum = (int) binToInt(binaryPATFields, position, position += sectionNumLength);
         int lastSectionNum = (int) binToInt(binaryPATFields, position, position += sectionNumLength);
 
-        Map PATmap = new HashMap<Integer,Integer>();
-        int N = (sectionLength * byteBinaryLength) - mandatoryPATfields;
+        Map PATmap = new HashMap<Integer,Integer>(); //hashmapa ukladajúca si programové asociácie
+        int N = (sectionLength * byteBinaryLength) - mandatoryPATfields; //dĺžka nasledujúceho poľa s cyklom programových asociácií
 
-        for(int i = 0; i < N; i+=32) {
-            int programNum = (int) binToInt(binaryPATFields, position, position +=16);
-            int programMapPID= (int) binToInt(binaryPATFields, position += 3, position +=13);
-            PATmap.put(programNum, programMapPID);
+        for(int i = 0; i < N; i += PATloopLength) { //cyklus získavania programových asociácií PAT tabuľky
+            int programNum = (int) binToInt(binaryPATFields, position, position += programNumberLength); //získanie čísla programu
+            //získanie PIDu paketu, v ktorom sa nachádza PMT tabuľka daného programu
+            int programMapPID= (int) binToInt(binaryPATFields, position += 3, position += PCR_PIDlength);
+            PATmap.put(programNum, programMapPID); //vloženie asociácie do hasmapy
         }
-        //int networkPID = (int) PATmap.get(0x0000);
-        long CRC = binToInt(binaryPATFields, position, position+=CRClength);
+        long CRC = nil; //binToInt(binaryPATFields, position, CRClength); //získanie posledného poľa PAT tabuľky, t.j. CRC kontrolný súčet
 
-        tables.updatePAT(PATmap,versionNum);
-
+        tables.updatePAT(PATmap,versionNum);//aktualizácia PAT tabuľky
+        //vráti objekt triedy PAT zavolaním jej konštruktora s parametrami získaných atribútov paketu
         return new PAT(
                 psiCommonFields.getTableID(),
                 psiCommonFields.getSSI(),
@@ -100,11 +104,11 @@ public class PSIparser extends Parser {
         position+=1; //TODO i do not understand why here is one null byte, there is no sign of it in mpeg documentation
 
         PSI psiCommonFields = analyzePSICommonFields(packet,position);
-        position += PSIcommonFieldsLength / byteBinaryLength;
+        position += PSIcommonFieldsBinaryLength / byteBinaryLength;
 
         final int reserved = 2;
         int sectionLength = psiCommonFields.getSectionLength();
-
+        sectionLength = (sectionLength * byteBinaryLength) + position + CRClength > packet.length ? tsPacketSize - position - CRClengthByte : sectionLength;
         int[] PMTFields = parseNfields(packet,position,sectionLength); //72 - 1024 bitov(9 - 128 Bytov)
         byte[] binaryPMTFields = intToBinary(PMTFields, sectionLength);
 
@@ -117,7 +121,7 @@ public class PSIparser extends Parser {
         short programInfoLength = (short) binToInt(binaryPMTFields, position += reserved+2, position += programInfoLengthLength);
 
         int nLoopDescriptorsLength = programInfoLength * byteBinaryLength;
-        byte[] descriptors = new byte[nLoopDescriptorsLength];
+        byte[] descriptors = null; //new byte[nLoopDescriptorsLength];
         //TODO load N descriptors
         position += nLoopDescriptorsLength;
 
@@ -129,14 +133,15 @@ public class PSIparser extends Parser {
             int streamType = (int) binToInt(binaryPMTFields, position, position += streamTypeLength);
             int elementaryPID = (int) binToInt(binaryPMTFields, position += 3, position += elementaryPIDlength);
             int ESinfoLength = (int) binToInt(binaryPMTFields, position += 4, position += ESinfoLengthLength);
-            byte[] NloopDescriptors = new byte[ESinfoLength * byteBinaryLength];
+            byte[] NloopDescriptors = null; // new byte[ESinfoLength * byteBinaryLength];
             //TODO load N ES descriptors
             position += ESinfoLength * byteBinaryLength;
             ESmap.put(elementaryPID,streamType);
             PMTmap.put(elementaryPID,programNum);
         }
-        long CRC = binToInt(binaryPMTFields, position, position+CRClength);
+        long CRC = nil; // binToInt(binaryPMTFields, position, position+CRClength);
 
+        tables.updatePMTnumber();
         tables.updateESmap(ESmap,versionNum);
         tables.updatePMT(PMTmap,versionNum);
         tables.updatePCRpmtMap(analyzedHeader.getPID(),PCR_PID);
@@ -163,7 +168,7 @@ public class PSIparser extends Parser {
         position += 1;
 
         PSI psiCommonFields = analyzePSICommonFields(packet, position);
-        position += PSIcommonFieldsLength / byteBinaryLength;
+        position += PSIcommonFieldsBinaryLength / byteBinaryLength;
 
         if (isSDT(psiCommonFields.getTableID())) {
             int sectionLength = psiCommonFields.getSectionLength();
@@ -190,10 +195,8 @@ public class PSIparser extends Parser {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            position += descriptorsLoopLength;
-
-            long CRC = binToInt(binarySDTfields, position, position + CRClength);
-
+            //position += descriptorsLoopLength;
+            long CRC = nil; // binToInt(binarySDTfields, position, position + CRClength);
 
             return new SDT(
                     psiCommonFields.getTableID(),
@@ -214,7 +217,7 @@ public class PSIparser extends Parser {
                     descriptors,
                     CRC);
         }
-        return null; //new ST();
+        return null; //new SDT();
     }
 
 
@@ -224,7 +227,7 @@ public class PSIparser extends Parser {
         position += 1;
 
         PSI psiCommonFields = analyzePSICommonFields(packet, position);
-        position += PSIcommonFieldsLength / byteBinaryLength;
+        position += PSIcommonFieldsBinaryLength / byteBinaryLength;
 
         if (isEIT(psiCommonFields.getTableID())) {
             int sectionLength = psiCommonFields.getSectionLength();
@@ -253,10 +256,8 @@ public class PSIparser extends Parser {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            position += descriptorsLoopLength;
-
-            long CRC = binToInt(binaryEITfields, position, position + CRClength);
-
+            //position += descriptorsLoopLength;
+            long CRC = nil; //binToInt(binaryEITfields, position, position + CRClength);
 
             return new EIT(
                     psiCommonFields.getTableID(),
@@ -281,6 +282,7 @@ public class PSIparser extends Parser {
         }
         return null; //new ST();
     }
+
 
     private List loadDescriptors(int PID, byte[] binaryFields, int size, int position) throws UnsupportedEncodingException {
 
@@ -326,7 +328,6 @@ public class PSIparser extends Parser {
         String serviceName =  new String(new BigInteger(serviceNameString, 2).toByteArray(), "UTF-8");
 
         // descriptors.add(new Descriptor(PID, serviceType,  serviceProvider, serviceName));
-
         tables.updateServiceName(PID, serviceName);
     }
 
@@ -386,9 +387,9 @@ public class PSIparser extends Parser {
 
         int commonFields = parseCommonFields(packet,startPosition);
 
-        byte[] binaryPacket = new byte[PSIcommonFieldsLength];
-        for (int index = 0; index < PSIcommonFieldsLength; index++) {
-            binaryPacket[PSIcommonFieldsLength - index - 1] = getBit(commonFields, index);
+        byte[] binaryPacket = new byte[PSIcommonFieldsBinaryLength];
+        for (int index = 0; index < PSIcommonFieldsBinaryLength; index++) {
+            binaryPacket[PSIcommonFieldsBinaryLength - index - 1] = getBit(commonFields, index);
         }
         int position = 0;
         final int reserved = 2;

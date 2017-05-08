@@ -7,7 +7,7 @@ import model.packet.AdaptationFieldOptionalFields;
 import static app.streamAnalyzer.TimestampParser.parsePCRopcr;
 
 
-public class AdaptationFieldParser extends Parser {
+class AdaptationFieldParser extends Parser {
 
 
     AdaptationFieldParser(){

@@ -1,24 +1,20 @@
 package view;
 
-import app.Main;
+import app.streamAnalyzer.TimestampParser;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Stream;
-import app.streamAnalyzer.TimestampParser;
+import model.config.Localization;
 import view.graphTabs.BitrateTab;
 import view.graphTabs.CompositionTab;
 import view.graphTabs.StructureTab;
@@ -27,16 +23,15 @@ import view.visualizationTab.VisualizationTab;
 
 import java.io.IOException;
 
-import static app.Main.releaseDate;
+import static app.Main.localization;
 import static model.config.Config.*;
-import static model.config.MPEG.DVBicon;
-
 
 public class Window extends TimestampParser {
 
     public Stage primaryStage;
-    Stage aboutStage;
-    Stage progressStage;
+    public Stage miniStage;
+    public Button setButton;
+    public FileChooser saveFileChooser;
     private Stage userGuideStage;
     private DetailTab detailTab;
     private BitrateTab bitrateTab;
@@ -44,30 +39,31 @@ public class Window extends TimestampParser {
     private CompositionTab compositionTab;
     private VisualizationTab visualizationTab;
     private TimestampsTab timestampsTab;
-    GridPane gridPane;
-    public FileChooser fileChooser;
+    public FileChooser openFileChooser;
     public Button selectFileButton;
     public Scene scene;
-    StackPane rootPane;
-    BorderPane borderPane;
-    public ProgressForm progressWindow;
-    Alert alertBox;
-    VBox topContainer;
-    MenuBar mainMenu;
-    ToolBar toolBar;
-    TabPane tabPane;
-    Menu file, edit, help;
+    private StackPane rootPane;
+    private BorderPane borderPane;
+    public ProgressDialog progressWindow;
+    private Alert alertBox;
+    private VBox topContainer;
+    private MenuBar mainMenu;
+    private ToolBar toolBar;
+    private TabPane tabPane;
+    private Menu file, edit, help;
     public MenuItem openFile;
     public MenuItem importXML;
     public MenuItem exportXML;
-    MenuItem settings;
+    public MenuItem exportTXT;
+    public MenuItem settings;
     public MenuItem exitApp;
-    MenuItem jumpToPacket;
-    MenuItem searchPacket;
+    private MenuItem jumpToPacket;
+    private MenuItem searchPacket;
     public MenuItem about;
     public MenuItem userGuide;
 
     private Task task;
+
 
 
     public Window(Stage primaryStage) {
@@ -77,37 +73,31 @@ public class Window extends TimestampParser {
         this.task = null;
 
         this.primaryStage = primaryStage;
-        aboutStage = new Stage();
+        miniStage = new Stage();
         userGuideStage = new Stage();
-        progressStage = new Stage();
+        Stage progressStage = new Stage();
 
         rootPane = new StackPane();
-        gridPane = new GridPane();
+        GridPane gridPane = new GridPane();
         borderPane = new BorderPane();
 
-        topContainer = new VBox();  //Creates a container to hold all Menu Objects.
-        mainMenu = new MenuBar();  //Creates our main menu to hold our Sub-Menus.
-        toolBar = new ToolBar();  //Creates our tool-bar to hold the buttons.
+        topContainer = new VBox();
+        mainMenu = new MenuBar();
+        toolBar = new ToolBar();
 
-        tabPane = new TabPane(); // Use tab pane with one tab for sizing UI and one tab for alignment UI
+        tabPane = new TabPane();
 
         createToolBar();
 
         gridPane.setAlignment(Pos.CENTER);
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-        gridPane.setPadding(new Insets(25, 25, 25, 25));
+        gridPane.setHgap(windowGripGap);
+        gridPane.setVgap(windowGripGap);
+        gridPane.setPadding(windowInsets);
 
         topContainer.getChildren().add(mainMenu);
         borderPane.setTop(topContainer);
 
-        rootPane.setStyle(
-                "-fx-background-image: url('" +
-                        Main.class.getResource("/resources/dragndrop.png").toExternalForm() +
-                        "'); " +
-                        "-fx-background-position: center center; " +
-                        "-fx-background-repeat: stretch;"
-        );
+        rootPane.setStyle(windowStyle);
 
         selectFileButton.setAlignment(Pos.CENTER);
         gridPane.getChildren().addAll(selectFileButton);
@@ -116,10 +106,10 @@ public class Window extends TimestampParser {
         borderPane.setCenter(gridPane);
 
         alertBox = new Alert(Alert.AlertType.ERROR);
-        progressWindow = new ProgressForm(progressStage);
+        progressWindow = new ProgressDialog(progressStage);
 
-        scene = new Scene(rootPane, windowWidth, windowHeigth);
-        primaryStage.setTitle("TS Visualizer");
+        scene = new Scene(rootPane, windowWidth, windowHeight);
+        primaryStage.setTitle(localization.getSoftwareName());
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -137,6 +127,8 @@ public class Window extends TimestampParser {
         compositionTab.setScene(scene);
         timestampsTab.setScene(scene);
 
+        setButton = new Button();
+
         mainMenu.toFront();
     }
 
@@ -147,31 +139,39 @@ public class Window extends TimestampParser {
 
     private void createToolBar() {
 
-        fileChooser = new FileChooser();
-        selectFileButton = new Button("Select file...");
 
-        file = new Menu("File");
-        edit = new Menu("Edit");
-        help = new Menu("Help");
+        openFileChooser = new FileChooser();
+        saveFileChooser = new FileChooser();
+        saveFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt"));
 
-        openFile = new MenuItem("Open File");
-        importXML = new MenuItem("Import XML");
-        exportXML = new MenuItem("Export XML");
-        settings = new MenuItem("Settings");
-        exitApp = new MenuItem("Exit");
+        selectFileButton = new Button(localization.getSelectFileText());
 
-        jumpToPacket = new MenuItem("Jump to packet...");
-        searchPacket = new MenuItem("Search packet...");
+        file = new Menu(localization.getFileMenuText());
+        edit = new Menu(localization.getEditMenuText());
+        help = new Menu(localization.getHelpMenuText());
+        edit.setDisable(true);
 
-        about = new MenuItem("About");
-        userGuide = new MenuItem("Guide");
+        openFile = new MenuItem(localization.getOpenFileMenuText());
+        importXML = new MenuItem(localization.getImportXMLMenuText());
+        exportXML = new MenuItem(localization.getExportXMLMenuText());
+        exportTXT = new MenuItem(localization.getExportTXTMenuText());
+        settings = new MenuItem(localization.getSettingsMenuText());
+        exitApp = new MenuItem(localization.getExitMenuText());
 
+        jumpToPacket = new MenuItem(localization.getJumpMenuText());
+        searchPacket = new MenuItem(localization.getSearchMenuText());
+
+        about = new MenuItem(localization.getAboutMenuText());
+        userGuide = new MenuItem(localization.getGuideMenuText());
+
+        importXML.setDisable(true);
         exportXML.setDisable(true);
-        settings.setDisable(true);
+        exportTXT.setDisable(true);
+        settings.setDisable(false);
         jumpToPacket.setDisable(true);
         searchPacket.setDisable(true);
 
-        file.getItems().addAll(openFile, importXML, exportXML, new SeparatorMenuItem(), settings, new SeparatorMenuItem(), exitApp);
+        file.getItems().addAll(openFile,  exportXML, exportTXT, new SeparatorMenuItem(), settings, new SeparatorMenuItem(), exitApp);
         edit.getItems().addAll(jumpToPacket, searchPacket);
         help.getItems().addAll(userGuide, new SeparatorMenuItem(), about);
 
@@ -190,7 +190,8 @@ public class Window extends TimestampParser {
                     drawGraphs(streamDescriptor);
                     createTabPane();
                 });
-                rootPane.setStyle("-fx-background-color: transparent");
+                rootPane.setStyle(afterWindowStyle);
+                exportTXT.setDisable(false);
                 return null;
             }
         };
@@ -224,18 +225,113 @@ public class Window extends TimestampParser {
 
 
     public void showAbout() {
-        if(aboutStage.getModality() != Modality.WINDOW_MODAL) {
-            aboutStage.initModality(Modality.WINDOW_MODAL);
+        if(miniStage.getModality() != Modality.WINDOW_MODAL) {
+            miniStage.initModality(Modality.WINDOW_MODAL);
         }
-        aboutStage.setTitle("About");
+        miniStage.setTitle(localization.getAboutTitle());
 
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
-        vBox.setPadding(new Insets(5));
-        vBox.getChildren().addAll(new Label("TS Visualizer BETA" + "\n\n" + "Last release " + releaseDate), new Text("\nCreated by Tomas Krupa"));
+        vBox.setPadding(vBoxInsets);
 
-        aboutStage.setScene(new Scene(vBox, 400, 300));
-        aboutStage.show();
+        Text text = new Text(logoText);
+        text.setFont(Font.font("Monospaced", 6));
+        vBox.getChildren().addAll(
+                text,
+                new Text(localization.getSoftwareName() + version),
+                new Text("\n\n" + localization.getReleaseText()  + releaseDate ),
+                new Text("\n" + localization.getCreatedByText()),
+                new Text("\n" + email + "\n"),
+                new Label(localization.getRightsText())
+        );
+
+        miniStage.setScene(new Scene(vBox, aboutWidth, aboutHeight));
+        miniStage.show();
+    }
+
+
+    public void showSettings() {
+        if(miniStage.getModality() != Modality.WINDOW_MODAL) {
+            miniStage.initModality(Modality.WINDOW_MODAL);
+        }
+        //miniStage.setTitle(localization.getSettingsTitle());
+        miniStage.setTitle(localization.getSettingsText());
+
+        Label languagelabel = new Label(localization.getLanguage() +": ");
+
+        LanguageButton slovak = new LanguageButton("Slovak", localizationSK);
+        LanguageButton english = new LanguageButton("English", localizationEN);
+        LanguageButton deutsch = new LanguageButton("Deutsch", localizationDE);
+        LanguageButton russian = new LanguageButton("Руский", localizationRU);
+
+        ToggleGroup radioButtonsGroup = new ToggleGroup();
+        slovak.setToggleGroup(radioButtonsGroup);
+        english.setToggleGroup(radioButtonsGroup);
+        deutsch.setToggleGroup(radioButtonsGroup);
+        russian.setToggleGroup(radioButtonsGroup);
+
+        deutsch.setDisable(true);
+        russian.setDisable(true);
+
+        setButton.setDisable(true);
+        setButton.setText(localization.getButtonSetText());
+
+        for(Object button : radioButtonsGroup.getToggles()){
+            if(((LanguageButton)button).getText().equals(localization.getLocalization())){
+                ((LanguageButton) button).setSelected(true);
+                ((LanguageButton) button).setOnAction(event -> setButton.setDisable(true));
+                break;
+            }
+        }
+
+        radioButtonsGroup.selectedToggleProperty().addListener((observable, oldVal, newVal) -> {
+            try {
+                localization = ((LanguageButton)newVal).getLocalization();
+                miniStage.setTitle(localization.getSettingsText());
+                setButton.setText(localization.getButtonSetText());
+                settings.setText(localization.getSettingsText());
+                languagelabel.setText(localization.getLanguage() +": ");
+                if(!localization.getLanguage().equals(setButton.getText())) {
+                    setButton.setDisable(false);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        HBox buttonsHBox = new HBox(slovak,english,deutsch,russian);
+        buttonsHBox.setAlignment(Pos.CENTER);
+        buttonsHBox.setPadding(hBoxInsets);
+        buttonsHBox.setSpacing(chartHBoxSpacing);
+        VBox vBox = new VBox(languagelabel,buttonsHBox, setButton);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setPadding(hBoxInsets);
+        vBox.setSpacing(chartHBoxSpacing);
+
+        miniStage.setScene(new Scene(vBox, aboutWidth, aboutHeight));
+        miniStage.show();
+    }
+
+
+    public void showUserGuide() {
+        if(userGuideStage.getModality() != Modality.WINDOW_MODAL) {
+            userGuideStage.initModality(Modality.WINDOW_MODAL);
+        }
+        userGuideStage.setTitle(localization.getUserGuideTitle());
+        TextArea textArea = new TextArea(localization.getUserGuideText());
+        textArea.setWrapText(true);
+        textArea.setMinHeight(textAreaMinHeigth);
+        textArea.setEditable(false);
+
+        Label label = new Label(localization.getUserGuideLabel() + "\n");
+        label.setFont(new Font(labelFontSize));
+
+        VBox vBox = new VBox(label,textArea);
+        vBox.setMargin(label,labelInsets);
+        vBox.setMargin(textArea,textInsets);
+        vBox.setAlignment(Pos.CENTER);
+        userGuideStage.setScene(new Scene(vBox, userGuideWidth, userGuideHeight));
+        userGuideStage.show();
     }
 
 
@@ -244,38 +340,21 @@ public class Window extends TimestampParser {
     }
 
 
-    public void showUserGuide() {
-        if(userGuideStage.getModality() != Modality.WINDOW_MODAL) {
-            userGuideStage.initModality(Modality.WINDOW_MODAL);
-        }
-        userGuideStage.setTitle("User userGuide");
-        TextArea textArea = new TextArea(userGuideText);
-        textArea.setWrapText(true);
-        textArea.setMinHeight(370);
-        textArea.setEditable(false);
-
-        Label label = new Label("User userGuide to using application TS Visualizer\n");
-        label.setFont(new Font(12));
-        //label.setPadding(new Insets(20,10,10,10));
-
-
-        VBox vBox = new VBox(label,textArea);
-        vBox.setMargin(label,new Insets(20,10,10,10));
-        vBox.setMargin(textArea,new Insets(10,10,10,10));
-        vBox.setAlignment(Pos.CENTER);
-        userGuideStage.setScene(new Scene(vBox, 600, 450));
-        userGuideStage.show();
+    public TreeItem getTreeData() {
+        return detailTab.getTreeData();
     }
 
-    protected ComboBox<String> createFilterComboBox(Stream stream) {
 
-        ComboBox<String> comboBox = new ComboBox<String>();
-        comboBox.getItems().add("All");
-        comboBox.getSelectionModel().selectFirst();
+    private class LanguageButton extends RadioButton{
+        private Localization localization;
 
-        for (Object entry : stream.getTables().getProgramMap().values()) {
-            comboBox.getItems().add(entry.toString());
+        public LanguageButton(String name, Localization localization) {
+            super(name);
+            this.localization = localization;
         }
-        return comboBox;
+
+        public Localization getLocalization() {
+            return localization;
+        }
     }
 }

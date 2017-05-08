@@ -74,31 +74,54 @@ public class PacketPane extends VisualizationTab implements Drawer {
         addListenersAndHandlers(stream, packets);
     }
 
+    /**
+     * Metóda vykresľuje pakety viditeľné na vykresľovacom plátne vizualizačnej karty
+     *
+     * @param stream  objekt triedy Stream so všetkými analyzovanými údajmi transportného toku
+     * @param packets pole objektov triedy Packet, na základe ktorých sú vykresľované pakety
+     * @param xPos    pozícia na x-ovej osi vykreľovacieho plátna
+     */
     @Override
     public void drawPackets(Stream stream, ArrayList<Packet> packets, double xPos) {
-
+        //získanie inštanie GraphicsContext vykresľovacieho plátna potrebnej na manipuláciu s jeho grafickým obsahom
         GraphicsContext graphicsContextPacketCanvas = canvas.getGraphicsContext2D();
-
-        graphicsContextPacketCanvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        graphicsContextPacketCanvas.setFill(Color.WHITE);
-        graphicsContextPacketCanvas.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
-        int index = 0;
-        for (Packet packet : packets) {
-            int pid = packet.getPID();
-            Integer yPos = (Integer) sortedPIDs.get(pid);
-            if(yPos != null) {
+        {
+            graphicsContextPacketCanvas.clearRect(0,0,canvas.getWidth(),canvas.getHeight()); //vyčistenie plátna
+            graphicsContextPacketCanvas.setFill(Color.WHITE);
+            graphicsContextPacketCanvas.fillRect(0,0,canvas.getWidth(),canvas.getHeight()); //vybielenie plátna
+        }
+        int index = 0; //počítadlo ako koeficient posuvu paketu na x-ovej osy
+        for (Packet packet : packets) { //cyklus prechádzania poľa všetkých paketov
+            int PID = packet.getPID(); //PID aktuálneho paketu
+            Integer yPos = (Integer) sortedPIDs.get(PID); //pozícia paketu na y-ovej osy na základe zoradeného zoznamu PIDov
+            if(yPos != null) { //ak sa podarilo získať y-ovú pozíciu
+                //ak sa paket nachádza na viditeľnej časti vykreslovacieho plátna
                 if (isInViewport(scene, index * packetImageWidth, -xPos)) {
-                    double newPos = xPos + index * packetImageWidth;
-                    boolean hasPESheader = packet.getPayload() != null ? packet.getPayload().hasPESheader() : false;
-                    boolean isPayloadStart = packet.getPayloadStartIndicator() == 1;
-                    boolean isPMT = isPMT(stream.getTables().getPATmap(),packet.getPID());
-                    boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //packet.getAdaptationFieldHeader() != null;
-                    drawPacketImg(graphicsContextPacketCanvas, yPos, newPos, getType(packet.getPID(), stream), pid, MPEG.getProgramName(stream, pid), isAdaptationField, isPayloadStart, isPMT,hasPESheader,hasTimestamp(packet) );
+                    double newPos = xPos + index * packetImageWidth; //x-ová pozícia na základe absolútnej pozície paketu v transprtnom toku
+                    //na základe hodnôt nasledujúcich premenných sú vykresľované v pakete dané ikony
+                    boolean hasPESheader = packet.getPayload() != null ? packet.getPayload().hasPESheader() : false; //paket obsahuje PES hlavičku
+                    boolean isPayloadStart = packet.getPayloadStartIndicator() == 1; //paket obsahuje začiatok užitočných dát PES paketu
+                    boolean isPMT = isPMT(stream.getTables().getPATmap(),packet.getPID()); //paket nesie PMT tabuľku
+                    boolean isAdaptationField = packet.getAdaptationFieldControl() > 1; //paket obsahuje adaptačné pole
+                    //zavolanie metódy vykreslenia jedného paketu
+                    drawPacketImg(
+                            graphicsContextPacketCanvas,
+                            yPos, //y-ová pozícia
+                            newPos,  // x-ová pozícia
+                            getType(packet.getPID(), stream),  //typ paketu
+                            PID,
+                            MPEG.getProgramName(stream, PID),  //názov programu resp. služby
+                            isAdaptationField,
+                            isPayloadStart,
+                            isPMT,
+                            hasPESheader,
+                            hasTimestamp(packet) //prítomnosť synchronizačnej časovej značky v pakete
+                    );
+                    //pridanie imaginárnej plochy nad paketom, spravujúcej používateľovu interakciu, t.k. klikanie myšou na paket
                     pane.getChildren().add(createListenerRect(yPos, newPos, packet.hashCode()));
                 }
             }
-            index++;
+            index++; //incrementácia posuvu po x-ovej osy
         }
     }
 
@@ -183,7 +206,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
             }
         }
         graphicsContext.setFont(new Font(fontSize));
-        graphicsContext.strokeText("PID: " + pid + "\n" + MPEG.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55);
+        graphicsContext.strokeText("PID: " + pid + "\n" + MPEG.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55); //TODO change PES to PMT if so
     }
 
 

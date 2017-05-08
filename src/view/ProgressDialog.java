@@ -1,19 +1,20 @@
 package view;
 
 import javafx.concurrent.Task;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import static app.Main.localization;
+import static model.config.Config.*;
 
-public class ProgressForm {
+
+public class ProgressDialog {
     private final Stage dialogStage;
     private final ProgressBar pb;
     private final ProgressIndicator pin;
@@ -21,7 +22,7 @@ public class ProgressForm {
     private Label label;
 
 
-    ProgressForm(Stage dialogStage) {
+    ProgressDialog(Stage dialogStage) {
 
         this.dialogStage = dialogStage;
         pb = new ProgressBar();
@@ -29,17 +30,17 @@ public class ProgressForm {
         vbox = new VBox(5);
         label = new Label();
 
-        this.dialogStage.setTitle("Analyzing transport stream...");
+        this.dialogStage.setTitle(localization.getAnalyseText());
         this.dialogStage.initStyle(StageStyle.UTILITY);
         this.dialogStage.setResizable(false);
-        this.dialogStage.setWidth(250);
-        this.dialogStage.setHeight(100);
+        this.dialogStage.setWidth(dialogStageWidth);
+        this.dialogStage.setHeight(dialogStageHeight);
         //this.dialogStage.initModality(Modality.APPLICATION_MODAL);
 
-        label.setText(("Preparing stream..."));
+        label.setText(localization.getParsingText());
         pb.setProgress(-1F);
 
-        vbox.setPadding(new Insets(10));
+        vbox.setPadding(dialogInsets);
         vbox.setAlignment(Pos.CENTER);
         vbox.getChildren().addAll(pin, label);
 
@@ -52,7 +53,7 @@ public class ProgressForm {
 
         vbox.getChildren().clear();
 
-        label.setText("Parsing packets");
+        label.setText(localization.getParsingText());
         vbox.getChildren().addAll(pb, label);
 
         dialogStage.show();
@@ -62,9 +63,11 @@ public class ProgressForm {
     }
 
 
-    public void activatePinBar(final Task<?> task) {
+    public void activatePinBar(final Task<?> task, String text) {
         vbox.getChildren().clear();
 
+        label.setText(text);
+        vbox.getChildren().addAll(pin, label);
         dialogStage.show();
 
         pb.progressProperty().unbind();

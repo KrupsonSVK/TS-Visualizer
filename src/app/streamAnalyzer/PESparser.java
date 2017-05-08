@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import static app.streamAnalyzer.TimestampParser.parsePTSdts;
 
 
-public class PESparser extends Parser {
+class PESparser extends Parser {
 
 
     PESparser(){

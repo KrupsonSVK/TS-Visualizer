@@ -52,18 +52,28 @@ public class Tables {
     private Map maxBitrateMap;
 
     private Map serviceTimestampMap;
+    private Map enhancedPMTmap;
+    private List PIDlist;
+    private Integer PMTnumber;
+    private boolean synchronizationLost;
 
 
     public Tables() {
+
+        this.PIDlist = new ArrayList<>();
+
         this.PIDmap = new HashMap<>();
         this.errorMap = new HashMap<>();
         this.programMap = new HashMap();
 
         this.ESmap = new HashMap();
         this.PATmap = new HashMap();
-        this.PMTmap = new HashMap();
 
+        this.PMTnumber=0;
+        this.PMTmap = new HashMap();
         this.PCRpmtMap = new HashMap();
+        this.enhancedPMTmap = new HashMap();
+
         this.PCRpacketMap = new HashMap();
         this.OPCRpacketMap = new HashMap();
         this.PTSpacketMap = new HashMap();
@@ -576,6 +586,42 @@ public class Tables {
 
     public void setPTSsnapshotMap(Map PTSsnapshotMap) {
         this.PTSsnapshotMap = PTSsnapshotMap;
+    }
+
+    public void setEnhancedPMTmap(Map enhancedPMTmap) {
+        this.enhancedPMTmap = enhancedPMTmap;
+    }
+
+    public Map getEnhancedPMTmap() {
+        return enhancedPMTmap;
+    }
+
+    public void setPIDlist(List<Integer> PIDlist) {
+        this.PIDlist = PIDlist;
+    }
+
+    public List getPIDlist() {
+        return PIDlist;
+    }
+
+    public Integer getPMTnumber() {
+        return PMTnumber;
+    }
+
+    public void updatePMTnumber() {
+        this.PMTnumber++;
+    }
+
+    public void setPMTnumber(Integer PMTnumber) {
+        this.PMTnumber = PMTnumber;
+    }
+
+    public void setSynchronizationLost(boolean synchronizationLost) {
+        this.synchronizationLost = synchronizationLost;
+    }
+
+    public boolean isSynchronizationLost() {
+        return synchronizationLost;
     }
 }
 

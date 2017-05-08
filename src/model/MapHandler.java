@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public abstract class MapHandler {
 
 
-    public <K, V> HashMap<V, K> reverse(Map<K, V> map) {
+    public static <K, V> HashMap<V, K> reverse(Map<K, V> map) {
         HashMap<V, K> rev = new HashMap<V, K>();
 
         for (Map.Entry<K, V> entry : map.entrySet()) {

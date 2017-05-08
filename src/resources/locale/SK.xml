@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0_112" class="java.beans.XMLDecoder">
+ <object class="model.config.Localization">
+     <void property="localization">
+         <string>Slovak</string>
+     </void>
+  <void property="rightsText">
+   <string>Všetky práva vyhradené.</string>
+  </void>
+  <void property="userGuideLabel">
+   <string>Používateľská príručka k aplikácii TS Visualizer</string>
+  </void>
+  <void property="userGuideText">
+   <string>
+    Hlavný účel nástroja, analýza a vizualizácia transportných tokov, sa vyvolá otvorením súboru, ktorý ich nesie. To je možné cez ponuku File a tlačidlo Open, alebo cez tlačidlo Select file v strede plochy okna, ktoré oba vyvolajú systémový súborový manažér, ktorý umožní vyhľadať a otvoriť súbor na analýzu. Jednoduchší spôsob však je presunúť žiadaný súbor nad plochu nástroja a uvoľniť ho, inak povedané vykonať „drag’n’drop” súboru. Po otvorení súboru sa spustí jeho analýza.
+
+    Po úspešnej analýze súboru sa vytvorí šesť kariet podávajúcich údaje získané analýzou súboru a otvorí sa karta Detail Tab s detailnými informáciami o transportnom toku. Karta obsahuje detailné výpisy v riadkoch, pričom riadky začínajúce symbolom trojuholníka obsahujú ďalšie podriadky, ktorých stromová štruktúra sa rozbalí po kliknutí na daný riadok. Výpisy obsahujú základné súborové informácie ako jeho veľkosť, dátum vytvorenia, absolútna cesta a podobne, nasledované informáciami o transportnom toku, t.j. dĺžka, prenosová rýchlosť, počet transportných paketov a iné. Za nimi nasledujú stromové výpisy s obsahom jednotlivých PSI tabuliek, ako typ tabuľky, jej PID, kvantita, a informácie špecifické pre ten ktorý konkrétny typ, ako napr. programové asociácie pri PAT tabuľke alebo typy tokov prislúchajúcich k programu v PMT tabuľke. Za týmto stromom nasleduje stromový výpis s koreňovým riadkom PID, ktorého podriadky tvoria jednotlivé PID-y a informácie pre nich špecifické ako napr. typ či kvantita.
+
+    Po prekliknutí na kartu Visualization sa otvorí primárny grafický komponent nástroja- vizualizácia paketov, alebo inak povedané paketami vykreslené plátno, nachádzajúce sa v hornej polovici okna. V dolnej časti okna sa nachádza podobné plátno, ale s miniatúrami, resp. legendou paketov a tieto dva plátna sú oddelené tzv. paketovou lištou.
+    Paketové plátno vykresľuje pakety ako trojrozmerné dlaždice, usporiadané na x-ovej osi tak, ako sú radené v transportnom toku a na y-ovej osi podľa hodnoty PID, prípadne inak zvoleného filtra. Pohyb po paketovom plátne je možný myšou, t.j. stlačením pravého tlačidla myši na ľubovoľnom mieste na plátne a ťahaním do žiadaného smeru, a to horizontálne i vertikálne.
+    Paketová legenda predstavuje pohľad na paketové plátno z vyššej perspektívy, umožňujúc lepšie vyhľadať daný typ paketu. Svetlá plocha na tejto šedej legende predstavuje výrez viditeľný na paketovom plátne. Pohyb po nej je riešený rovnakým spôsobom ako po paketovom plátne.
+    Paketová lišta predstavuje takisto vyššiu perspektívu, avšak z pohľadu celého transportného toku, kde jednotlivé farebné pruhy znamenajú pakety nesúce PSI tabuľky. To umožňuje efektívne lokalizovať daný typ tabuľky v súbore a presunúť sa k nemu. Na to slúži okrem zdĺhavého posunu po niektorom z plátien tzv. lupa nachádzajúca sa paketovej lište. Jej šírka predstavuje výrez, ktorí poníma paketová legenda v rámci transportného toku. Po stlačení myši nad touto lupou ňou možno hýbať v horizontálnom smere, a tým pádom sa expresne rýchlo pohybovať v transportnom toku.
+    Lišta nad paketovým plátnom obsahuje filter zobrazenia pozostávajúci z tzv. „comboboxu” programov a zaškrtávacieho poľa združovania. To po zaškrtnutí umožňuje združiť jednotlivé pakety do televíznych programov podľa y-ovej osi. Programový „combobox” umožnuje zvoliť konkrétny televízny program, resp. službu, ktorej pakety budú vykreslené na plátne. Obe funkcie filtra možno skombinovať.
+
+    Po kliknutí na ľubovoľný paket na plátne sa zobrazí informačná bublina. Táto bublina obsahuje všetky informácie, ktoré daný paket nesie, t.j. jednotlivé záhlavia a ich premenné, ale aj ich dátový obraz v hexadeximálnom, prípadne v textovom tvare. Obsahuje takisto údaje špecifické pre daný typ tabuľky, v prípade, že nesie PSI tabuľky. Po kliknutí na ľubovoľné biele miesto na paketovom plátne možno túto bublinu vypnúť.
+
+    Po prekliknutí na ďalšiu kartu, t.j. Bitrate, sa v okne vykreslí kumulovaný plošný graf zobrazujúci priebeh prenosovej rýchlosti jednotlivých PID-ov v čase. X-ová os predstavuje relatívny čas, resp. absolútnu pozíciu v transportnom toku a y-ová os vyjadruje hodnotu prenosovej rýchlosti. Z grafu je tak možné vyčítať hodnotu prenosovej rýchlosti daného PID-u, prípadne celého toku v tom ktorom konkrétnom čase. Pod grafom sa nachádza legenda priraďujúca jednotlivým PID-om, resp. programom, farby im prislúchajúcich kriviek v grafe. Pod legendou sa nachádza zaškrtávacie políčko filtra, ktoré po kliknutí združí PID-y kriviek grafu do programov, ktorým patria.
+    Preklenutím sa na kartu Structure, vznikne v okne stĺpcový graf extrémov prenosovej rýchlosti jednotlivých služieb. Na x-ovej osi sa nachádzajú jednotlivé PID-y,
+    resp. programy a y-ová os vyjadruje hodnotu prenosovej rýchlosti. Každá položka x-ovej osi je zložená z troch stĺpcov a to z globálneho minima, globálneho maxima a strednej hodnoty jeho prenosovej rýchlosti. Pod grafom sa takisto nachádza zaškrtávacie políčko filtra združujúceho PID-y do im prislúchajúcich programov.
+
+    Prechodom na ďalšiu kartu, t.j. Composition, sa v okne vytvorí koláčový graf dátovej kompozície transportného toku. Kruh, alebo inak koláč, predstavuje celú množinu paketov transportného toku. Jednotlivé výseky grafu reprezentujú súbory všetkých paketov špecifického PID-u, prípadne programu, a ich kvantitatívny podiel v tomto transportnom toku. Po stlačení a podržaní myši nad jednotlivým výsekom sa zobrazí informačná bublina s údajom o jeho veľkosti v MB a percentuálny podiel v celom súbore. Legenda pod grafom priraďuje jednotlivým výsekom, resp. farbám im prislúchajúce PID-y, prípadne služby. Tzv. rádiové tlačidlá pod touto legendou obsluhujú filter grafu, ktorý umožňuje zvoliť zostavenie grafu nie len podľa PID-ov transportného toku, ale i podľa programov alebo typov elementárnych tokov.
+
+    Posledná karta Timestamp, vykreslí po otvorení korelačný diagram, alebo inak bodový graf, prezentujúci rozloženie časových synchronizačných značiek (PCR, OPCR, PTS a DTS) v transportnom toku. X-ová os grafu predstavuje absolútnu polohu paketu s danou časovou značkou v transportnom toku a y-ová predstavuje časovú hodnotu, ktorú táto značka nesie. Tzv. „combobox” programového filtra pod grafom umožňuje vybrať, resp. filtrovať konkrétny program a teda jemu prislúchajúce časové značky. Po kliknutí na ľubovoľnú časovú značku v grafe a podržaní myši sa zobrazí informačná bublina s údajmi, ktoré nesie, t.j typ a presný čas. Po uvoľnení myši bublina zanikne.
+    Program umožňuje kedykoľvek otvoriť a analyzovať ďalší súbor s transportným tokom, alebo prerušiť prebiehajúcu analýzu.
+   </string>
+  </void>
+  <void property="userGuideTitle">
+   <string>Používateľská príručka</string>
+  </void>
+  <void property="PIDcompositionText">
+   <string>Zloženie PID</string>
+  </void>
+  <void property="aboutMenuText">
+   <string>O programe</string>
+  </void>
+  <void property="aboutTitle">
+   <string>O programe</string>
+  </void>
+  <void property="accessText">
+   <string>Posledný prístup: </string>
+  </void>
+  <void property="allText">
+   <string>Všetko</string>
+  </void>
+  <void property="analyseText">
+   <string>Analýza transportného toku...</string>
+  </void>
+  <void property="bitrateStructureByPIDs">
+   <string>Štruktúra presnosovej rýchlosti na základe PID</string>
+  </void>
+  <void property="bitrateStructureByProgramsText">
+   <string>Štruktúra presnosovej rýchlosti na základe programov</string>
+  </void>
+  <void property="bitrateTabText">
+   <string>Prenos</string>
+  </void>
+  <void property="bitrateText">
+   <string>Prenosová rýchlosť: </string>
+  </void>
+  <void property="buttonSetText">
+   <string>Aplikovať</string>
+  </void>
+  <void property="compositionTabText">
+   <string>Zloženie</string>
+  </void>
+  <void property="createdByText">
+   <string>Vytvoril Tomáš Krupa</string>
+  </void>
+  <void property="createdText">
+   <string>Vytvorený: </string>
+  </void>
+  <void property="detailTabText">
+   <string>Detaily</string>
+  </void>
+  <void property="durationText">
+   <string>Trvanie: </string>
+  </void>
+  <void property="editMenuText">
+   <string>Úpravy</string>
+  </void>
+  <void property="errorPackets">
+   <string>Chybné pakety: </string>
+  </void>
+  <void property="exitMenuText">
+   <string>Odísť</string>
+  </void>
+  <void property="exportTXTMenuText">
+   <string>Exportovať TXT</string>
+  </void>
+  <void property="exportXMLMenuText">
+   <string>Exportovať XML</string>
+  </void>
+  <void property="fileMenuText">
+   <string>Súbor</string>
+  </void>
+  <void property="groupProgramsText">
+   <string>Združiť podľa programov</string>
+  </void>
+  <void property="guideMenuText">
+   <string>Sprievodca</string>
+  </void>
+  <void property="helpMenuText">
+   <string>Pomoc</string>
+  </void>
+  <void property="importXMLMenuText">
+   <string>Importovať XML</string>
+  </void>
+  <void property="jumpMenuText">
+   <string>Skoč na paket...</string>
+  </void>
+  <void property="language">
+   <string>Jazyk</string>
+  </void>
+  <void property="modifiedText">
+   <string>Modifikovaný: </string>
+  </void>
+  <void property="multiplexBitrateText">
+   <string>Prenosová rýchlosť multiplexu</string>
+  </void>
+  <void property="multiplexProgramBitrateText">
+   <string>Prenosová rýchlosť programov multiplexu</string>
+  </void>
+  <void property="multiplexText">
+   <string>Multiplex</string>
+  </void>
+  <void property="numerOfPacketText">
+   <string>Počet paketov: </string>
+  </void>
+  <void property="openFileMenuText">
+   <string>Otvoriť súbor</string>
+  </void>
+  <void property="ownerText">
+   <string>Vlastník: </string>
+  </void>
+  <void property="packetOrderText">
+   <string>Poradie paketu</string>
+  </void>
+  <void property="packetPositionText">
+   <string>Pozícia paketu: </string>
+  </void>
+  <void property="packetSize">
+   <string>Veľkosť paketu: </string>
+  </void>
+  <void property="parsingText">
+   <string>Parsujem pakety...</string>
+  </void>
+  <void property="pathText">
+   <string>Cesta: </string>
+  </void>
+  <void property="prepareText">
+   <string>Príprava súboru...</string>
+  </void>
+  <void property="programCompositionText">
+   <string>Zloženie programov</string>
+  </void>
+  <void property="programFilterText">
+   <string>Programový filter: </string>
+  </void>
+  <void property="readonlyText">
+   <string>Iba na čítanie: </string>
+  </void>
+  <void property="regularText">
+   <string>Regulárny súbor: </string>
+  </void>
+  <void property="releaseText">
+   <string>Posledné vydanie </string>
+  </void>
+  <void property="searchMenuText">
+   <string>Vyhľadať paket...</string>
+  </void>
+  <void property="selectFileText">
+   <string>Vybrať súbor...</string>
+  </void>
+  <void property="settingsMenuText">
+   <string>Nastavenia</string>
+  </void>
+  <void property="settingsText">
+   <string>Nastavenia</string>
+  </void>
+  <void property="sizeText">
+   <string>Veľkosť: </string>
+  </void>
+  <void property="softwareName">
+   <string>TS Visualizer</string>
+  </void>
+  <void property="streamCompositionText">
+   <string>Zloženie elementárnych tokov</string>
+  </void>
+  <void property="streamIntegrity">
+   <string>Celistvosť toku: </string>
+  </void>
+  <void property="structureTabText">
+   <string>Extrémy</string>
+  </void>
+  <void property="timeText">
+   <string>Čas</string>
+  </void>
+  <void property="timestampsLayoutText">
+   <string>Rozloženie časových značiek</string>
+  </void>
+  <void property="timestampsTabText">
+   <string>Časové značky</string>
+  </void>
+  <void property="tsPacketsText">
+   <string>Počet TS paketov: </string>
+  </void>
+  <void property="typeText">
+   <string>Typ: </string>
+  </void>
+  <void property="visualizationTabText">
+   <string>Vizualizácia</string>
+  </void>
+ </object>
+</java>
+

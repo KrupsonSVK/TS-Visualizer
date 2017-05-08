@@ -9,7 +9,6 @@ import model.pes.PES;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
 import static model.config.Config.snapshotInterval;
 
@@ -31,116 +30,135 @@ public class StreamParser extends Parser {
         PESparser = new PESparser();
     }
 
+    public static int getTsPacketSize() {
+        return tsPacketSize;
+    }
 
+    /**
+     * Funkcia spracovavá trasportný tok ako pole bajtov, pohybujúc sa sekvenčne po 188 bajtoch (dĺžkapaketu) jednotlivých paketov
+     *
+     * @param buffer vstupný buffer s transportným tokom
+     */
     public void parseStream(byte[] buffer) {
 
-        super.tables =  new Tables();
-        PESparser.tables = super.tables;
+        super.tables =  new Tables(); //objekty triedy Tables nesúce rôzne dátové tabuľky resp. asociácie
+        PESparser.tables = super.tables;  //inicializácia objektov podtried
         PSIparser.tables = super.tables;
 
-        this.task = new Task<Tables>() {
+        this.task = new Task<Tables>() { //parsovanie prebieha ako úloha paralelizovaná do mnohých vlákien
             @Override
             public Tables call() throws InterruptedException, IOException {
 
-                ArrayList<Packet> packets = new ArrayList<>();
-                boolean isPATanalyzed = false;
-                int firstPosition = nil;
-                long packetIndex = 0;
-                int totalPackets = 0;
+                ArrayList<Packet> packets = new ArrayList<>(); //pole objektov triedy Packet predstavujúce pakety
+                boolean isPATanalyzed = false; //indikátor analyzovaných PAT tabuliek
+                int firstPosition = nil; //pozícia prvého paketu
+                long packetIndex = 0; //pozícia paketu v transportnom toku
+                int totalPackets; // celkové množstvo paketov transportného toku
+                int tickInterval = nil; //interval vytvárania obrazou transportného toku
+                int tick = 0; //počítadlo paketov pre interval vytvárania obrazu
+                int lost = 0;
 
-                int tickInterval = nil;
-                int tick = 0;
+                for (int i = 0; i < buffer.length; i += tsPacketSize) { //prechádzanie celého transportného toku v cykle s posuvom veľkosi paketu
 
-                for (int i = 0; i < buffer.length; i += tsPacketSize) {
-
-                    if(!isPATanalyzed && i>=buffer.length - 2*tsPacketSize) { // if we are almost at the and there is no PAT, pretend like there is
+                    if(!isPATanalyzed && i>=buffer.length - 2*tsPacketSize) { // ak sa nenašla žiadna PAT tabuľka, predstierame, že sa našla
                         isPATanalyzed = true;
-                        i = firstPosition;
+                        i = firstPosition; //vráti sa na pozíciu prvého paketu
                     }
-                    if (i == 0) {
+                    if (i == 0) { //na začiatku vyhľadá prvý transportný paket
                         i = seekBeginning(buffer, i);
-
-                        if (i == nil) {
+                        if (i == nil) { //ak sa nenašiel, skončí
                             throw new IOException("File does not contain TS stream!");
                         }
-                        firstPosition = i;
-                        totalPackets = sumPackets(buffer,i);
-                        tickInterval = totalPackets/snapshotInterval;
+                        firstPosition = i; //zaznamená pozíciu prvého transportného paketu
+                        totalPackets = sumPackets(buffer,i); //spočíta celkový počet paketov
+                        tickInterval = totalPackets/snapshotInterval; //vypočíta interval ukladania paketového obrazu transportného toku
                     }
-                    if (buffer[i] == syncByte) {
+                    if (buffer[i] == syncByte) { // paket musí začínať synchronizačným bajtom
+                        lost = 0;
+                        byte[] packet = Arrays.copyOfRange(buffer, i, i + tsPacketSize); //skopírovanie bajtov paketu
+                        int header = headerParser.parseHeader(packet); //získanie 4 bajtov hlavičky
+                        byte[] binaryHeader = toBinary(header,tsHeaderBinaryLength); //prevod hlavičky na binárne pole
 
-                        byte[] packet = Arrays.copyOfRange(buffer, i, i + tsPacketSize);
-
-                        int header = headerParser.parseHeader(packet);
-                        byte[] binaryHeader = toBinary(header,tsHeaderBinaryLength);
-
-                        Packet analyzedHeader =  headerParser.analyzeHeader(binaryHeader,packet,packetIndex++);
+                        Packet analyzedHeader =  headerParser.analyzeHeader(binaryHeader,packet,packetIndex++); //analýza hlavičky paketu
                         if(isPATanalyzed) {
-                            tables.updatePIDmap(analyzedHeader.getPID());
-                            if(tick == tickInterval){
-                                tables.updateIndexSnapshotMap();
+                            tables.updatePIDmap(analyzedHeader.getPID()); //aktualizácia tabuľky početnosti PIDov
+                            if(tick++ == tickInterval){
+                                tables.updateIndexSnapshotMap();    //aktualizácia paketového obrazu transportného toku
                                 tick=0;
                             }
-                            tick++;
-                        }
+                            if (adaptationFieldParser.isAdaptationField(analyzedHeader) ) { //ak paket obsahuje transportné pole
 
-                        if (adaptationFieldParser.isAdaptationField(analyzedHeader)) {
+                                short adaptationFieldHeader =  adaptationFieldParser.parseAdaptationFieldHeader(packet); //načítanie 2 bajtov adaptačného poľa
+                                byte[] binaryAdaptationFieldHeader = toBinary(adaptationFieldHeader,tsAdaptationFieldHeaderBinaryLength); //prevod na binárne pole
+                                analyzedHeader.setAdaptationFieldHeader(adaptationFieldParser.analyzeAdaptationFieldHeader(binaryAdaptationFieldHeader)); //analýza adaptačného poľa
 
-                            short adaptationFieldHeader =  adaptationFieldParser.parseAdaptationFieldHeader(packet);
-                            byte[] binaryAdaptationFieldHeader = toBinary(adaptationFieldHeader,tsAdaptationFieldHeaderBinaryLength);
+                                short adaptationFieldLength = analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength(); //získanie dĺžky adaptačného poľa
+                                if (adaptationFieldLength > 1 && isOptionalField(analyzedHeader.getAdaptationFieldHeader())) { //ak adaptačné pole obsahuje doplnkové polia
 
-                            analyzedHeader.setAdaptationFieldHeader(adaptationFieldParser.analyzeAdaptationFieldHeader(binaryAdaptationFieldHeader));
+                                    int[] adaptationOptionalFields = parseNfields(packet, tsAdaptationFieldHeaderPosition, adaptationFieldLength-1);
+                                    byte[] binaryAdaptationFieldOptional = intToBinary(adaptationOptionalFields, adaptationFieldLength-1);
 
-                            short adaptationFieldLength = analyzedHeader.getAdaptationFieldHeader().getAdaptationFieldLength();
-                            if (adaptationFieldLength > 1 && isOptionalField(analyzedHeader.getAdaptationFieldHeader())) {
-
-                                int[] adaptationOptionalFields = parseNfields(packet, 6, adaptationFieldLength-1);
-                                byte[] binaryAdaptationFieldOptional = intToBinary(adaptationOptionalFields, adaptationFieldLength-1);
-
-                                analyzedHeader.getAdaptationFieldHeader().setAdaptationFieldOptionalFields(
-                                        adaptationFieldParser.analyzeAdaptationFieldOptionalFields(analyzedHeader.getAdaptationFieldHeader(), binaryAdaptationFieldOptional, analyzedHeader.getIndex(), analyzedHeader.getPID())
-                                );
-                                if(isPATanalyzed) {
-                                    tables.updatePCRmap(analyzedHeader.getAdaptationFieldHeader().getOptionalFields());
-                                    updateTables(adaptationFieldParser);
+                                    analyzedHeader.getAdaptationFieldHeader().setAdaptationFieldOptionalFields( //analýza doplnkových polí adaptačného poľa
+                                            adaptationFieldParser.analyzeAdaptationFieldOptionalFields(
+                                                    analyzedHeader.getAdaptationFieldHeader(), binaryAdaptationFieldOptional, analyzedHeader.getIndex(), analyzedHeader.getPID()
+                                            )
+                                    );
+                                    tables.updatePCRmap(analyzedHeader.getAdaptationFieldHeader().getOptionalFields()); //aktualizácia tabuľky synchronizačných značiek PCR
+                                    updateTables(adaptationFieldParser); //aktualizácia tabuliek vytvorených parserom adaptačých polí
                                 }
                             }
                         }
-                        if(isPayload(analyzedHeader.getAdaptationFieldControl())) {
-                            if (!isPATanalyzed) { //TODO if PAT not analysed, skip PES and Adaptation field parsing
-                                if (analyzedHeader.getPID() == PATpid) {
-                                    PSIparser.analyzePAT(analyzedHeader, packet);
+                        if(isPayload(analyzedHeader.getAdaptationFieldControl())) { //ak paket obsahuje užitočné dáta
+                            if (!isPATanalyzed) {
+                                if (analyzedHeader.getPID() == PATpid) {    //ak obsahuje PAT tabuľku
+                                    PSIparser.analyzePAT(analyzedHeader, packet); //analyzuje PAT tabuľku
                                     i = firstPosition;
                                     packetIndex = 0;
                                     isPATanalyzed = true;
                                 }
                                 continue;
                             }
-                            if (PSIparser.isPayloadPSI(analyzedHeader.getPID())) {
-                                analyzedHeader.setPayload(PSIparser.analyzePSI(analyzedHeader, packet));
-                                updateTables(PSIparser);
+                            if (PSIparser.isPayloadPSI(analyzedHeader.getPID())) { //ak obsahuje PSI tabuľku
+                                analyzedHeader.setPayload(PSIparser.analyzePSI(analyzedHeader, packet)); //analyzuje PSI tabuľku
+                                updateTables(PSIparser); //aktualizácia tabuliek vytvorených parserom PSI tabuliek
                             }
-                            else if (PSIparser.isPMT(analyzedHeader.getPID())) {
-                                analyzedHeader.setPayload(PSIparser.analyzePMT(analyzedHeader, packet));
-                                updateTables(PSIparser);
+                            else if (PSIparser.isPMT(analyzedHeader.getPID())) { //ak obsahuje PMT tabuľku
+                                analyzedHeader.setPayload(PSIparser.analyzePMT(analyzedHeader, packet)); //analyzuje PMT tabuľku
+                                updateTables(PSIparser); //aktualizácia tabuliek vytvorených parserom PSI tabuliek
                             }
-                            else {
-                                analyzedHeader.setPayload(PESparser.analyzePES(analyzedHeader, packet));
-                                tables.updatePTSmap(((PES)analyzedHeader.getPayload()));
-                                updateTables(PESparser);
+                            else {  //ak obsahuje PES paket
+                                analyzedHeader.setPayload(PESparser.analyzePES(analyzedHeader, packet)); //analyzuje PES užitočné dáta
+                                tables.updatePTSmap(((PES)analyzedHeader.getPayload())); //aktualizácia tabuliek vytvorených parserom PSI tabuliek
+                                updateTables(PESparser); //aktualizácia tabuliek vytvorených parserom PES dát
                             }
-                            packets.add(analyzedHeader);
+                            packets.add(analyzedHeader); //pridá kompletne analyzovaný paket do poľa paketov
+                            updateProgress(i, buffer.length); //aktualizuje okno s progresom analýzy
                         }
-                        updateProgress(i, buffer.length);
+                    }
+                    else {
+                        lost++; //stráca sa konfigurácia
+                        i = seekBeginning(buffer, i); //
+                        if(i == nil || lost == syncLost){ // počet stratených paketov presiahol únosnú mieru
+                            tables.setSynchronizationLost(true);
+                            break; // koniec
+                        }
                     }
                 }
-                return createPIDnErrorMaps(packets);
+                tables.setPackets(packets); //uloží do tabuliek pole paketov
+                return tables; //vráti tabuľky so získanými dátami
             }
 
 
+            /**
+             * Funkcia zráta počet paketov v transportnom toku
+             *
+             * @param buffer vstupný buffer transportného toku
+             * @param i pozícia prvého paketu
+             * @return vráti celkový počet paketov
+             */
             private int sumPackets(byte[] buffer, int i) {
                 int totalPackets = 0;
-                for (; i < buffer.length; i += tsPacketSize) {
+                for (; i < buffer.length; i += tsPacketSize) { //prechádzam transportný tok a rátam pakety
                     if (buffer[i] == syncByte) {
                         totalPackets++;
                     }
@@ -150,7 +168,6 @@ public class StreamParser extends Parser {
         };
     }
 
-
     private byte[] toBinary(int source, int length) {
         byte[] binaryField = new byte[length];
         for (int index = 0; index < length; index++) {
@@ -159,14 +176,12 @@ public class StreamParser extends Parser {
         return binaryField;
     }
 
-
     private boolean isOptionalField(AdaptationFieldHeader adaptationFieldHeader) {
         if (adaptationFieldHeader.getPCRF() == 0x01 || adaptationFieldHeader.getOPCRF() == 0x01 || adaptationFieldHeader.getSplicingPointFlag() == 0x01 || adaptationFieldHeader.getAFEflag() == 0x01) {
             return true;
         }
         return false;
     }
-
 
     private void updateTables(Parser parser) {
 
@@ -182,6 +197,7 @@ public class StreamParser extends Parser {
             tables.setDTSpacketMap(parser.tables.getDTSpacketMap());
         }
         else if(parser instanceof PSIparser) {
+            tables.setPMTnumber(parser.tables.getPMTnumber());
             tables.setPATmap(parser.tables.getPATmap());
             tables.setPMTmap(parser.tables.getPMTmap());
             tables.setESmap(parser.tables.getESmap());
@@ -198,7 +214,6 @@ public class StreamParser extends Parser {
         }
     }
 
-
     private int seekBeginning(byte[] buffer, int i){
 
         for (; i < buffer.length - tsPacketSize; i++) {
@@ -209,35 +224,8 @@ public class StreamParser extends Parser {
         return nil;
     }
 
-
-    private Tables createPIDnErrorMaps(ArrayList<Packet> packets) {
-        HashMap<Integer, Integer> PIDmap = new HashMap<>();
-        HashMap<Integer, Integer> ErrorMap = new HashMap<>();
-
-        for (Packet packet : packets) {
-            if (PIDmap.get(packet.getPID()) == null) {
-                PIDmap.put(packet.getPID(), 1);
-                ErrorMap.put(packet.getPID(), 0);
-            }
-            else {
-                PIDmap.put(packet.getPID(), PIDmap.get(packet.getPID()) + 1);
-            }
-            if (packet.getTransportErrorIndicator() == 0x01) {
-                ErrorMap.put(packet.getPID(), ErrorMap.get(packet.getPID()) + 1);
-            }
-        }
-        tables.setErrorMap(ErrorMap);
-        tables.setPackets(packets);
-        return tables;
-    }
-
-
     private boolean isPayload(Integer adaptationFieldControl) {
         return adaptationFieldControl != 2;
-    }
-
-    public static int getTsPacketSize() {
-        return tsPacketSize;
     }
 
     public Task<Tables> getTask() {
