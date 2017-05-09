@@ -51,13 +51,13 @@ public class DetailTab extends Window {
         {
             PSInode.getChildren().addAll( new TreeItem<>("Program Specific Information Tables"));
 
-            TreeItem PATnode = createPATnode((HashMap<Integer, Integer>) streamDescriptor.getTables().getPATmap(), streamDescriptor.getTables().getPIDmap());
+            TreeItem PATnode = createPATnode((HashMap<Integer, Integer>) streamDescriptor.getTables().getPATmap(), streamDescriptor.getTables().getPIDmap(), streamDescriptor);
             TreeItem<String> CATnode = createCATnode(streamDescriptor.getTables().getPIDmap());
             TreeItem PMTnode = createPMTnode(
                     (HashMap<Integer, String>) streamDescriptor.getTables().getProgramMap(),
                     (HashMap<Integer, Integer>)streamDescriptor.getTables().getPMTmap(),
                     (HashMap<Integer, Integer>) streamDescriptor.getTables().getESmap(),
-                    streamDescriptor.getTables().getPMTnumber()
+                    streamDescriptor.getTables().getPMTnumber(), streamDescriptor
             );
             TreeItem<String> NITnode = createNITnode(streamDescriptor.getTables().getPIDmap());
             TreeItem<String> SDTnode = createSDTnode(streamDescriptor.getTables().getPIDmap());
@@ -153,13 +153,13 @@ public class DetailTab extends Window {
     }
 
 
-    private TreeItem createPMTnode(HashMap<Integer, String> programMap,  HashMap<Integer, Integer> PMTmap, HashMap<Integer, Integer> ESmap, Integer packets) {
+    private TreeItem createPMTnode(HashMap<Integer, String> programMap,  HashMap<Integer, Integer> PMTmap, HashMap<Integer, Integer> ESmap, Integer packets, Stream stream) {
         TreeItem<String> PMTnode = new TreeItem<>("PMT");
         PMTnode.getChildren().add(new TreeItem<>("Program Map Table"));
         PMTnode.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + packets  + "x "));
 
         for (Map.Entry<Integer, String> programEntry : programMap.entrySet()) {
-            TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()) + " (" + programEntry.getKey() + ")");
+            TreeItem<String> programNode = new TreeItem<>("Program: " + toHex(programEntry.getKey()) + " (" + getProgramName(stream,programEntry.getKey()) + ")");
             int index = 0;
 
             for (Map.Entry<Integer, Integer> PMTentry : PMTmap.entrySet()) {
@@ -183,13 +183,13 @@ public class DetailTab extends Window {
     }
 
 
-    private TreeItem createPATnode(HashMap<Integer, Integer> PATmap, Map PIDmap) {
+    private TreeItem createPATnode(HashMap<Integer, Integer> PATmap, Map PIDmap, Stream stream) {
         TreeItem<String> PATnode = new TreeItem<>("PAT");
         PATnode.getChildren().add(new TreeItem<>("Program Association Table"));
         PATnode.getChildren().add(new TreeItem<>(localization.getNumerOfPacketText() + (PIDmap.get(PATpid)==null?0:PIDmap.get(PATpid))  + "x "));
 
         for (Map.Entry<Integer, Integer> pid : PATmap.entrySet()) {
-            TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")");
+            TreeItem<String> serviceNode = new TreeItem<>("Service: " + toHex(pid.getKey()) + " (" + getProgramName(stream,pid.getKey()) + ")");
 
             serviceNode.getChildren().add(new TreeItem<>("Program number: " + toHex(pid.getKey()) + " (" + pid.getKey() + ")"));
             serviceNode.getChildren().add(new TreeItem<>( "Program PMT PID: " + toHex(pid.getValue()) + " (" + pid.getValue() + ")"));

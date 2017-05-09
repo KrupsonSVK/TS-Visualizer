@@ -259,20 +259,24 @@ public class Window extends TimestampParser {
         miniStage.setTitle(localization.getSettingsText());
 
         Label languagelabel = new Label(localization.getLanguage() +": ");
-
-        LanguageButton slovak = new LanguageButton("Slovak", localizationSK);
         LanguageButton english = new LanguageButton("English", localizationEN);
-        LanguageButton deutsch = new LanguageButton("Deutsch", localizationDE);
+        LanguageButton slovak = new LanguageButton("Slovensky", localizationSK);
+        LanguageButton serbian = new LanguageButton("Srpski", localizationSRB);
+        LanguageButton german = new LanguageButton("Deutsch", localizationDE);
         LanguageButton russian = new LanguageButton("Руский", localizationRU);
+        LanguageButton spanish = new LanguageButton("Español", localizationES);
 
         ToggleGroup radioButtonsGroup = new ToggleGroup();
-        slovak.setToggleGroup(radioButtonsGroup);
         english.setToggleGroup(radioButtonsGroup);
-        deutsch.setToggleGroup(radioButtonsGroup);
+        slovak.setToggleGroup(radioButtonsGroup);
+        serbian.setToggleGroup(radioButtonsGroup);
+        german.setToggleGroup(radioButtonsGroup);
         russian.setToggleGroup(radioButtonsGroup);
+        spanish.setToggleGroup(radioButtonsGroup);
 
-        deutsch.setDisable(true);
+        german.setDisable(true);
         russian.setDisable(true);
+        spanish.setDisable(true);
 
         setButton.setDisable(true);
         setButton.setText(localization.getButtonSetText());
@@ -300,11 +304,17 @@ public class Window extends TimestampParser {
             }
         });
 
-        HBox buttonsHBox = new HBox(slovak,english,deutsch,russian);
-        buttonsHBox.setAlignment(Pos.CENTER);
-        buttonsHBox.setPadding(hBoxInsets);
-        buttonsHBox.setSpacing(chartHBoxSpacing);
-        VBox vBox = new VBox(languagelabel,buttonsHBox, setButton);
+        HBox buttonsHBoxA = new HBox(english,german,spanish);
+        HBox buttonsHBoxB = new HBox(slovak,serbian,russian);
+
+        buttonsHBoxA.setAlignment(Pos.CENTER);
+        buttonsHBoxA.setPadding(hBoxInsets);
+        buttonsHBoxA.setSpacing(chartHBoxSpacing);
+        buttonsHBoxB.setAlignment(Pos.CENTER);
+        buttonsHBoxB.setPadding(hBoxInsets);
+        buttonsHBoxB.setSpacing(chartHBoxSpacing);
+
+        VBox vBox = new VBox(languagelabel,buttonsHBoxA, buttonsHBoxB, setButton);
         vBox.setAlignment(Pos.CENTER);
         vBox.setPadding(hBoxInsets);
         vBox.setSpacing(chartHBoxSpacing);

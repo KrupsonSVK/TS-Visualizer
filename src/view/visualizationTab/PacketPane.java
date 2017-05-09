@@ -206,7 +206,7 @@ public class PacketPane extends VisualizationTab implements Drawer {
             }
         }
         graphicsContext.setFont(new Font(fontSize));
-        graphicsContext.strokeText("PID: " + pid + "\n" + MPEG.getPacketName(pid) + "\n" + name, xPos + margin, yPos + offset*0.55); //TODO change PES to PMT if so
+        graphicsContext.strokeText("PID: " + pid + "\n" + MPEG.getPacketName(pid) + "\n", xPos + margin, yPos + offset*0.55); //TODO change PES to PMT if so
     }
 
 

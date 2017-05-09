@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0_112" class="java.beans.XMLDecoder">
+ <object class="model.config.Localization">
+  <void property="localization">
+   <string>Srpski</string>
+  </void>
+  <void property="PIDcompositionText">
+   <string>PID kompozicija</string>
+  </void>
+  <void property="aboutMenuText">
+   <string>O programu</string>
+  </void>
+  <void property="aboutTitle">
+   <string>O programu</string>
+  </void>
+  <void property="accessText">
+   <string>Poslednji pristup: </string>
+  </void>
+  <void property="allText">
+   <string>Sve</string>
+  </void>
+  <void property="analyseText">
+   <string>Analiziranje transportnog toka...</string>
+  </void>
+  <void property="bitrateStructureByPIDs">
+   <string>Struktura bitrejta po PID</string>
+  </void>
+  <void property="bitrateStructureByProgramsText">
+   <string>Struktura bitrejta po programu</string>
+  </void>
+  <void property="bitrateTabText">
+   <string>Bitrate</string>
+  </void>
+  <void property="bitrateText">
+   <string>Bitrate: </string>
+  </void>
+  <void property="buttonSetText">
+   <string>Primeni</string>
+  </void>
+  <void property="compositionTabText">
+   <string>Kompozicija</string>
+  </void>
+  <void property="createdByText">
+   <string>Napravio je Tomas Krupa</string>
+  </void>
+  <void property="createdText">
+   <string>Napravljeno: </string>
+  </void>
+  <void property="detailTabText">
+   <string>Detalji</string>
+  </void>
+  <void property="durationText">
+   <string>Trajanje: </string>
+  </void>
+  <void property="editMenuText">
+   <string>Urediti</string>
+  </void>
+  <void property="errorPackets">
+   <string>Paketi grešaka: </string>
+  </void>
+  <void property="exitMenuText">
+   <string>Izlaz</string>
+  </void>
+  <void property="exportTXTMenuText">
+   <string>Export TXT</string>
+  </void>
+  <void property="exportXMLMenuText">
+   <string>Export XML</string>
+  </void>
+  <void property="fileMenuText">
+   <string>Fajl</string>
+  </void>
+  <void property="groupProgramsText">
+   <string>Sjediniti po programu</string>
+  </void>
+  <void property="guideMenuText">
+   <string>Vodič</string>
+  </void>
+  <void property="helpMenuText">
+   <string>Pomoć</string>
+  </void>
+  <void property="importXMLMenuText">
+   <string>Import XML</string>
+  </void>
+  <void property="jumpMenuText">
+   <string>Skoči na paket...</string>
+  </void>
+  <void property="language">
+   <string>Jezik</string>
+  </void>
+  <void property="modifiedText">
+   <string>Prepravljen: </string>
+  </void>
+  <void property="multiplexBitrateText">
+   <string>Multiplex Bitrate</string>
+  </void>
+  <void property="multiplexProgramBitrateText">
+   <string>Multiplex Programa Bitrate</string>
+  </void>
+  <void property="multiplexText">
+   <string>Multiplex</string>
+  </void>
+  <void property="numerOfPacketText">
+   <string>Broj paketa: </string>
+  </void>
+  <void property="openFileMenuText">
+   <string>Otvoriti Fajl</string>
+  </void>
+  <void property="ownerText">
+   <string>Vlasnik: </string>
+  </void>
+  <void property="packetOrderText">
+   <string>Red paketa</string>
+  </void>
+  <void property="packetPositionText">
+   <string>Pozicija paketa: </string>
+  </void>
+  <void property="packetSize">
+   <string>Veličina paketa: </string>
+  </void>
+  <void property="parsingText">
+   <string>Parsiranje paketa...</string>
+  </void>
+  <void property="pathText">
+   <string>Put: </string>
+  </void>
+  <void property="prepareText">
+   <string>Pripremanje toka...</string>
+  </void>
+  <void property="programCompositionText">
+   <string>Kompozicija programa</string>
+  </void>
+  <void property="programFilterText">
+   <string>Filter programa: </string>
+  </void>
+  <void property="readonlyText">
+   <string>Read-only: </string>
+  </void>
+  <void property="regularText">
+   <string>Običan fajl: </string>
+  </void>
+  <void property="releaseText">
+   <string>Poslednje izdanje </string>
+  </void>
+  <void property="searchMenuText">
+   <string>Traži paket...</string>
+  </void>
+  <void property="selectFileText">
+   <string>Izaberi fajl...</string>
+  </void>
+  <void property="settingsMenuText">
+   <string>Podešavanja</string>
+  </void>
+  <void property="settingsText">
+   <string>Podešavanja</string>
+  </void>
+  <void property="sizeText">
+   <string>Veličina: </string>
+  </void>
+  <void property="softwareName">
+   <string>TS Visualizer</string>
+  </void>
+  <void property="streamCompositionText">
+   <string>Kompozicija toka</string>
+  </void>
+  <void property="streamIntegrity">
+   <string>Integritet toka: </string>
+  </void>
+  <void property="structureTabText">
+   <string>Extremi</string>
+  </void>
+  <void property="timeText">
+   <string>Vreme</string>
+  </void>
+  <void property="timestampsLayoutText">
+   <string>Raspored vremenskih oznaka</string>
+  </void>
+  <void property="timestampsTabText">
+   <string>Vremenske oznake</string>
+  </void>
+  <void property="tsPacketsText">
+   <string>TS paketi: </string>
+  </void>
+  <void property="typeText">
+   <string>Tip: </string>
+  </void>
+  <void property="userGuideLabel">
+   <string>Vodič za korišćenje programa TS Visualizer</string>
+  </void>
+  <void property="userGuideText">
+   <string>
+    Prvo izabrati datoteku za analizu klikom na "Select file .." dugme ili drag'n'drop datoteku sa vindov.An greške mogu occure ako datoteka da izaberete je nevažeća, unaccessible ili ne sadrži valjane TS pakete. Odaberite jednu od šest kartica na ekranu:
+    za detaljne specifikacije potoka Kliknite na karticu "Detalji", za grafički vizuelizaciju raspodele paketa u kartici tok kliknite "Vizuelizacija", za stek područja bitrate grafikonu PID ili programa izabrati "bitrate" karticu, za bar grafikon na bitrate ekstrema izabrati "ekstremi" kartica, za pie grafikon saobraćajne stream sastava na osnovu PID programa ili vrste stream, izaberite "kompozicija" tab i na kraju, za corellation diargram od timestamps raspored izabrati karticu "timestamps".
+
+    Vizuelizacija kartica:
+    Da biste pomerili su paketni okna ih prevucite sa miša. Da biste prikazali paketni detalji kliknete na njega sa leve miša. Da biste primenili filter program paketi izabrati dostupne opcije u komboboksu. Da biste se kretali paketni okna od paketa bar ja ogledalo sa mišem. Da biste primenili PSI filter za paketa bar kliknite na nju i izaberite dostupne opcije.
+
+    Bitrate kartica:
+    Naslagani prostorni grafikon prikazuje bitrejt napretku transportnog toka kroz vreme, na osnovu PID ili programa filtera. Koriste potvrdu da promeni filter.
+
+    Ekstrema kartica:
+    Vertikalni stubićima prikazuje bitrate krajnosti, odnosno globalno maksimum, globalni minimum i aritmetička sredina transportnog potoka, na osnovu PID ili programa filtera. Koriste potvrdu da promeni filter.
+
+    Sastav kartica:
+    Pie composition šema prikazuje podatke elementarnih tokova transportne struje, na osnovu PID, programima ili ES tip filtera. Upotrebite RadioButtons da promeni filter.
+
+    Timestamps kartica:
+    KSI grafikon, tj korelacija dijagram sinhronizacije timestamps raspored u transportnom strimu. Upotrebite ComboBok za izbor filtera Programa.
+   </string>
+  </void>
+  <void property="userGuideTitle">
+   <string>Uputstvo za upotrebu</string>
+  </void>
+  <void property="visualizationTabText">
+   <string>Vizualizacija</string>
+  </void>
+  <void property="rightsText">
+   <string>Sva prava su zadržana.</string>
+  </void>
+ </object>
+</java>

@@ -2,7 +2,7 @@
 <java version="1.8.0_112" class="java.beans.XMLDecoder">
  <object class="model.config.Localization">
      <void property="localization">
-         <string>Slovak</string>
+         <string>Slovensky</string>
      </void>
   <void property="rightsText">
    <string>Všetky práva vyhradené.</string>

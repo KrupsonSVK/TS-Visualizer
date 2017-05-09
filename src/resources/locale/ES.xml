@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0_112" class="java.beans.XMLDecoder">
+    <object class="model.config.Localization">
+        <void property="localization">
+            <string>Español</string>
+        </void>
+        <void property="rightsText">
+            <string>All rights reserved.</string>
+        </void>
+        <void property="PIDcompositionText">
+            <string>PID composition</string>
+        </void>
+        <void property="aboutMenuText">
+            <string>About</string>
+        </void>
+        <void property="aboutTitle">
+            <string>About</string>
+        </void>
+        <void property="accessText">
+            <string>Last access: </string>
+        </void>
+        <void property="allText">
+            <string>All</string>
+        </void>
+        <void property="analyseText">
+            <string>Analyzing transport stream...</string>
+        </void>
+        <void property="bitrateStructureByPIDs">
+            <string>Bitrate Structure By PIDs</string>
+        </void>
+        <void property="bitrateStructureByProgramsText">
+            <string>Bitrate Structure By Programs</string>
+        </void>
+        <void property="bitrateTabText">
+            <string>Bitrate</string>
+        </void>
+        <void property="bitrateText">
+            <string>Bitrate: </string>
+        </void>
+        <void property="buttonSetText">
+            <string>Apply</string>
+        </void>
+        <void property="compositionTabText">
+            <string>Composition</string>
+        </void>
+        <void property="createdByText">
+            <string>Created by Tomas Krupa</string>
+        </void>
+        <void property="createdText">
+            <string>Created: </string>
+        </void>
+        <void property="detailTabText">
+            <string>Details</string>
+        </void>
+        <void property="durationText">
+            <string>Duration: </string>
+        </void>
+        <void property="editMenuText">
+            <string>Edit</string>
+        </void>
+        <void property="errorPackets">
+            <string>Error packets: </string>
+        </void>
+        <void property="exitMenuText">
+            <string>Exit</string>
+        </void>
+        <void property="exportTXTMenuText">
+            <string>Export TXT</string>
+        </void>
+        <void property="exportXMLMenuText">
+            <string>Export XML</string>
+        </void>
+        <void property="fileMenuText">
+            <string>File</string>
+        </void>
+        <void property="groupProgramsText">
+            <string>Group by programs</string>
+        </void>
+        <void property="guideMenuText">
+            <string>Guide</string>
+        </void>
+        <void property="helpMenuText">
+            <string>Help</string>
+        </void>
+        <void property="importXMLMenuText">
+            <string>Import XML</string>
+        </void>
+        <void property="jumpMenuText">
+            <string>Jump to packet...</string>
+        </void>
+        <void property="language">
+            <string>Language</string>
+        </void>
+        <void property="modifiedText">
+            <string>Modified: </string>
+        </void>
+        <void property="multiplexBitrateText">
+            <string>Multiplex Bitrate</string>
+        </void>
+        <void property="multiplexProgramBitrateText">
+            <string>Multiplex Program Bitrate</string>
+        </void>
+        <void property="multiplexText">
+            <string>Multiplex</string>
+        </void>
+        <void property="numerOfPacketText">
+            <string>Number of packets: </string>
+        </void>
+        <void property="openFileMenuText">
+            <string>Open File</string>
+        </void>
+        <void property="ownerText">
+            <string>Owner: </string>
+        </void>
+        <void property="packetOrderText">
+            <string>Packet order</string>
+        </void>
+        <void property="packetPositionText">
+            <string>Packet position: </string>
+        </void>
+        <void property="packetSize">
+            <string>Packet size: </string>
+        </void>
+        <void property="parsingText">
+            <string>Parsing packets...</string>
+        </void>
+        <void property="pathText">
+            <string>Path: </string>
+        </void>
+        <void property="prepareText">
+            <string>Preparing stream...</string>
+        </void>
+        <void property="programCompositionText">
+            <string>Program composition</string>
+        </void>
+        <void property="programFilterText">
+            <string>Program filter: </string>
+        </void>
+        <void property="readonlyText">
+            <string>Read-only: </string>
+        </void>
+        <void property="regularText">
+            <string>Regular file: </string>
+        </void>
+        <void property="releaseText">
+            <string>Last release </string>
+        </void>
+        <void property="searchMenuText">
+            <string>Search packet...</string>
+        </void>
+        <void property="selectFileText">
+            <string>Select file...</string>
+        </void>
+        <void property="settingsMenuText">
+            <string>Settings</string>
+        </void>
+        <void property="settingsText">
+            <string>Settings</string>
+        </void>
+        <void property="sizeText">
+            <string>Size: </string>
+        </void>
+        <void property="softwareName">
+            <string>TS Visualizer</string>
+        </void>
+        <void property="streamCompositionText">
+            <string>Stream composition</string>
+        </void>
+        <void property="streamIntegrity">
+            <string>Stream integrity: </string>
+        </void>
+        <void property="structureTabText">
+            <string>Extremes</string>
+        </void>
+        <void property="timeText">
+            <string>Time</string>
+        </void>
+        <void property="timestampsLayoutText">
+            <string>Timestamps Layout</string>
+        </void>
+        <void property="timestampsTabText">
+            <string>Timestamps</string>
+        </void>
+        <void property="tsPacketsText">
+            <string>TS packets: </string>
+        </void>
+        <void property="typeText">
+            <string>Type: </string>
+        </void>
+        <void property="userGuideLabel">
+            <string>User guide to using application TS Visualizer</string>
+        </void>
+        <void property="userGuideText">
+        <string>
+First choose a file to analyse by clicking &quot;Select file..&quot; button or drag&apos;n&apos;drop a file to the window.An error can occure if the file you choose is invalid, unaccessible or does not contain valid TS packets. Choose from six tabs to display:
+for detailed specifications of the stream click &quot;Details&quot; tab, for graphical visualization of the packet distribution in the stream click &quot;Visualization&quot; tab, for stack area bitrate chart of PIDs or Programs choose &quot;Bitrate&quot; tab, for bar chart of bitrate extremes choose &quot;Extremes&quot; tab, for pie chart of transport stream composition based on PIDs, Programs or stream types, choose &quot;Composition&quot; tab and lastly, for corellation diargram of timestamps layout choose &quot;Timestamps&quot; tab.
+
+Visualization tab:
+To move the packet panes drag them with mouse. To display packet details click on it with left mouse. To apply program filter of packets choose available option in combobox. To move packet panes by packet bar drag the looking glass with mouse. To apply PSI filter of packet bar click on it and select available option.
+
+Bitrate tab:
+Stacked area chart displays bitrate progress of the transport stream through time, based on PID or Program filter. Use checkbox to change the filter.
+
+Extremes tab:
+Vertical bar chart displays bitrate extremes, i.e. global maximum, global minimum and an arithmetic mean of the transport stream, based on PID or Program filter. Use checkbox to change the filter.
+
+Composition tab:
+Pie chart displays data composition of elementary streams of the transport stream, based on PID,Programs or ES type filter. Use radiobuttons to change the filter.
+
+Timestamps tab:
+XY chart, i.e. correllation diagram of synchronization timestamps layout in the transport stream. Use combobox to select filter by Program.
+        </string>
+        </void>
+        <void property="userGuideTitle">
+            <string>User Guide</string>
+        </void>
+        <void property="visualizationTabText">
+            <string>Visualization</string>
+        </void>
+    </object>
+</java>

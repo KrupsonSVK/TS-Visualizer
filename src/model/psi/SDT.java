@@ -39,6 +39,23 @@ public class SDT extends PSI {
 
     }
 
+    public SDT(short tableID, byte SSI, int sectionLength, int transportStreamID, byte versionNum, byte currentNextIndicator, short sectionNum, short lastSectionNum, int originalNetworkID, List descriptors, long CRC) {
+        super(tableID, SSI, sectionLength, null);
+        this.transportStreamID = transportStreamID;
+        this.versionNum = versionNum;
+        this.currentNextIndicator = currentNextIndicator;
+        this.sectionNum = sectionNum;
+        this.lastSectionNum = lastSectionNum;
+        this.originalNetworkID = originalNetworkID;
+        this.serviceID = serviceID;
+        this.EITscheduleFlag = EITscheduleFlag;
+        this.EITpresentFollowingFlag = EITpresentFollowingFlag;
+        this.runningStatus = runningStatus;
+        this.freeCAmode = freeCAmode;
+        this.descriptorsLoopLength = descriptorsLoopLength;
+        this.descriptors = descriptors;
+    }
+
     public int getTransportStreamID() {
         return transportStreamID;
     }

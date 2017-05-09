@@ -74,7 +74,7 @@ public class TimestampsTab extends VisualizationTab implements Graph{
         captionLabel.toFront();
 
         scatterChart = createScatterChart(stream.getTables(),filterComboBox.getValue());
-        addListenersAndHandlers(scatterChart);
+        addListenersAndHandlers(stream, scatterChart);
         filterComboBox.setOnAction(filterComboBoxEvent);
 
         vbox = new VBox(captionLabel,scatterChart,filterHBox);
@@ -183,7 +183,7 @@ public class TimestampsTab extends VisualizationTab implements Graph{
     }
 
 
-    public void addListenersAndHandlers(Chart chart) {
+    public void addListenersAndHandlers(Stream stream, Chart chart) {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
             chart.setPrefHeight(scene.getHeight());
         });

@@ -65,7 +65,7 @@ public class CompositionTab extends TimestampParser implements Graph{
 
         tooltip.hide();
 
-        addListenersAndHandlers(pieChart);
+        addListenersAndHandlers(streamDescriptor, pieChart);
 
         PIDradioButton.fire();
     }
@@ -105,10 +105,10 @@ public class CompositionTab extends TimestampParser implements Graph{
     }
 
 
-    public void addListenersAndHandlers(Chart chart) {
+    public void addListenersAndHandlers(Stream stream, Chart chart)  {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
             pieChart.setPrefHeight(scene.getHeight());
-            addListenersAndHandlers(pieChart);
+            addListenersAndHandlers(stream, pieChart);
         });
 
         PIDradioButton.setOnAction( event -> {
@@ -193,7 +193,7 @@ public class CompositionTab extends TimestampParser implements Graph{
         double heigth = ((Legend)pieChart.lookup(".chart-legend")).getHeight();
         pieChart = createPieChart(programMap,stream.getNumOfPackets(),heigth);
         pieChart.setTitle(localization.getProgramCompositionText());
-        addListenersAndHandlers(pieChart);
+        addListenersAndHandlers(stream, pieChart);
         vbox = new VBox(pieChart,radioButtonHBox);
         tab.setContent(vbox);
     }
@@ -227,7 +227,7 @@ public class CompositionTab extends TimestampParser implements Graph{
         double heigth = ((Legend)pieChart.lookup(".chart-legend")).getHeight();
         pieChart = createPieChart(streamMap, stream.getNumOfPackets(),heigth);
         pieChart.setTitle(localization.getStreamCompositionText());
-        addListenersAndHandlers(pieChart);
+        addListenersAndHandlers(stream, pieChart);
         vbox = new VBox(pieChart,radioButtonHBox);
         tab.setContent(vbox);
     }
@@ -246,7 +246,7 @@ public class CompositionTab extends TimestampParser implements Graph{
         pieChart = createPieChart(PIDmap, stream.getNumOfPackets(),null);
 
         pieChart.setTitle(localization.getPIDcompositionText());
-        addListenersAndHandlers(pieChart);
+        addListenersAndHandlers(stream, pieChart);
         vbox = new VBox(pieChart,radioButtonHBox);
         tab.setContent(vbox);
     }

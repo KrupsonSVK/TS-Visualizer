@@ -89,7 +89,7 @@ public class BitrateTab extends TimestampParser implements Graph{
         checkHBox.setSpacing(10);
         checkHBox.setPadding(chartHBoxInsets);
 
-        addListenersAndHandlers(stackedAreaChart);
+        addListenersAndHandlers(stream,stackedAreaChart);
         groupByCheckBox.fire();
 
         tab.setContent(new VBox(stackedAreaChart,checkHBox));
@@ -127,13 +127,13 @@ public class BitrateTab extends TimestampParser implements Graph{
      * @param bitrateMap dvojitá hashmapa s prenosovými rýchlosťami jednotlivých PIDov v čase
      * @return kolekciu grafových dát obsahujúcu série tvorené súradnicami X a Y
      */
-    private Collection createBitrateChart(Map<Integer,Integer> map, Map<Integer,Map> bitrateMap) {
+    private Collection createBitrateChart(Stream stream, Map<Integer,Integer> map, Map<Integer,Map> bitrateMap) {
 
         ObservableList<XYChart.Series> chartData = FXCollections.observableArrayList(); //inicialzácia kolekcie grafových dát
 
         for (Integer PID : map.keySet()) { //cyklus prechádza všetky PID resp. služby, pre ktoré vytvára plošné krivky
             final XYChart.Series series = new XYChart.Series<>(); //séria bodov tvoriaca plošnú krivku aktuálneho PIDu
-            series.setName("PID: " + String.format("0x%04X", PID & 0xFFFF)  + " (" + PID + ")"); //názov série daný PIDom
+            series.setName("PID: " + String.format("0x%04X", PID & 0xFFFF)  + " (" + getProgramName(stream, PID) + ")"); //názov série daný PIDom
             //cyklus prechádza hashmapu s prenosovými rýchlosťami služiebm v čase
             for (Map.Entry<Integer,Map> bitrate : bitrateMap.entrySet()) {
                 Integer value = (Integer) bitrate.getValue().get(PID); // zistí bitrate pre aktuálny PID superiórneho cyklu
@@ -147,7 +147,7 @@ public class BitrateTab extends TimestampParser implements Graph{
     }
 
 
-    public void addListenersAndHandlers(Chart chart) {
+    public void addListenersAndHandlers(Stream stream, Chart chart) {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
             chart.setPrefHeight(scene.getHeight());
         });
@@ -156,11 +156,11 @@ public class BitrateTab extends TimestampParser implements Graph{
             ((StackedAreaChart)chart).getData().clear();
             if(groupByCheckBox.isSelected()) {
                 chart.setTitle(localization.getMultiplexProgramBitrateText());
-                ((StackedAreaChart)chart).getData().addAll(createBitrateChart((Map)getLastItem(deltaServiceBitrateMap).getValue(),deltaServiceBitrateMap));
+                ((StackedAreaChart)chart).getData().addAll(createBitrateChart(stream, (Map)getLastItem(deltaServiceBitrateMap).getValue(),deltaServiceBitrateMap));
             }
             else {
                 chart.setTitle(localization.getMultiplexBitrateText());
-                ((StackedAreaChart)chart).getData().addAll(createBitrateChart((Map)getLastItem(deltaPIDBitrateMap).getValue(),deltaPIDBitrateMap));
+                ((StackedAreaChart)chart).getData().addAll(createBitrateChart(stream, (Map)getLastItem(deltaPIDBitrateMap).getValue(),deltaPIDBitrateMap));
             }
         });
     }

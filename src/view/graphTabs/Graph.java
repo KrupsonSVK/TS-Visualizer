@@ -7,6 +7,6 @@ import model.Stream;
 
 public interface Graph {
     void drawGraph(Stream stream);
-    void addListenersAndHandlers(Chart chart);
+    void addListenersAndHandlers(Stream stream, Chart chart);
     void setScene(Scene scene);
 }

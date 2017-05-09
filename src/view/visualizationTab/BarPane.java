@@ -179,6 +179,8 @@ public class BarPane extends VisualizationTab implements Drawer{
         lookingGlassOnMouseDraggedEventHandler = mouseEvent -> {
 
             xPos = stayInRange(mouseEvent.getSceneX());
+//            xPos = othersInRange(packetPane.getXpos());
+//            xPos = othersInRange(legendPane.getXpos());
             xPos -= initDiff;
 
             ((Rectangle) (mouseEvent.getSource())).setX(xPos);
@@ -229,10 +231,18 @@ public class BarPane extends VisualizationTab implements Drawer{
         lookingGlass.setOnMouseDragged(lookingGlassOnMouseDraggedEventHandler);
     }
 
+    private double othersInRange(double sceneX) {
+        if (xPos < 0) {
+            return 0;
+        }
+        if (xPos > scene.getWidth()) {
+            return scene.getWidth();
+        }
+        return xPos;
+    }
+
 
     private boolean isInLookingGlass(double x, double width, double xPos) {
-        System.out.println(xPos + ":" + x + ":" + (x+width));
-        System.out.println((xPos >= x && xPos <= (x + width)) ? "is" : "not");
         return xPos >= x && xPos <= (x + width);
     }
 

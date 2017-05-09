@@ -51,6 +51,9 @@ public class Tables {
     private Map avgPTSBitrateMap;
     private Map maxBitrateMap;
 
+    private Map programNameMap;
+    private Map providerNameMap;
+
     private Map serviceTimestampMap;
     private Map enhancedPMTmap;
     private List PIDlist;
@@ -103,6 +106,9 @@ public class Tables {
         this.avgPCRBitrateMap = new HashMap();
         this.avgPTSBitrateMap = new HashMap();
         this.maxBitrateMap = new HashMap();
+
+        this.programNameMap = new HashMap();
+        this.providerNameMap = new HashMap();
     }
 
 
@@ -317,7 +323,13 @@ public class Tables {
         DTSpidMap.put(timestamp,PID);
     }
 
+    public void updateProgramMap(int serviceID, String serviceName) {
+        programNameMap.put(serviceID,serviceName);
+    }
 
+    public void updateProviderMap(int serviceID, String providerName) {
+        providerNameMap.put(serviceID,providerName);
+    }
 
     public Map getProgramMap() {
         return programMap;
@@ -622,6 +634,38 @@ public class Tables {
 
     public boolean isSynchronizationLost() {
         return synchronizationLost;
+    }
+
+    public void setPTSpidDurationMap(Map PTSpidDurationMap) {
+        this.PTSpidDurationMap = PTSpidDurationMap;
+    }
+
+    public void setPTSsizeMap(Map PTSsizeMap) {
+        this.PTSsizeMap = PTSsizeMap;
+    }
+
+    public void setPTSdurationMap(Map PTSdurationMap) {
+        this.PTSdurationMap = PTSdurationMap;
+    }
+
+    public void setAvgPTSBitrateMap(Map avgPTSBitrateMap) {
+        this.avgPTSBitrateMap = avgPTSBitrateMap;
+    }
+
+    public Map getProgramNameMap() {
+        return programNameMap;
+    }
+
+    public void setProgramNameMap(Map programNameMap) {
+        this.programNameMap = programNameMap;
+    }
+
+    public Map getProviderNameMap() {
+        return providerNameMap;
+    }
+
+    public void setProviderNameMap(Map providerNameMap) {
+        this.providerNameMap = providerNameMap;
     }
 }
 

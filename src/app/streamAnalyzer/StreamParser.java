@@ -203,6 +203,8 @@ public class StreamParser extends Parser {
             tables.setPMTmap(parser.tables.getPMTmap());
             tables.setESmap(parser.tables.getESmap());
 
+            tables.setProgramNameMap(parser.tables.getProgramNameMap());
+            tables.setServiceNamesMap(parser.tables.getServiceNamesMap());
             tables.setServiceNamesMap(parser.tables.getServiceNamesMap());
             tables.setPCRpmtMap(parser.tables.getPCRpmtMap());
         }

@@ -20,10 +20,7 @@ public abstract class XML {
 
     public static Object read(String path) throws Exception {
         XMLDecoder decoder = new XMLDecoder(Main.class.getResourceAsStream((path)));
-        decoder.setExceptionListener(e -> {
-            System.out.println("got exception. e=" + e);
-            e.printStackTrace();
-        });
+        decoder.setExceptionListener(Throwable::printStackTrace);
         Localization localization =(Localization) decoder.readObject();
         decoder.close();
         return localization;

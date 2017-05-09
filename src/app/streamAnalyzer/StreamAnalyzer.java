@@ -47,7 +47,7 @@ public class StreamAnalyzer {
 
                 tables.setErrorMap(createPIDnErrorMaps(tables.getPackets())); //vytvorí tabuľku chybných paketov
                 tables.setPIDlist(createPIDlist(tables.getPIDmap())); //vytvorí zoznam PIDov
-                tables.setProgramMap(createPrograms(tables.getPMTmap())); //vytvorí tabuľku televíznych programov
+                tables.setProgramMap(createPrograms(tables.getPMTmap(),tables.getProgramNameMap())); //vytvorí tabuľku televíznych programov
                 tables.setEnhancedPMTmap(enhancePMTmap(tables.getPIDmap(), tables.getPMTmap())); //vytvorí špeciálnu tabuľku programových asociácií
                 //vytvorí tabuľku synchronizačných značiek programov
                 tables.setServiceTimestampMap(createServiceTimestampMap(tables, tables.getPATmap(), tables.getPMTmap(), tables.getPCRpidMap(),tables.getPCRpmtMap()));
@@ -375,16 +375,18 @@ public class StreamAnalyzer {
     }
 
 
-    protected Map createPrograms(Map inputMap) {
+    protected Map createPrograms(Map pmtMap, Map programNameMap) {
         HashMap<Integer, String> outputMap = new HashMap<>();
-        Set<Integer> keys = inputMap.keySet(); // The set of keys in the map.
+        Set<Integer> keys = pmtMap.keySet(); // The set of keys in the map.
 
         for (Integer key : keys) {
-            Integer value = (Integer) inputMap.get(key);
-            outputMap.put(value, "Service: " + Integer.toString(value));
+            Integer value = (Integer) pmtMap.get(key);
+            String name = (String) programNameMap.get(value);
+            outputMap.put(value, (name == null ? ("Service: " + Integer.toString(value)) : name ));
         }
         return outputMap;
     }
+
 
     private <K,V> Map<Integer,Integer> enhancePMTmap(Map<K,V> originalPIDmaps, Map<K,V> PMT ) {
 
@@ -393,6 +395,7 @@ public class StreamAnalyzer {
         }
         return sortHashMapByValue((Map<Integer,Integer>)PMT);
     }
+
 
     public Task<Stream> getTask() {
         return task;

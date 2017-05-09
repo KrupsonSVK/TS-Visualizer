@@ -1,5 +1,6 @@
 package app.streamAnalyzer;
 
+import model.descriptors.Descriptor;
 import model.packet.Packet;
 import model.psi.*;
 
@@ -10,8 +11,11 @@ import java.util.*;
 
 class PSIparser extends Parser {
 
+    private DescriptorParser descriptor;
+
 
     PSIparser(){
+        descriptor = new DescriptorParser();
     }
 
 
@@ -28,7 +32,7 @@ class PSIparser extends Parser {
             case NIT_STpid:
                 return analyzeNIT_ST(analyzedHeader, packet);
             case SDT_BAT_STpid:
-              //  return analyzeSDT_BAT(analyzedHeader, packet);
+                return analyzeSDT_BAT(analyzedHeader, packet);
             case EIT_STpid:
               //   return analyzeEIT_ST(analyzedHeader, packet);
             case RST_STpid:
@@ -168,52 +172,53 @@ class PSIparser extends Parser {
         position += 1;
 
         PSI psiCommonFields = analyzePSICommonFields(packet, position);
-        position += PSIcommonFieldsBinaryLength / byteBinaryLength;
+        position += PSIcommonFieldsLength;
 
         if (isSDT(psiCommonFields.getTableID())) {
             int sectionLength = psiCommonFields.getSectionLength();
-
+            sectionLength = (sectionLength * byteBinaryLength) + position + CRClength > packet.length ? tsPacketSize - position - CRClengthByte : sectionLength;
             int[] SDTfields = parseNfields(packet, position, sectionLength);
             byte[] binarySDTfields = intToBinary(SDTfields, sectionLength);
-            //TODO correct lengths
-            int tranportStreamID = (int) binToInt(binarySDTfields, position = 0, position += serviceIDlength);
+
+            int transportStreamID = (int) binToInt(binarySDTfields, position = 0, position += serviceIDlength);
             byte versionNum = (byte) binToInt(binarySDTfields, position += 2, position +=  versionNumLength);
             byte currentNextIndicator = binarySDTfields[position++];
             short sectionNum = (short) binToInt(binarySDTfields, position, position += sectionNumLength);
             short lastSectionNum = (short) binToInt(binarySDTfields, position, position += sectionNumLength);
             int originalNetworkID = (int) binToInt(binarySDTfields, position, position += networkIDlength);
-            int serviceID = (int) binToInt(binarySDTfields, position, position += networkIDlength);
-            byte EITscheduleFlag = (byte) binToInt(binarySDTfields, position, position += sectionNumLength);
-            byte EITpresentFollowingFlag = (byte) binToInt(binarySDTfields, position, position += sectionNumLength);
-            byte runningStatus = (byte) binToInt(binarySDTfields, position = 0, position += runningStatusLength);
-            byte freeCAmode = (byte) binToInt(binarySDTfields, position = 0, position += runningStatusLength);
-            short descriptorsLoopLength = (short) binToInt(binarySDTfields, position = 0, position += descriptorsLengthLength);
 
+            position += 8;
+            int end = psiCommonFields.getSectionLength() * byteBinaryLength - CRClength;
             List descriptors = null;
-            try {
-                descriptors = loadDescriptors(analyzedHeader.getPID(), binarySDTfields, descriptorsLoopLength *= byteBinaryLength, position);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+            for(;position < end;) {
+
+                int serviceID = (int) binToInt(binarySDTfields, position, position += networkIDlength);
+                byte EITscheduleFlag = binarySDTfields[position += 6];
+                byte EITpresentFollowingFlag = binarySDTfields[position += 1];
+                byte runningStatus = (byte) binToInt(binarySDTfields, position += 1, position += runningStatusLength);
+                byte freeCAmode = binarySDTfields[position++];
+                short descriptorsLoopLength = (short) binToInt(binarySDTfields, position, position += descriptorsLengthLength);
+
+                if((descriptorsLoopLength *= byteBinaryLength) + position > (sectionLength * byteBinaryLength)){
+                   break;
+                }
+                descriptors = descriptor.loadDescriptors(serviceID, binarySDTfields, descriptorsLoopLength, position);
+                tables.setProgramNameMap(descriptor.tables.getProgramNameMap());
+                tables.setServiceNamesMap(descriptor.tables.getServiceNamesMap());
+                position += descriptorsLoopLength;
             }
-            //position += descriptorsLoopLength;
             long CRC = nil; // binToInt(binarySDTfields, position, position + CRClength);
 
             return new SDT(
                     psiCommonFields.getTableID(),
                     psiCommonFields.getSSI(),
                     psiCommonFields.getSectionLength(),
-                    tranportStreamID,
+                    transportStreamID,
                     versionNum,
                     currentNextIndicator,
                     sectionNum,
                     lastSectionNum,
                     originalNetworkID,
-                    serviceID,
-                    EITscheduleFlag,
-                    EITpresentFollowingFlag,
-                    runningStatus,
-                    freeCAmode,
-                    descriptorsLoopLength,
                     descriptors,
                     CRC);
         }
@@ -250,12 +255,7 @@ class PSIparser extends Parser {
             byte runningStatus = (byte) binToInt(binaryEITfields, position = 0, position += runningStatusLength);
             short descriptorsLoopLength = (short) binToInt(binaryEITfields, position = 0, position += descriptorsLengthLength);
 
-            List descriptors = null;
-            try {
-                descriptors = loadDescriptors(analyzedHeader.getPID(), binaryEITfields, descriptorsLoopLength *= byteBinaryLength, position);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            List descriptors = descriptor.loadDescriptors(analyzedHeader.getPID(), binaryEITfields, descriptorsLoopLength *= byteBinaryLength, position);
             //position += descriptorsLoopLength;
             long CRC = nil; //binToInt(binaryEITfields, position, position + CRClength);
 
@@ -281,35 +281,6 @@ class PSIparser extends Parser {
                     CRC);
         }
         return null; //new ST();
-    }
-
-
-    private List loadDescriptors(int PID, byte[] binaryFields, int size, int position) throws UnsupportedEncodingException {
-
-        List descriptors = new ArrayList<>();
-
-        for(size += position; position < size;) {
-            short descriptorTag = (short) binToInt(binaryFields, position, position += descriptorTagLength );
-            short descriptorLength = (short) binToInt(binaryFields, position, position += descriptorLengthLength);
-
-            switch ( descriptorTag ) {
-                case service_descriptor:
-                    analyzeServiceDescriptor(PID, binaryFields, position);
-                    break;
-                case short_event_descriptor:
-                    analyzeShortEventDescriptor(PID, binaryFields, position);
-                    break;
-                case extended_event_descriptor:
-                    break;
-                case network_name_descriptor:
-                    break;
-                default:
-                    break;
-                //TODO all descriptors
-            }
-            position += descriptorLength;
-        }
-        return descriptors;
     }
 
 

@@ -70,7 +70,7 @@ public class StructureTab extends TimestampParser implements Graph{
         barChart.setPrefHeight(scene.getHeight());
         barChart.setLegendSide(Side.LEFT);
 
-        addListenersAndHandlers(barChart);
+        addListenersAndHandlers(stream, barChart);
 
         groupByCheckBox.fire();
 
@@ -102,11 +102,11 @@ public class StructureTab extends TimestampParser implements Graph{
                     if (PIDentry.equals(entry.getKey())) {
                         switch (PIDbitrateMap.getKey()) {
                             case "Min":
-                                seriesMin.getData().add(new XYChart.Data(entry.getKey().toString(), entry.getValue().intValue()));
+                                seriesMin.getData().add(new XYChart.Data(getProgramName(stream,entry.getKey()), entry.getValue().intValue()));
                             case "Avg":
-                                seriesAvg.getData().add(new XYChart.Data(entry.getKey().toString(), entry.getValue().intValue()));
+                                seriesAvg.getData().add(new XYChart.Data(getProgramName(stream,entry.getKey()), entry.getValue().intValue()));
                             case "Max":
-                                seriesMax.getData().add(new XYChart.Data(entry.getKey().toString(), entry.getValue().intValue()));
+                                seriesMax.getData().add(new XYChart.Data(getProgramName(stream,entry.getKey()), entry.getValue().intValue()));
                                 // tooltip.setText(String.format("0x%04X", PIDentry.getKey() & 0xFFFFF) + " (" + PIDentry.getKey().toString() + ")", PIDentry.getValue());
                         }
                     }
@@ -157,7 +157,7 @@ public class StructureTab extends TimestampParser implements Graph{
     }
 
 
-    public void addListenersAndHandlers(Chart chart) {
+    public void addListenersAndHandlers(Stream stream, Chart chart) {
         scene.heightProperty().addListener((observable, oldValue, newValue) -> {
             this.barChart.setPrefHeight(scene.getHeight());
         });

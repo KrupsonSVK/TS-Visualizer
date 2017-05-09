@@ -259,7 +259,7 @@ public class PacketInfo extends Tooltip {
 
 
     private String createASCIIoutput(byte[] data, int pid){
-        if(pid == EIT_STpid){
+        if(pid == EIT_STpid || pid == SDT_BAT_STpid){
             StringBuilder stringBuilder = new StringBuilder("\n\nASCII data: \n\n");
             try {
                 int index = 0;

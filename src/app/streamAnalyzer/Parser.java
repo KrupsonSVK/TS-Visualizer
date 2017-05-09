@@ -74,4 +74,24 @@ abstract class Parser extends MPEG {
         }
         return byteFields;
     }
+
+    String parseNchars(byte[] binaryHeader, int position, int length) {
+        int end = position + length;
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (; position < end; position += charSize) {
+            stringBuilder.append(binToChar(binaryHeader, position));
+        }
+        return stringBuilder.toString();
+    }
+
+
+    private char binToChar(byte[] binaryHeader, int start) {
+
+        char result = 0;
+        for (int i = start; i < start + charSize; i++) {
+            result = (char) ((result << 1) | (binaryHeader[i] == 1 ? 1 : 0));
+        }
+        return result;
+    }
 }

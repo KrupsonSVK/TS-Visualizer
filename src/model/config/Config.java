@@ -60,17 +60,21 @@ public class Config {
     private final static String imagesPath = resourcesPath + "/images/";
     private final static String localePath = resourcesPath + "/locale/";
 
-    public final static String localeEN = localePath + "EN.xml";
-    public final static String localeDE = localePath + "DE.xml";
-    public final static String localeSK = localePath + "SK.xml";
-    public final static String localeRU = localePath + "RU.xml";
+    private final static String localeEN = localePath + "EN.xml";
+    private final static String localeDE = localePath + "DE.xml";
+    private final static String localeSK = localePath + "SK.xml";
+    private final static String localeRU = localePath + "RU.xml";
+    private final static String localeSRB = localePath + "SRB.xml";
+    private final static String localeES = localePath + "ES.xml";
 
     public static Localization localizationEN = readLocale(localeEN);
     public static Localization localizationDE = readLocale(localeDE);
     public static Localization localizationSK = readLocale(localeSK);
     public static Localization localizationRU = readLocale(localeRU);
+    public static Localization localizationSRB = readLocale(localeSRB);
+    public static Localization localizationES = readLocale(localeES);
 
-    public final static String errorTitle = "Error occured!"; //TODO move to localization
+    public final static String errorTitle = " Error occured! "; //TODO move to localization
     private final static String dragNdrop = "dragndrop.png";
     public final static String windowStyle = "-fx-background-image: url('" + Main.class.getResource(imagesPath + dragNdrop ).toExternalForm() + "'); " + "-fx-background-position: center center; " + "-fx-background-repeat: stretch;";
     public final static String afterWindowStyle ="-fx-background-color: transparent";
@@ -241,9 +245,9 @@ public class Config {
 
 
     public static class ImageHashMap<K,V> extends HashMap<K,V> {
-        protected V defaultValue;
+        V defaultValue;
 
-        public ImageHashMap(V defaultValue) {
+        ImageHashMap(V defaultValue) {
             this.defaultValue = defaultValue;
         }
 
@@ -252,6 +256,7 @@ public class Config {
             return containsKey(k) ? super.get(k) : defaultValue;
         }
     }
+
 
     public static final String logoText = (     "████████╗███████╗    ██╗   ██╗██╗███████╗██╗   ██╗ █████╗ ██╗     ██╗███████╗███████╗██████╗ \n" +
                                                 "╚══██╔══╝██╔════╝    ██║   ██║██║██╔════╝██║   ██║██╔══██╗██║     ██║╚══███╔╝██╔════╝██╔══██╗\n" +

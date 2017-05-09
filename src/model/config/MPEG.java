@@ -11,6 +11,7 @@ public class MPEG {
 
     public static final int intBinaryLength = 32;
     public static final int byteBinaryLength = 8;
+    public static final int charSize = 8;
 
     public final static int tsPacketSize = 188;
     public final static int tsHeaderSize = 4;
@@ -225,7 +226,7 @@ public class MPEG {
     public static final int cell_list_descriptor = 0x6C;	//	NIT
     public static final int cell_frequency_link_descriptor	= 0x6D;	//	NIT
     public static final int announcement_support_descriptor = 0x6E;	//	NIT
-    public static final int user_defined_descriptor = 0x80-0xFE;	//
+    public static final int user_defined_descriptor = 0x80-0xFE;	//TODO this is range, not subtraction
 
     public enum TimestampType {
         PCR, OPCR, PTS, DTS
@@ -536,9 +537,9 @@ public class MPEG {
 
 
     public static  String getProgramName(Stream stream, int pid) {
-        Map map = stream.getTables().getProgramMap();
+        Map map = stream.getTables().getProgramNameMap();
         Object obj = map.get(pid);
-        return obj == null ? "" : obj.toString();
+        return obj == null ? String.valueOf(pid) : obj.toString();
     }
 
 
