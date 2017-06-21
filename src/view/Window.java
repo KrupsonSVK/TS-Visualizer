@@ -275,7 +275,6 @@ public class Window extends TimestampParser {
         spanish.setToggleGroup(radioButtonsGroup);
 
         german.setDisable(true);
-        russian.setDisable(true);
         spanish.setDisable(true);
 
         setButton.setDisable(true);
