@@ -263,7 +263,7 @@ public class Window extends TimestampParser {
         LanguageButton slovak = new LanguageButton("Slovensky", localizationSK);
         LanguageButton serbian = new LanguageButton("Srpski", localizationSRB);
         LanguageButton german = new LanguageButton("Deutsch", localizationDE);
-        LanguageButton russian = new LanguageButton("Руский", localizationRU);
+        LanguageButton russian = new LanguageButton("Русский", localizationRU);
         LanguageButton spanish = new LanguageButton("Español", localizationES);
 
         ToggleGroup radioButtonsGroup = new ToggleGroup();
@@ -275,7 +275,6 @@ public class Window extends TimestampParser {
         spanish.setToggleGroup(radioButtonsGroup);
 
         german.setDisable(true);
-        russian.setDisable(true);
         spanish.setDisable(true);
 
         setButton.setDisable(true);

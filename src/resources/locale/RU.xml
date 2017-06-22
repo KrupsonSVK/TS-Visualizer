@@ -2,220 +2,220 @@
 <java version="1.8.0_112" class="java.beans.XMLDecoder">
  <object class="model.config.Localization">
   <void property="localization">
-   <string>Руский</string>
+   <string>Русский</string>
   </void>
   <void property="PIDcompositionText">
-   <string>PID composition</string>
+   <string>Состав PID</string>
   </void>
   <void property="aboutMenuText">
-   <string>About</string>
+   <string>О программе</string>
   </void>
   <void property="aboutTitle">
-   <string>About</string>
+   <string>О программе</string>
   </void>
   <void property="accessText">
-   <string>Last access: </string>
+   <string>Последний доступ: </string>
   </void>
   <void property="allText">
-   <string>All</string>
+   <string>Все</string>
   </void>
   <void property="analyseText">
-   <string>Analyzing transport stream...</string>
+   <string>Анализ транспортного потока...</string>
   </void>
   <void property="bitrateStructureByPIDs">
-   <string>Bitrate Structure By PIDs</string>
+   <string>Структура скорости потоков по PID</string>
   </void>
   <void property="bitrateStructureByProgramsText">
-   <string>Bitrate Structure By Programs</string>
+   <string>Структура скорости потоков по программам</string>
   </void>
   <void property="bitrateTabText">
-   <string>Bitrate</string>
+   <string>Скорости потоков</string>
   </void>
   <void property="bitrateText">
-   <string>Bitrate: </string>
+   <string>Скорость потока: </string>
   </void>
   <void property="buttonSetText">
-   <string>Apply</string>
+   <string>Применить</string>
   </void>
   <void property="compositionTabText">
-   <string>Composition</string>
+   <string>Состав</string>
   </void>
   <void property="createdByText">
-   <string>Created by Tomas Krupa</string>
+   <string>Разработчик: Tomas Krupa</string>
   </void>
   <void property="createdText">
-   <string>Created: </string>
+   <string>Дата создания: </string>
   </void>
   <void property="detailTabText">
-   <string>Details</string>
+   <string>Подробности</string>
   </void>
   <void property="durationText">
-   <string>Duration: </string>
+   <string>Длительность: </string>
   </void>
   <void property="editMenuText">
-   <string>Edit</string>
+   <string>Редактировать</string>
   </void>
   <void property="errorPackets">
-   <string>Error packets: </string>
+   <string>Пакеты с ошибками: </string>
   </void>
   <void property="exitMenuText">
-   <string>Exit</string>
+   <string>Выход</string>
   </void>
   <void property="exportTXTMenuText">
-   <string>Export TXT</string>
+   <string>Экспорт в TXT</string>
   </void>
   <void property="exportXMLMenuText">
-   <string>Export XML</string>
+   <string>Экспорт в XML</string>
   </void>
   <void property="fileMenuText">
-   <string>File</string>
+   <string>Файл</string>
   </void>
   <void property="groupProgramsText">
-   <string>Group by programs</string>
+   <string>Группировать по программам</string>
   </void>
   <void property="guideMenuText">
-   <string>Guide</string>
+   <string>Инструкции</string>
   </void>
   <void property="helpMenuText">
-   <string>Help</string>
+   <string>Помощь</string>
   </void>
   <void property="importXMLMenuText">
-   <string>Import XML</string>
+   <string>Импорт из XML</string>
   </void>
   <void property="jumpMenuText">
-   <string>Jump to packet...</string>
+   <string>Перейти к пакету...</string>
   </void>
   <void property="language">
-   <string>Language</string>
+   <string>Язык</string>
   </void>
   <void property="modifiedText">
-   <string>Modified: </string>
+   <string>Изменен: </string>
   </void>
   <void property="multiplexBitrateText">
-   <string>Multiplex Bitrate</string>
+   <string>Скорость потоков мультиплекса</string>
   </void>
   <void property="multiplexProgramBitrateText">
-   <string>Multiplex Program Bitrate</string>
+   <string>Скорость потоков программ мультиплекса</string>
   </void>
   <void property="multiplexText">
-   <string>Multiplex</string>
+   <string>Мультиплекс</string>
   </void>
   <void property="numerOfPacketText">
-   <string>Number of packets: </string>
+   <string>Количество пакетов: </string>
   </void>
   <void property="openFileMenuText">
-   <string>Open File</string>
+   <string>Открыть файл</string>
   </void>
   <void property="ownerText">
-   <string>Owner: </string>
+   <string>Владелец: </string>
   </void>
   <void property="packetOrderText">
-   <string>Packet order</string>
+   <string>Порядок пакетов</string>
   </void>
   <void property="packetPositionText">
-   <string>Packet position: </string>
+   <string>Позиция пакета: </string>
   </void>
   <void property="packetSize">
-   <string>Packet size: </string>
+   <string>Размер пакета: </string>
   </void>
   <void property="parsingText">
-   <string>Parsing packets...</string>
+   <string>Анализ пакетов...</string>
   </void>
   <void property="pathText">
-   <string>Path: </string>
+   <string>Путь: </string>
   </void>
   <void property="prepareText">
-   <string>Preparing stream...</string>
+   <string>Подготовка потока...</string>
   </void>
   <void property="programCompositionText">
-   <string>Program composition</string>
+   <string>Состав программ</string>
   </void>
   <void property="programFilterText">
-   <string>Program filter: </string>
+   <string>Фильтр по программе: </string>
   </void>
   <void property="readonlyText">
-   <string>Read-only: </string>
+   <string>Только для чтения: </string>
   </void>
   <void property="regularText">
-   <string>Regular file: </string>
+   <string>Обычный файл: </string>
   </void>
   <void property="releaseText">
-   <string>Last release </string>
+   <string>Дата создания: </string>
   </void>
   <void property="searchMenuText">
-   <string>Search packet...</string>
+   <string>Поиск пакета...</string>
   </void>
   <void property="selectFileText">
-   <string>Select file...</string>
+   <string>Выберите файл...</string>
   </void>
   <void property="settingsMenuText">
-   <string>Settings</string>
+   <string>Настройки</string>
   </void>
   <void property="settingsText">
-   <string>Settings</string>
+   <string>Настройки</string>
   </void>
   <void property="sizeText">
-   <string>Size: </string>
+   <string>Размер: </string>
   </void>
   <void property="softwareName">
-   <string>TS Visualizer</string>
+   <string>Визуализатор TS</string>
   </void>
   <void property="streamCompositionText">
-   <string>Stream composition</string>
+   <string>Состав по типам потоков</string>
   </void>
   <void property="streamIntegrity">
-   <string>Stream integrity: </string>
+   <string>Целостность потока: </string>
   </void>
   <void property="structureTabText">
-   <string>Extremes</string>
+   <string>Гистограмма экстремумов</string>
   </void>
   <void property="timeText">
-   <string>Time</string>
+   <string>Время</string>
   </void>
   <void property="timestampsLayoutText">
-   <string>Timestamps Layout</string>
+   <string>Расположение меток времени</string>
   </void>
   <void property="timestampsTabText">
-   <string>Timestamps</string>
+   <string>Метки времени</string>
   </void>
   <void property="tsPacketsText">
-   <string>TS packets: </string>
+   <string>Количество пакетов TS: </string>
   </void>
   <void property="typeText">
-   <string>Type: </string>
+   <string>Тип: </string>
   </void>
   <void property="userGuideLabel">
-   <string>User guide to using application TS Visualizer</string>
+   <string>Руководство пользователя по использованию приложения Визуализатор TS</string>
   </void>
   <void property="userGuideText">
    <string>
-    First choose a file to analyse by clicking &quot;Select file..&quot; button or drag&apos;n&apos;drop a file to the window.An error can occure if the file you choose is invalid, unaccessible or does not contain valid TS packets. Choose from six tabs to display:
-    for detailed specifications of the stream click &quot;Details&quot; tab, for graphical visualization of the packet distribution in the stream click &quot;Visualization&quot; tab, for stack area bitrate chart of PIDs or Programs choose &quot;Bitrate&quot; tab, for bar chart of bitrate extremes choose &quot;Extremes&quot; tab, for pie chart of transport stream composition based on PIDs, Programs or stream types, choose &quot;Composition&quot; tab and lastly, for corellation diargram of timestamps layout choose &quot;Timestamps&quot; tab.
+    Сначала выберите файл для анализа, нажав кнопку "Открыть файл" или просто перетащите файл в окно программы. Может произойти ошибка, если выбранный вами файл является недопустимым, недоступным или не содержит подходящих пакетов TS. Выберите одну из шести вкладок для отображения:
+    Для просмотра подробной спецификации потока выберите вкладку «Подробности», для графической визуализации распределения пакетов в потоке выберите вкладку "Визуализация", для просмотра графиков скоростей потоков PID'ов или программ выберите вкладку "Скорости потоков", для просмотра гистограммы экстремумов скорости потоков выберите вкладку "Экстремумы", для просмотра круговой диаграммы состава транспортного потока на основе PID, программ или типов потоков, выберите вкладку «Состав» и, наконец, для просмотра диаграммы меток времени выберите вкладку "Метки времени".
 
-    Visualization tab:
-    To move the packet panes drag them with mouse. To display packet details click on it with left mouse. To apply program filter of packets choose available option in combobox. To move packet panes by packet bar drag the looking glass with mouse. To apply PSI filter of packet bar click on it and select available option.
+    Вкладка «Визуализация»:
+    Чтобы переместить пакеты, перетащите их мышью. Чтобы отобразить сведения о пакете, щелкните по нему левой кнопкой мыши. Чтобы применить фильтр к пакетам, выберите доступный параметр из списка. Чтобы переместить пакеты в области полосы прокрутки, перетащите с зажатой кнопкой мыши. Чтобы применить фильтр PSI к пакетам в области полосы прокрутки, щелкните по ней правой кнопкой мыши и выберите доступную опцию.
 
-    Bitrate tab:
-    Stacked area chart displays bitrate progress of the transport stream through time, based on PID or Program filter. Use checkbox to change the filter.
+    Вкладка «Скорости потоков»:
+    На диаграмме с разбивкой по областям отображается скорость передачи данных транспортного потока во времени, основанная на PID или фильтре по программам. Установите флажок, чтобы изменить фильтр.
 
-    Extremes tab:
-    Vertical bar chart displays bitrate extremes, i.e. global maximum, global minimum and an arithmetic mean of the transport stream, based on PID or Program filter. Use checkbox to change the filter.
+    Вкладка "Гистограмма экстремумов":
+    По вертикали гистограмма отображает экстремальные значения битрейта, т. е. глобальный максимум, глобальный минимум и среднее арифметическое транспортного потока, основанное на PID или фильтре по программам. Установите флажок, чтобы изменить фильтр.
 
-    Composition tab:
-    Pie chart displays data composition of elementary streams of the transport stream, based on PID,Programs or ES type filter. Use radiobuttons to change the filter.
+    Вкладка "Состав":
+    Круговая диаграмма отображает состав данных элементарных потоков транспортного потока на основе PID, программ или фильтров ES-типа. Используйте радиокнопки для изменения фильтра.
 
-    Timestamps tab:
-    XY chart, i.e. correllation diagram of synchronization timestamps layout in the transport stream. Use combobox to select filter by Program.
+    Вкладка «Метки времени»:
+    График XY, то есть диаграмма корреляции компоновки временных меток синхронизации в транспортном потоке. Используйте выпадающий список для выбора фильтра по программе.
    </string>
   </void>
   <void property="userGuideTitle">
-   <string>User Guide</string>
+   <string>Руководство пользователя</string>
   </void>
   <void property="visualizationTabText">
-   <string>Visualization</string>
+   <string>Визуализация</string>
   </void>
   <void property="rightsText">
-   <string>All rights reserved.</string>
+   <string>Все права защищены.</string>
   </void>
  </object>
 </java>
